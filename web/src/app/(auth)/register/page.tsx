@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { register } from '@/lib/supabase/auth-actions'
+import { useRouter } from 'next/navigation'
+import { register, resendConfirmation } from '@/lib/supabase/auth-actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,26 +15,108 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [role, setRole] = useState<string>('WORKER')
+  const [step, setStep] = useState(1)
 
-  async function handleSubmit(formData: FormData) {
+  // Resend Cooldown State
+  const [cooldown, setCooldown] = useState(0)
+
+  // Form State
+  const [role, setRole] = useState<'WORKER' | 'EMPLOYER'>('WORKER')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  
+  // Profile State
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [city, setCity] = useState('')
+  const [county, setCounty] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [cui, setCui] = useState('')
+  const [address, setAddress] = useState('')
+  const [cnp, setCnp] = useState('')
+  const [idSeries, setIdSeries] = useState('')
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (cooldown > 0) {
+      timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
+    }
+    return () => clearTimeout(timer)
+  }, [cooldown])
+
+  const handleNextStep = () => {
+    setError(null)
+    setSuccessMsg(null)
+    if (step === 2) {
+      if (password !== confirmPassword) {
+        setError('Parolele nu coincid.')
+        return
+      }
+      if (password.length < 6) {
+        setError('Parola trebuie să aibă minim 6 caractere.')
+        return
+      }
+    }
+    setStep((s) => s + 1)
+  }
+
+  const handlePrevStep = () => {
+    setError(null)
+    setStep((s) => s - 1)
+  }
+
+  async function handleResend() {
+    if (cooldown > 0) return
     setLoading(true)
     setError(null)
-    formData.set('role', role)
+    setSuccessMsg(null)
+    
+    const result = await resendConfirmation(email)
+    if (result?.error) {
+      setError(result.error)
+    } else {
+      setSuccessMsg('Email-ul a fost retrimis cu succes!')
+      setCooldown(60) // 60 seconds cooldown
+    }
+    setLoading(false)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const formData = new FormData()
+    formData.append('role', role)
+    formData.append('email', email)
+    formData.append('password', password)
+    formData.append('phone', phone)
+    formData.append('city', city)
+    formData.append('county', county)
+
+    if (role === 'WORKER') {
+      formData.append('fullName', fullName)
+      formData.append('cnp', cnp)
+      formData.append('idSeries', idSeries)
+    } else {
+      formData.append('companyName', companyName)
+      formData.append('cui', cui)
+      formData.append('address', address)
+    }
+
     const result = await register(formData)
     if (result?.error) {
       setError(result.error)
+      setLoading(false)
+    } else {
+      setStep(4) // Move to success step
       setLoading(false)
     }
   }
@@ -54,68 +137,290 @@ export default function RegisterPage() {
 
         <Card className="border-border/50 shadow-xl shadow-black/10">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">Înregistrare</CardTitle>
+            <CardTitle className="text-xl">
+              {step === 1 && 'Tipul contului'}
+              {step === 2 && 'Date autentificare'}
+              {step === 3 && 'Profil utilizator'}
+              {step === 4 && 'Verifică email-ul'}
+            </CardTitle>
             <CardDescription>
-              Alege tipul contului și completează datele
+              {step === 1 && 'Alege cum vrei să folosești platforma'}
+              {step === 2 && 'Introdu adresa de email și o parolă sigură'}
+              {step === 3 && 'Completează detaliile pentru a-ți finaliza profilul'}
+              {step === 4 && 'Contul a fost creat cu succes!'}
             </CardDescription>
           </CardHeader>
-          <form action={handleSubmit}>
-            <CardContent className="space-y-4">
+
+          <form onSubmit={step === 3 ? handleSubmit : (e) => { e.preventDefault(); if (step < 4) handleNextStep(); }}>
+            <CardContent className="space-y-4 pb-2">
+              {/* Progress Bar */}
+              {step < 4 && (
+                <div className="flex items-center gap-2 mb-6">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-2 flex-1 rounded-full transition-colors ${
+                        step >= i ? 'bg-primary' : 'bg-primary/20'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
               {error && (
                 <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                   {error}
                 </div>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="role">Tip cont</Label>
-                <Select value={role} onValueChange={(val) => setRole(val ?? 'WORKER')}>
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Selectează tipul" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="WORKER">
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">👷 Lucrător (Zilier)</span>
-                        <span className="text-xs text-muted-foreground">Caut ture de muncă</span>
+              {successMsg && (
+                <div className="rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">
+                  {successMsg}
+                </div>
+              )}
+
+              {/* STEP 1: ROLE */}
+              {step === 1 && (
+                <div className="space-y-4">
+                  <Label>Tip cont</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRole('WORKER')}
+                      className={`flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                        role === 'WORKER'
+                          ? 'border-primary bg-primary/10 text-primary shadow-md shadow-primary/10'
+                          : 'border-border hover:border-primary/40 hover:bg-accent/50 text-muted-foreground'
+                      }`}
+                    >
+                      👷 Angajat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('EMPLOYER')}
+                      className={`flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                        role === 'EMPLOYER'
+                          ? 'border-primary bg-primary/10 text-primary shadow-md shadow-primary/10'
+                          : 'border-border hover:border-primary/40 hover:bg-accent/50 text-muted-foreground'
+                      }`}
+                    >
+                      🏢 Angajator
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2: CREDENTIALS */}
+              {step === 2 && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="exemplu@email.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Parolă</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Minim 6 caractere"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirmă Parola</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Rescrie parola"
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* STEP 3: PROFILE */}
+              {step === 3 && (
+                <>
+                  {role === 'WORKER' ? (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullName">Nume complet (conform CI)</Label>
+                        <Input
+                          id="fullName"
+                          placeholder="Ex: Ion Popescu"
+                          required
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                        />
                       </div>
-                    </SelectItem>
-                    <SelectItem value="EMPLOYER">
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">🏢 Angajator</span>
-                        <span className="text-xs text-muted-foreground">Caut zilieri pentru afacere</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="cnp">CNP</Label>
+                          <Input
+                            id="cnp"
+                            placeholder="13 cifre"
+                            required
+                            minLength={13}
+                            maxLength={13}
+                            value={cnp}
+                            onChange={(e) => setCnp(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="idSeries">Serie și Număr CI</Label>
+                          <Input
+                            id="idSeries"
+                            placeholder="Ex: TM 123456"
+                            required
+                            value={idSeries}
+                            onChange={(e) => setIdSeries(e.target.value)}
+                          />
+                        </div>
                       </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="exemplu@email.com"
-                  required
-                  autoComplete="email"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Parolă</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Minim 6 caractere"
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                />
-              </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="companyName">Nume Companie / SRL</Label>
+                        <Input
+                          id="companyName"
+                          placeholder="Ex: GigTim SRL"
+                          required
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cui">CUI</Label>
+                        <Input
+                          id="cui"
+                          placeholder="Ex: RO12345678"
+                          required
+                          value={cui}
+                          onChange={(e) => setCui(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="address">Adresă Sediu</Label>
+                        <Input
+                          id="address"
+                          placeholder="Strada, Număr, Detalii..."
+                          required
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Număr de telefon</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="07XX XXX XXX"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="county">Județ</Label>
+                      <Input
+                        id="county"
+                        placeholder="Ex: Timiș"
+                        required
+                        value={county}
+                        onChange={(e) => setCounty(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Localitate</Label>
+                      <Input
+                        id="city"
+                        placeholder="Ex: Timișoara"
+                        required
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* STEP 4: SUCCESS */}
+              {step === 4 && (
+                <div className="text-center space-y-4 py-4">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+                    <span className="text-3xl text-emerald-500">✉️</span>
+                  </div>
+                  <h3 className="text-lg font-semibold">Te-ai înregistrat cu succes!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Ți-am trimis un link de confirmare la adresa <strong>{email}</strong>. 
+                    Te rugăm să îți verifici căsuța de email și să dai click pe link pentru a-ți activa contul.
+                  </p>
+                  
+                  <div className="pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={handleResend}
+                      disabled={cooldown > 0 || loading}
+                    >
+                      {cooldown > 0 ? `Așteaptă ${cooldown}s pentru a retrimite` : 'Retrimite email-ul de confirmare'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
             </CardContent>
+            
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Se creează contul...' : 'Creează cont'}
-              </Button>
+              {step < 4 && (
+                <div className="flex w-full gap-3">
+                  {step > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePrevStep}
+                      className="w-1/3"
+                    >
+                      Înapoi
+                    </Button>
+                  )}
+                  <Button
+                    type="submit"
+                    className={`transition-all duration-200 hover:shadow-lg hover:shadow-primary/25 hover:brightness-110 ${step > 1 ? 'w-2/3' : 'w-full'}`}
+                    disabled={loading}
+                  >
+                    {step === 3 
+                      ? (loading ? 'Se creează...' : 'Finalizează contul') 
+                      : 'Continuă →'}
+                  </Button>
+                </div>
+              )}
+              
+              {step === 4 && (
+                <Button render={<Link href="/login" />} className="w-full">
+                  Mergi la Conectare
+                </Button>
+              )}
+              
               <p className="text-center text-sm text-muted-foreground">
                 Ai deja cont?{' '}
                 <Link

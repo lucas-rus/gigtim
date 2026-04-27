@@ -1,5 +1,5 @@
 -- ============================================================
--- GigTim — Initial Database Schema
+-- GigTim — Initial Database Schema (IDEMPOTENT)
 -- Supabase (PostgreSQL) migration
 -- PRD reference: GigApp_PRD.md §4 "Database Schema"
 -- ============================================================
@@ -10,27 +10,35 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ────────────────────────────────────────────────────────────
--- 1. Custom ENUM types
+-- 1. Custom ENUM types (idempotent via DO blocks)
 -- ────────────────────────────────────────────────────────────
 
--- User role (WORKER or EMPLOYER)
-CREATE TYPE user_role AS ENUM ('WORKER', 'EMPLOYER');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('WORKER', 'EMPLOYER');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Worker skill set
-CREATE TYPE worker_skill AS ENUM ('BARISTA', 'WAITER', 'DISHWASHER', 'STAGEHAND');
+DO $$ BEGIN
+    CREATE TYPE worker_skill AS ENUM ('BARISTA', 'WAITER', 'DISHWASHER', 'STAGEHAND');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Shift lifecycle status
-CREATE TYPE shift_status AS ENUM ('OPEN', 'FILLED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+DO $$ BEGIN
+    CREATE TYPE shift_status AS ENUM ('OPEN', 'FILLED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- Application status
-CREATE TYPE application_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'NO_SHOW');
+DO $$ BEGIN
+    CREATE TYPE application_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'NO_SHOW');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ────────────────────────────────────────────────────────────
 -- 2. Tables
 -- ────────────────────────────────────────────────────────────
 
 -- 2.1  Users (base table, linked to Supabase Auth)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     role       user_role    NOT NULL,
     auth_id    UUID         NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -41,7 +49,7 @@ COMMENT ON TABLE  users IS 'Base user record — every authenticated person has 
 COMMENT ON COLUMN users.auth_id IS 'FK → Supabase auth.users. One-to-one mapping.';
 
 -- 2.2  Worker Profiles
-CREATE TABLE worker_profiles (
+CREATE TABLE IF NOT EXISTS worker_profiles (
     user_id                UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     full_name              TEXT          NOT NULL,
     cnp                    CHAR(13)      NOT NULL UNIQUE
@@ -58,7 +66,7 @@ COMMENT ON TABLE  worker_profiles IS 'Extended profile for WORKER users. Stores 
 COMMENT ON COLUMN worker_profiles.cnp IS 'Romanian Personal Numeric Code — exactly 13 digits. Required for ITM (Legea 52/2011).';
 
 -- 2.3  Employer Profiles
-CREATE TABLE employer_profiles (
+CREATE TABLE IF NOT EXISTS employer_profiles (
     user_id         UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     company_name    TEXT          NOT NULL,
     cui             TEXT          NOT NULL,
@@ -72,7 +80,7 @@ CREATE TABLE employer_profiles (
 COMMENT ON TABLE  employer_profiles IS 'Extended profile for EMPLOYER users. Stores CUI (Romanian Tax ID) and business location.';
 
 -- 2.4  Job Shifts
-CREATE TABLE job_shifts (
+CREATE TABLE IF NOT EXISTS job_shifts (
     id              UUID          PRIMARY KEY DEFAULT uuid_generate_v4(),
     employer_id     UUID          NOT NULL REFERENCES employer_profiles(user_id) ON DELETE CASCADE,
     role_needed     worker_skill  NOT NULL,
@@ -88,7 +96,7 @@ CREATE TABLE job_shifts (
 COMMENT ON TABLE job_shifts IS 'A single bookable shift posted by an employer.';
 
 -- 2.5  Applications
-CREATE TABLE applications (
+CREATE TABLE IF NOT EXISTS applications (
     id         UUID               PRIMARY KEY DEFAULT uuid_generate_v4(),
     shift_id   UUID               NOT NULL REFERENCES job_shifts(id) ON DELETE CASCADE,
     worker_id  UUID               NOT NULL REFERENCES worker_profiles(user_id) ON DELETE CASCADE,
@@ -106,14 +114,14 @@ COMMENT ON TABLE applications IS 'A worker''s application to a specific shift.';
 -- ────────────────────────────────────────────────────────────
 
 -- Fast lookup of open shifts by status and time window
-CREATE INDEX idx_job_shifts_status_start ON job_shifts (status, start_time);
+CREATE INDEX IF NOT EXISTS idx_job_shifts_status_start ON job_shifts (status, start_time);
 
 -- Geo queries: allow PostGIS-less bounding-box filtering on lat/lng
-CREATE INDEX idx_employer_profiles_location ON employer_profiles (lat, lng);
+CREATE INDEX IF NOT EXISTS idx_employer_profiles_location ON employer_profiles (lat, lng);
 
 -- Application queries per shift and per worker
-CREATE INDEX idx_applications_shift  ON applications (shift_id);
-CREATE INDEX idx_applications_worker ON applications (worker_id);
+CREATE INDEX IF NOT EXISTS idx_applications_shift  ON applications (shift_id);
+CREATE INDEX IF NOT EXISTS idx_applications_worker ON applications (worker_id);
 
 -- ────────────────────────────────────────────────────────────
 -- 4. Row Level Security (RLS)
@@ -129,26 +137,27 @@ ALTER TABLE applications       ENABLE ROW LEVEL SECURITY;
 -- ── 4.1  users ─────────────────────────────────────────────
 
 -- Users can read their own row
+DROP POLICY IF EXISTS "users_select_own" ON users;
 CREATE POLICY "users_select_own"
     ON users FOR SELECT
     USING (auth.uid() = auth_id);
 
--- Users can update their own row (role changes are NOT allowed via app —
--- enforce at the application layer; here we allow the row owner only).
+-- Users can update their own row
+DROP POLICY IF EXISTS "users_update_own" ON users;
 CREATE POLICY "users_update_own"
     ON users FOR UPDATE
     USING (auth.uid() = auth_id)
     WITH CHECK (auth.uid() = auth_id);
 
 -- Insert is done via a server-side trigger / Edge Function on sign-up.
--- We still allow authenticated insert so the sign-up flow works.
+DROP POLICY IF EXISTS "users_insert_own" ON users;
 CREATE POLICY "users_insert_own"
     ON users FOR INSERT
     WITH CHECK (auth.uid() = auth_id);
 
 -- ── 4.2  worker_profiles ──────────────────────────────────
 
--- Workers can read their own profile
+DROP POLICY IF EXISTS "worker_profiles_select_own" ON worker_profiles;
 CREATE POLICY "worker_profiles_select_own"
     ON worker_profiles FOR SELECT
     USING (
@@ -159,7 +168,7 @@ CREATE POLICY "worker_profiles_select_own"
         )
     );
 
--- Employers can read worker profiles (needed to view applicants & ITM data)
+DROP POLICY IF EXISTS "worker_profiles_select_employers" ON worker_profiles;
 CREATE POLICY "worker_profiles_select_employers"
     ON worker_profiles FOR SELECT
     USING (
@@ -170,7 +179,7 @@ CREATE POLICY "worker_profiles_select_employers"
         )
     );
 
--- Workers can insert their own profile
+DROP POLICY IF EXISTS "worker_profiles_insert_own" ON worker_profiles;
 CREATE POLICY "worker_profiles_insert_own"
     ON worker_profiles FOR INSERT
     WITH CHECK (
@@ -182,7 +191,7 @@ CREATE POLICY "worker_profiles_insert_own"
         )
     );
 
--- Workers can update their own profile
+DROP POLICY IF EXISTS "worker_profiles_update_own" ON worker_profiles;
 CREATE POLICY "worker_profiles_update_own"
     ON worker_profiles FOR UPDATE
     USING (
@@ -202,7 +211,7 @@ CREATE POLICY "worker_profiles_update_own"
 
 -- ── 4.3  employer_profiles ────────────────────────────────
 
--- Employer can read their own profile
+DROP POLICY IF EXISTS "employer_profiles_select_own" ON employer_profiles;
 CREATE POLICY "employer_profiles_select_own"
     ON employer_profiles FOR SELECT
     USING (
@@ -213,7 +222,7 @@ CREATE POLICY "employer_profiles_select_own"
         )
     );
 
--- Workers can view employer profiles (needed for shift details / company info)
+DROP POLICY IF EXISTS "employer_profiles_select_workers" ON employer_profiles;
 CREATE POLICY "employer_profiles_select_workers"
     ON employer_profiles FOR SELECT
     USING (
@@ -224,7 +233,7 @@ CREATE POLICY "employer_profiles_select_workers"
         )
     );
 
--- Employers can insert their own profile
+DROP POLICY IF EXISTS "employer_profiles_insert_own" ON employer_profiles;
 CREATE POLICY "employer_profiles_insert_own"
     ON employer_profiles FOR INSERT
     WITH CHECK (
@@ -236,7 +245,7 @@ CREATE POLICY "employer_profiles_insert_own"
         )
     );
 
--- Employers can update their own profile
+DROP POLICY IF EXISTS "employer_profiles_update_own" ON employer_profiles;
 CREATE POLICY "employer_profiles_update_own"
     ON employer_profiles FOR UPDATE
     USING (
@@ -256,12 +265,12 @@ CREATE POLICY "employer_profiles_update_own"
 
 -- ── 4.4  job_shifts ───────────────────────────────────────
 
--- Anyone authenticated can view OPEN shifts (workers browsing the map)
+DROP POLICY IF EXISTS "job_shifts_select_open" ON job_shifts;
 CREATE POLICY "job_shifts_select_open"
     ON job_shifts FOR SELECT
     USING (status = 'OPEN');
 
--- Employers can see ALL their own shifts (any status)
+DROP POLICY IF EXISTS "job_shifts_select_employer_own" ON job_shifts;
 CREATE POLICY "job_shifts_select_employer_own"
     ON job_shifts FOR SELECT
     USING (
@@ -272,7 +281,7 @@ CREATE POLICY "job_shifts_select_employer_own"
         )
     );
 
--- Workers can see shifts they have applied to (any status)
+DROP POLICY IF EXISTS "job_shifts_select_worker_applied" ON job_shifts;
 CREATE POLICY "job_shifts_select_worker_applied"
     ON job_shifts FOR SELECT
     USING (
@@ -284,7 +293,7 @@ CREATE POLICY "job_shifts_select_worker_applied"
         )
     );
 
--- Employers can insert shifts
+DROP POLICY IF EXISTS "job_shifts_insert_employer" ON job_shifts;
 CREATE POLICY "job_shifts_insert_employer"
     ON job_shifts FOR INSERT
     WITH CHECK (
@@ -296,7 +305,7 @@ CREATE POLICY "job_shifts_insert_employer"
         )
     );
 
--- Employers can update their own shifts (change status, etc.)
+DROP POLICY IF EXISTS "job_shifts_update_employer_own" ON job_shifts;
 CREATE POLICY "job_shifts_update_employer_own"
     ON job_shifts FOR UPDATE
     USING (
@@ -316,7 +325,7 @@ CREATE POLICY "job_shifts_update_employer_own"
 
 -- ── 4.5  applications ─────────────────────────────────────
 
--- Workers can see their own applications
+DROP POLICY IF EXISTS "applications_select_worker_own" ON applications;
 CREATE POLICY "applications_select_worker_own"
     ON applications FOR SELECT
     USING (
@@ -327,7 +336,7 @@ CREATE POLICY "applications_select_worker_own"
         )
     );
 
--- Employers can see applications for their shifts
+DROP POLICY IF EXISTS "applications_select_employer_shifts" ON applications;
 CREATE POLICY "applications_select_employer_shifts"
     ON applications FOR SELECT
     USING (
@@ -339,7 +348,7 @@ CREATE POLICY "applications_select_employer_shifts"
         )
     );
 
--- Workers can insert applications (apply to a shift)
+DROP POLICY IF EXISTS "applications_insert_worker" ON applications;
 CREATE POLICY "applications_insert_worker"
     ON applications FOR INSERT
     WITH CHECK (
@@ -351,7 +360,7 @@ CREATE POLICY "applications_insert_worker"
         )
     );
 
--- Employers can update applications for their own shifts (accept/reject)
+DROP POLICY IF EXISTS "applications_update_employer" ON applications;
 CREATE POLICY "applications_update_employer"
     ON applications FOR UPDATE
     USING (

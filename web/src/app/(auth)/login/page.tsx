@@ -51,7 +51,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <form action={handleSubmit}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pb-2">
               {error && (
                 <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                   {error}
@@ -69,7 +69,12 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Parolă</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Parolă</Label>
+                  <Link href="/forgot-password" className="text-xs font-medium text-primary hover:underline">
+                    Ai uitat parola?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   name="password"
@@ -81,7 +86,11 @@ export default function LoginPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full transition-all duration-200 hover:shadow-lg hover:shadow-primary/25 hover:brightness-110"
+                disabled={loading}
+              >
                 {loading ? 'Se conectează...' : 'Conectare'}
               </Button>
               <p className="text-center text-sm text-muted-foreground">

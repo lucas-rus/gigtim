@@ -1,5 +1,5 @@
 -- ============================================================
--- GigTim — Migration 002: Expanded Schema
+-- GigTim — Migration 002: Expanded Schema (IDEMPOTENT)
 -- Adds: ADMIN role, phone/location fields, ID verification
 --        (Persona), chat, forum, notifications, reviews,
 --        admin audit log + RLS policies for everything.
@@ -15,40 +15,28 @@ ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'ADMIN';
 -- 2. New ENUM types
 -- ────────────────────────────────────────────────────────────
 
-CREATE TYPE verification_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'EXPIRED', 'NEEDS_REVIEW');
-
-CREATE TYPE chat_room_type AS ENUM ('SHIFT', 'DIRECT');
-
-CREATE TYPE forum_category AS ENUM ('GENERAL', 'TIPS', 'JOBS', 'LEGAL');
-
-CREATE TYPE notification_type AS ENUM (
+DO $$ BEGIN CREATE TYPE verification_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'EXPIRED', 'NEEDS_REVIEW'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE chat_room_type AS ENUM ('SHIFT', 'DIRECT'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE forum_category AS ENUM ('GENERAL', 'TIPS', 'JOBS', 'LEGAL'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE notification_type AS ENUM (
     'SHIFT_APPLICATION', 'APPLICATION_ACCEPTED', 'APPLICATION_REJECTED',
     'SHIFT_REMINDER', 'REVIEW_REQUEST', 'CHAT_MESSAGE',
     'ID_VERIFIED', 'ID_REJECTED', 'ADMIN_NOTICE'
-);
+); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ────────────────────────────────────────────────────────────
--- 3. Alter existing tables
+-- 3. Alter existing tables (idempotent)
 -- ────────────────────────────────────────────────────────────
 
--- 3.1  worker_profiles: add phone, location, profile enrichment
-ALTER TABLE worker_profiles
-    ADD COLUMN phone_number        TEXT          NOT NULL DEFAULT '',
-    ADD COLUMN city                TEXT          NOT NULL DEFAULT '',
-    ADD COLUMN county              TEXT          NOT NULL DEFAULT '',
-    ADD COLUMN bio                 TEXT          DEFAULT '',
-    ADD COLUMN profile_picture_url TEXT          DEFAULT NULL;
+DO $$ BEGIN ALTER TABLE worker_profiles ADD COLUMN phone_number TEXT NOT NULL DEFAULT ''; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE worker_profiles ADD COLUMN city TEXT NOT NULL DEFAULT ''; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE worker_profiles ADD COLUMN county TEXT NOT NULL DEFAULT ''; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE worker_profiles ADD COLUMN bio TEXT DEFAULT ''; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE worker_profiles ADD COLUMN profile_picture_url TEXT DEFAULT NULL; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
 
-COMMENT ON COLUMN worker_profiles.phone_number IS 'Romanian mobile number for contact.';
-COMMENT ON COLUMN worker_profiles.city IS 'City where the worker is based (Romania-wide).';
-COMMENT ON COLUMN worker_profiles.county IS 'Romanian county (județ).';
+DO $$ BEGIN ALTER TABLE employer_profiles ADD COLUMN city TEXT NOT NULL DEFAULT ''; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE employer_profiles ADD COLUMN county TEXT NOT NULL DEFAULT ''; EXCEPTION WHEN duplicate_column THEN NULL; END $$;
 
--- 3.2  employer_profiles: add location fields
-ALTER TABLE employer_profiles
-    ADD COLUMN city   TEXT NOT NULL DEFAULT '',
-    ADD COLUMN county TEXT NOT NULL DEFAULT '';
-
-COMMENT ON COLUMN employer_profiles.city IS 'City where the business is located.';
 COMMENT ON COLUMN employer_profiles.county IS 'Romanian county (județ).';
 
 -- ────────────────────────────────────────────────────────────
@@ -56,7 +44,7 @@ COMMENT ON COLUMN employer_profiles.county IS 'Romanian county (județ).';
 -- ────────────────────────────────────────────────────────────
 
 -- 4.1  ID Verifications (Persona integration)
-CREATE TABLE id_verifications (
+CREATE TABLE IF NOT EXISTS id_verifications (
     id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     worker_id         UUID NOT NULL REFERENCES worker_profiles(user_id) ON DELETE CASCADE,
     persona_inquiry_id TEXT UNIQUE,
@@ -72,7 +60,7 @@ CREATE TABLE id_verifications (
 COMMENT ON TABLE id_verifications IS 'Tracks Persona-based ID verification for workers. Status updated via Persona webhooks.';
 
 -- 4.2  Chat rooms
-CREATE TABLE chat_rooms (
+CREATE TABLE IF NOT EXISTS chat_rooms (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     type       chat_room_type NOT NULL,
     shift_id   UUID REFERENCES job_shifts(id) ON DELETE SET NULL,
@@ -83,7 +71,7 @@ CREATE TABLE chat_rooms (
 COMMENT ON TABLE chat_rooms IS 'Chat rooms — SHIFT type auto-created when application accepted, DIRECT for user-to-user.';
 
 -- 4.3  Chat room members (N:N)
-CREATE TABLE chat_room_members (
+CREATE TABLE IF NOT EXISTS chat_room_members (
     room_id   UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
     user_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -91,7 +79,7 @@ CREATE TABLE chat_room_members (
 );
 
 -- 4.4  Chat messages
-CREATE TABLE chat_messages (
+CREATE TABLE IF NOT EXISTS chat_messages (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     room_id    UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
     sender_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -101,7 +89,7 @@ CREATE TABLE chat_messages (
 );
 
 -- 4.5  Forum posts
-CREATE TABLE forum_posts (
+CREATE TABLE IF NOT EXISTS forum_posts (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     author_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title      TEXT NOT NULL CHECK (char_length(title) > 0),
@@ -113,7 +101,7 @@ CREATE TABLE forum_posts (
 );
 
 -- 4.6  Forum comments
-CREATE TABLE forum_comments (
+CREATE TABLE IF NOT EXISTS forum_comments (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     post_id    UUID NOT NULL REFERENCES forum_posts(id) ON DELETE CASCADE,
     author_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -123,7 +111,7 @@ CREATE TABLE forum_comments (
 );
 
 -- 4.7  Notifications
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type       notification_type NOT NULL,
@@ -135,7 +123,7 @@ CREATE TABLE notifications (
 );
 
 -- 4.8  Reviews (mutual post-shift)
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     shift_id    UUID NOT NULL REFERENCES job_shifts(id) ON DELETE CASCADE,
     reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -149,7 +137,7 @@ CREATE TABLE reviews (
 );
 
 -- 4.9  Admin audit log
-CREATE TABLE admin_audit_log (
+CREATE TABLE IF NOT EXISTS admin_audit_log (
     id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     admin_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action       TEXT NOT NULL,
@@ -165,16 +153,16 @@ COMMENT ON TABLE admin_audit_log IS 'Immutable log of admin actions for accounta
 -- 5. Indexes for new tables
 -- ────────────────────────────────────────────────────────────
 
-CREATE INDEX idx_id_verifications_worker   ON id_verifications (worker_id);
-CREATE INDEX idx_id_verifications_status   ON id_verifications (status);
-CREATE INDEX idx_chat_messages_room        ON chat_messages (room_id, created_at);
-CREATE INDEX idx_chat_room_members_user    ON chat_room_members (user_id);
-CREATE INDEX idx_forum_posts_category      ON forum_posts (category, created_at DESC);
-CREATE INDEX idx_forum_comments_post       ON forum_comments (post_id, created_at);
-CREATE INDEX idx_notifications_user_unread ON notifications (user_id, read, created_at DESC);
-CREATE INDEX idx_reviews_shift             ON reviews (shift_id);
-CREATE INDEX idx_reviews_reviewee          ON reviews (reviewee_id);
-CREATE INDEX idx_admin_audit_log_admin     ON admin_audit_log (admin_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_id_verifications_worker   ON id_verifications (worker_id);
+CREATE INDEX IF NOT EXISTS idx_id_verifications_status   ON id_verifications (status);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_room        ON chat_messages (room_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_room_members_user    ON chat_room_members (user_id);
+CREATE INDEX IF NOT EXISTS idx_forum_posts_category      ON forum_posts (category, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_forum_comments_post       ON forum_comments (post_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications (user_id, read, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_shift             ON reviews (shift_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_reviewee          ON reviews (reviewee_id);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_log_admin     ON admin_audit_log (admin_id, created_at DESC);
 
 -- ────────────────────────────────────────────────────────────
 -- 6. Helper: is_admin() function
@@ -207,28 +195,38 @@ ALTER TABLE admin_audit_log   ENABLE ROW LEVEL SECURITY;
 -- 8. RLS — Admin overrides on EXISTING tables (from 001)
 -- ────────────────────────────────────────────────────────────
 
+DROP POLICY IF EXISTS "admin_select_all_users" ON users;
 CREATE POLICY "admin_select_all_users"
     ON users FOR SELECT USING (is_admin());
+DROP POLICY IF EXISTS "admin_update_all_users" ON users;
 CREATE POLICY "admin_update_all_users"
     ON users FOR UPDATE USING (is_admin()) WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "admin_select_all_worker_profiles" ON worker_profiles;
 CREATE POLICY "admin_select_all_worker_profiles"
     ON worker_profiles FOR SELECT USING (is_admin());
+DROP POLICY IF EXISTS "admin_update_all_worker_profiles" ON worker_profiles;
 CREATE POLICY "admin_update_all_worker_profiles"
     ON worker_profiles FOR UPDATE USING (is_admin()) WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "admin_select_all_employer_profiles" ON employer_profiles;
 CREATE POLICY "admin_select_all_employer_profiles"
     ON employer_profiles FOR SELECT USING (is_admin());
+DROP POLICY IF EXISTS "admin_update_all_employer_profiles" ON employer_profiles;
 CREATE POLICY "admin_update_all_employer_profiles"
     ON employer_profiles FOR UPDATE USING (is_admin()) WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "admin_select_all_job_shifts" ON job_shifts;
 CREATE POLICY "admin_select_all_job_shifts"
     ON job_shifts FOR SELECT USING (is_admin());
+DROP POLICY IF EXISTS "admin_update_all_job_shifts" ON job_shifts;
 CREATE POLICY "admin_update_all_job_shifts"
     ON job_shifts FOR UPDATE USING (is_admin()) WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "admin_select_all_applications" ON applications;
 CREATE POLICY "admin_select_all_applications"
     ON applications FOR SELECT USING (is_admin());
+DROP POLICY IF EXISTS "admin_update_all_applications" ON applications;
 CREATE POLICY "admin_update_all_applications"
     ON applications FOR UPDATE USING (is_admin()) WITH CHECK (is_admin());
 
@@ -238,6 +236,7 @@ CREATE POLICY "admin_update_all_applications"
 
 -- ── 9.1  id_verifications ──────────────────────────────────
 
+DROP POLICY IF EXISTS "id_verifications_select_own" ON id_verifications;
 CREATE POLICY "id_verifications_select_own"
     ON id_verifications FOR SELECT
     USING (
@@ -248,6 +247,7 @@ CREATE POLICY "id_verifications_select_own"
         )
     );
 
+DROP POLICY IF EXISTS "id_verifications_insert_own" ON id_verifications;
 CREATE POLICY "id_verifications_insert_own"
     ON id_verifications FOR INSERT
     WITH CHECK (
@@ -261,11 +261,13 @@ CREATE POLICY "id_verifications_insert_own"
 
 -- Persona webhooks update via service_role key (bypasses RLS).
 -- Admins can also read/update for support cases.
+DROP POLICY IF EXISTS "admin_all_id_verifications" ON id_verifications;
 CREATE POLICY "admin_all_id_verifications"
     ON id_verifications FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 -- ── 9.2  chat_rooms ────────────────────────────────────────
 
+DROP POLICY IF EXISTS "chat_rooms_select_member" ON chat_rooms;
 CREATE POLICY "chat_rooms_select_member"
     ON chat_rooms FOR SELECT
     USING (
@@ -277,15 +279,18 @@ CREATE POLICY "chat_rooms_select_member"
         )
     );
 
+DROP POLICY IF EXISTS "chat_rooms_insert_authenticated" ON chat_rooms;
 CREATE POLICY "chat_rooms_insert_authenticated"
     ON chat_rooms FOR INSERT
     WITH CHECK (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "admin_all_chat_rooms" ON chat_rooms;
 CREATE POLICY "admin_all_chat_rooms"
     ON chat_rooms FOR SELECT USING (is_admin());
 
 -- ── 9.3  chat_room_members ─────────────────────────────────
 
+DROP POLICY IF EXISTS "chat_room_members_select_member" ON chat_room_members;
 CREATE POLICY "chat_room_members_select_member"
     ON chat_room_members FOR SELECT
     USING (
@@ -303,15 +308,18 @@ CREATE POLICY "chat_room_members_select_member"
         )
     );
 
+DROP POLICY IF EXISTS "chat_room_members_insert" ON chat_room_members;
 CREATE POLICY "chat_room_members_insert"
     ON chat_room_members FOR INSERT
     WITH CHECK (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "admin_all_chat_room_members" ON chat_room_members;
 CREATE POLICY "admin_all_chat_room_members"
     ON chat_room_members FOR SELECT USING (is_admin());
 
 -- ── 9.4  chat_messages ─────────────────────────────────────
 
+DROP POLICY IF EXISTS "chat_messages_select_member" ON chat_messages;
 CREATE POLICY "chat_messages_select_member"
     ON chat_messages FOR SELECT
     USING (
@@ -323,6 +331,7 @@ CREATE POLICY "chat_messages_select_member"
         )
     );
 
+DROP POLICY IF EXISTS "chat_messages_insert_member" ON chat_messages;
 CREATE POLICY "chat_messages_insert_member"
     ON chat_messages FOR INSERT
     WITH CHECK (
@@ -335,16 +344,19 @@ CREATE POLICY "chat_messages_insert_member"
         )
     );
 
+DROP POLICY IF EXISTS "admin_all_chat_messages" ON chat_messages;
 CREATE POLICY "admin_all_chat_messages"
     ON chat_messages FOR SELECT USING (is_admin());
 
 -- ── 9.5  forum_posts ───────────────────────────────────────
 
 -- All authenticated users can read posts
+DROP POLICY IF EXISTS "forum_posts_select_all" ON forum_posts;
 CREATE POLICY "forum_posts_select_all"
     ON forum_posts FOR SELECT
     USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "forum_posts_insert_authenticated" ON forum_posts;
 CREATE POLICY "forum_posts_insert_authenticated"
     ON forum_posts FOR INSERT
     WITH CHECK (
@@ -355,6 +367,7 @@ CREATE POLICY "forum_posts_insert_authenticated"
         )
     );
 
+DROP POLICY IF EXISTS "forum_posts_update_own" ON forum_posts;
 CREATE POLICY "forum_posts_update_own"
     ON forum_posts FOR UPDATE
     USING (
@@ -372,6 +385,7 @@ CREATE POLICY "forum_posts_update_own"
         )
     );
 
+DROP POLICY IF EXISTS "forum_posts_delete_own" ON forum_posts;
 CREATE POLICY "forum_posts_delete_own"
     ON forum_posts FOR DELETE
     USING (
@@ -383,15 +397,18 @@ CREATE POLICY "forum_posts_delete_own"
     );
 
 -- Admins can do everything (pin, delete others' posts, etc.)
+DROP POLICY IF EXISTS "admin_all_forum_posts" ON forum_posts;
 CREATE POLICY "admin_all_forum_posts"
     ON forum_posts FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 -- ── 9.6  forum_comments ────────────────────────────────────
 
+DROP POLICY IF EXISTS "forum_comments_select_all" ON forum_comments;
 CREATE POLICY "forum_comments_select_all"
     ON forum_comments FOR SELECT
     USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "forum_comments_insert_authenticated" ON forum_comments;
 CREATE POLICY "forum_comments_insert_authenticated"
     ON forum_comments FOR INSERT
     WITH CHECK (
@@ -402,6 +419,7 @@ CREATE POLICY "forum_comments_insert_authenticated"
         )
     );
 
+DROP POLICY IF EXISTS "forum_comments_update_own" ON forum_comments;
 CREATE POLICY "forum_comments_update_own"
     ON forum_comments FOR UPDATE
     USING (
@@ -419,6 +437,7 @@ CREATE POLICY "forum_comments_update_own"
         )
     );
 
+DROP POLICY IF EXISTS "forum_comments_delete_own" ON forum_comments;
 CREATE POLICY "forum_comments_delete_own"
     ON forum_comments FOR DELETE
     USING (
@@ -429,11 +448,13 @@ CREATE POLICY "forum_comments_delete_own"
         )
     );
 
+DROP POLICY IF EXISTS "admin_all_forum_comments" ON forum_comments;
 CREATE POLICY "admin_all_forum_comments"
     ON forum_comments FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 -- ── 9.7  notifications ─────────────────────────────────────
 
+DROP POLICY IF EXISTS "notifications_select_own" ON notifications;
 CREATE POLICY "notifications_select_own"
     ON notifications FOR SELECT
     USING (
@@ -445,6 +466,7 @@ CREATE POLICY "notifications_select_own"
     );
 
 -- Users can mark their own notifications as read
+DROP POLICY IF EXISTS "notifications_update_own" ON notifications;
 CREATE POLICY "notifications_update_own"
     ON notifications FOR UPDATE
     USING (
@@ -464,11 +486,13 @@ CREATE POLICY "notifications_update_own"
 
 -- Notifications are inserted by Edge Functions / triggers (service_role).
 -- Admins can also insert (broadcast notices).
+DROP POLICY IF EXISTS "admin_all_notifications" ON notifications;
 CREATE POLICY "admin_all_notifications"
     ON notifications FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 -- ── 9.8  reviews ───────────────────────────────────────────
 
+DROP POLICY IF EXISTS "reviews_select_own" ON reviews;
 CREATE POLICY "reviews_select_own"
     ON reviews FOR SELECT
     USING (
@@ -479,6 +503,7 @@ CREATE POLICY "reviews_select_own"
         )
     );
 
+DROP POLICY IF EXISTS "reviews_insert_authenticated" ON reviews;
 CREATE POLICY "reviews_insert_authenticated"
     ON reviews FOR INSERT
     WITH CHECK (
@@ -489,15 +514,18 @@ CREATE POLICY "reviews_insert_authenticated"
         )
     );
 
+DROP POLICY IF EXISTS "admin_all_reviews" ON reviews;
 CREATE POLICY "admin_all_reviews"
     ON reviews FOR SELECT USING (is_admin());
 
 -- ── 9.9  admin_audit_log ───────────────────────────────────
 
+DROP POLICY IF EXISTS "admin_audit_log_insert" ON admin_audit_log;
 CREATE POLICY "admin_audit_log_insert"
     ON admin_audit_log FOR INSERT
     WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "admin_audit_log_select" ON admin_audit_log;
 CREATE POLICY "admin_audit_log_select"
     ON admin_audit_log FOR SELECT
     USING (is_admin());

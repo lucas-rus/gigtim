@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ro" className={`${inter.variable} dark`}>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <TooltipProvider>
           {children}
         </TooltipProvider>

@@ -30,7 +30,13 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Refresh the auth token
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user && request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/jobs'
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }

@@ -5,6 +5,25 @@
 
 ---
 
+## [0.3.0] — 2026-04-28
+
+### 👷 Registration & Onboarding — Wizard Overhaul
+- **Removed `/onboarding`**: Integrated profile completion directly into the `register` flow to prevent empty profile errors.
+- **Worker Verification Fields**: Added mandatory `CNP` and `ID Card Series` fields to the registration step for workers (ITM compliance).
+- **Employer Verification Fields**: Added `CUI` and `Address` fields to the registration step for employers.
+- **Auth Actions Update**: Modified `register` server action to perform a single-pass creation of Auth User + DB User + Profile row.
+
+### ⭐ Ratings & Reviews — Score Logic
+- **Migration 007**: Updated database constraints to allow `0.0` as a starting rating (previously defaulted to `5.0`).
+- **Reviews List UI**: Added a "Recenzii și Feedback" section to the profile page that lists every review received, including reviewer names and comments.
+- **Rating Counts**: Displayed the number of reviews next to the star rating on the profile.
+
+### 🎨 UI & UX — Polish
+- **Filter Labels**: Fixed the database keys (`ALL`, `DATE_ASC`, `PAY_DESC`) showing up in dropdown menus. They now display user-friendly Romanian labels.
+- **Profile Upsert**: Updated profile saving to use `UPSERT` with fallbacks, ensuring legacy users can still save their profiles even if they are missing mandatory ITM fields.
+
+---
+
 ## [0.2.0] — 2026-04-27
 
 ### 🗄️ Database — Schema Expansion (`supabase/migrations/002_expanded_schema.sql`)
@@ -149,3 +168,13 @@ All five tables have RLS **enabled**. Policy summary:
 ---
 
 *End of changelog — append new sections below as work progresses.*
+
+---
+
+## 🚀 Planned / Next Steps (Handoff)
+
+1. **Migration Execution**: The user needs to manually run `007_rating_defaults.sql` in the Supabase SQL Editor.
+2. **Profile Edit Expansion**: The `ProfileEditForm` should be expanded to allow editing the new ITM fields (CNP, CUI, Address) if a user needs to change them later.
+3. **Rating Trigger**: Currently, ratings are stored in the `reviews` table and displayed on the profile. A database trigger should be added (Migration 008) to automatically recalculate the `reliability_score` / `employer_rating` whenever a new review is inserted.
+4. **SMS Verification**: Implement the actual SMS API integration (e.g., Twilio) for the phone verification step of registration.
+
