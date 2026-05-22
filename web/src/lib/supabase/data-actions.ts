@@ -27,7 +27,10 @@ export async function getOpenShifts() {
     .eq('status', 'OPEN')
     .order('start_time', { ascending: true })
 
-  if (error) { console.error('getOpenShifts:', error); return [] }
+  if (error) {
+    console.error('getOpenShifts error:', error.message, 'Code:', error.code, 'Details:', error.details, 'Hint:', error.hint)
+    return []
+  }
   return data || []
 }
 
@@ -158,7 +161,10 @@ export async function getForumPosts() {
     .order('pinned', { ascending: false })
     .order('created_at', { ascending: false })
 
-  if (error) { console.error('getForumPosts:', error); return [] }
+  if (error) {
+    console.error('getForumPosts error:', error.message, 'Code:', error.code, 'Details:', error.details, 'Hint:', error.hint)
+    return []
+  }
 
   // Get author names
   if (!data || data.length === 0) return []
