@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useSyncExternalStore } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -26,13 +26,14 @@ const categoryLabels: Record<ForumCategory, string> = {
   LEGAL: '⚖️ Legal',
 }
 
-const emptySubscribe = () => () => {}
 function useCurrentTime() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => Date.now(),
-    () => 0
-  )
+  const [time, setTime] = useState<number>(0)
+  useEffect(() => {
+    setTime(Date.now())
+    const interval = setInterval(() => setTime(Date.now()), 10000)
+    return () => clearInterval(interval)
+  }, [])
+  return time
 }
 
 interface ForumClientProps {

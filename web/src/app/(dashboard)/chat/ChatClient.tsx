@@ -1,19 +1,20 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect, useSyncExternalStore } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { getChatMessages, sendChatMessage } from '@/lib/supabase/data-actions'
 import { createClient } from '@/lib/supabase/client'
 
-const emptySubscribe = () => () => {}
 function useCurrentTime() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => Date.now(),
-    () => 0
-  )
+  const [time, setTime] = useState<number>(0)
+  useEffect(() => {
+    setTime(Date.now())
+    const interval = setInterval(() => setTime(Date.now()), 10000)
+    return () => clearInterval(interval)
+  }, [])
+  return time
 }
 
 interface ChatClientProps {
