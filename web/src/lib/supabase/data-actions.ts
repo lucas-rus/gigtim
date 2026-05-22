@@ -5,12 +5,6 @@ import { revalidatePath } from 'next/cache'
 
 // ─── Helpers ────────────────────────────────────────────────
 
-async function getAuthUserId() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id || null
-}
-
 async function getDbUser() {
   const supabase = await createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -371,6 +365,15 @@ export async function updateWorkerProfile(formData: FormData) {
   if (!dbUser) return { error: 'Neautorizat' }
 
   // Use upsert to handle legacy users who might not have a profile row
+  const { data: existing } = await supabase
+    .from('worker_profiles')
+    .select('cnp, id_card_series')
+    .eq('user_id', dbUser.id)
+    .single()
+
+  const cnp = (formData.get('cnp') as string) || existing?.cnp || '0000000000000'
+  const id_card_series = (formData.get('id_card_series') as string) || existing?.id_card_series || 'XX000000'
+
   const { error } = await supabase
     .from('worker_profiles')
     .upsert({
@@ -380,9 +383,8 @@ export async function updateWorkerProfile(formData: FormData) {
       city: formData.get('city') as string,
       county: formData.get('county') as string,
       bio: formData.get('bio') as string,
-      // Default ITM values for legacy updates
-      cnp: '0000000000000',
-      id_card_series: 'XX000000',
+      cnp,
+      id_card_series,
     }, { onConflict: 'user_id' })
 
   if (error) return { error: error.message }
@@ -395,6 +397,14 @@ export async function updateEmployerProfile(formData: FormData) {
   const dbUser = await getDbUser()
   if (!dbUser) return { error: 'Neautorizat' }
 
+  const { data: existing } = await supabase
+    .from('employer_profiles')
+    .select('cui')
+    .eq('user_id', dbUser.id)
+    .single()
+
+  const cui = (formData.get('cui') as string) || existing?.cui || 'RO000000'
+
   const { error } = await supabase
     .from('employer_profiles')
     .upsert({
@@ -403,7 +413,7 @@ export async function updateEmployerProfile(formData: FormData) {
       address: formData.get('address') as string,
       city: formData.get('city') as string,
       county: formData.get('county') as string,
-      cui: 'RO000000', // Default for legacy updates
+      cui,
     }, { onConflict: 'user_id' })
 
   if (error) return { error: error.message }
@@ -430,7 +440,8 @@ export async function getUserReviews(userId: string) {
 
   return reviews.map(r => {
     let reviewerName = 'Utilizator'
-    if (r.reviewer?.role === 'WORKER') {
+    const reviewerObj: any = Array.isArray(r.reviewer) ? r.reviewer[0] : r.reviewer
+    if (reviewerObj?.role === 'WORKER') {
       reviewerName = workers?.find(w => w.user_id === r.reviewer_id)?.full_name || 'Utilizator'
     } else {
       reviewerName = employers?.find(e => e.user_id === r.reviewer_id)?.company_name || 'Angajator'

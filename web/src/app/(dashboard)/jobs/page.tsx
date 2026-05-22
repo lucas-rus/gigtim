@@ -13,5 +13,5 @@ export default async function JobsMarketplacePage() {
   const userRole = profileData?.user.role || 'WORKER'
   const userId = profileData?.user.id || null
 
-  return <JobsClient shifts={shifts} userRole={userRole} userId={userId} />
+  return <JobsClient shifts={shifts} userRole={userRole} _userId={userId} />
 }

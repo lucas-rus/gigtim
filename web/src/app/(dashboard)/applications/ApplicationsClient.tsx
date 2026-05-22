@@ -9,8 +9,10 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { skillLabels, applicationStatusLabels, getLabel } from '@/lib/labels'
-import { updateApplicationStatus } from '@/lib/supabase/data-actions'
-import type { ApplicationStatus, WorkerSkill, UserRole } from '@/lib/types/database'
+import { updateApplicationStatus, getUserReviews } from '@/lib/supabase/data-actions'
+import type { ApplicationStatus, UserRole } from '@/lib/types/database'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Rating } from '@/components/ui/rating'
 
 const statusColors: Record<ApplicationStatus, string> = {
   PENDING: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
@@ -46,6 +48,27 @@ interface Props {
 export function ApplicationsClient({ userRole, initialApplications }: Props) {
   const [apps, setApps] = useState(initialApplications)
   const [isPending, startTransition] = useTransition()
+  const [selectedWorkerReviews, setSelectedWorkerReviews] = useState<any[] | null>(null)
+  const [selectedWorkerName, setSelectedWorkerName] = useState<string>('')
+  const [reviewsDialogOpen, setReviewsDialogOpen] = useState(false)
+  const [loadingReviews, setLoadingReviews] = useState(false)
+
+  function viewWorkerReviews(workerId: string, name: string) {
+    setSelectedWorkerName(name)
+    setSelectedWorkerReviews(null)
+    setReviewsDialogOpen(true)
+    setLoadingReviews(true)
+    startTransition(async () => {
+      try {
+        const data = await getUserReviews(workerId)
+        setSelectedWorkerReviews(data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoadingReviews(false)
+      }
+    })
+  }
 
   function handleStatusUpdate(appId: string, status: 'ACCEPTED' | 'REJECTED') {
     startTransition(async () => {
@@ -150,8 +173,20 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-bold text-amber-400">★ {Number(worker.reliability_score || 5).toFixed(1)}</div>
-                            <div className="text-[10px] text-muted-foreground">fiabilitate</div>
+                            <button
+                              type="button"
+                              onClick={() => viewWorkerReviews(app.worker_id, worker.full_name)}
+                              className="text-lg font-bold text-amber-400 hover:underline hover:text-amber-300 transition-colors cursor-pointer block w-full text-right"
+                            >
+                              ★ {Number(worker.reliability_score || 0).toFixed(1)}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => viewWorkerReviews(app.worker_id, worker.full_name)}
+                              className="text-[10px] text-muted-foreground hover:underline cursor-pointer block w-full text-right"
+                            >
+                              vezi recenzii
+                            </button>
                           </div>
                         </div>
                       </CardHeader>
@@ -235,6 +270,37 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
           )}
         </>
       )}
+      <Dialog open={reviewsDialogOpen} onOpenChange={setReviewsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recenzii - {selectedWorkerName}</DialogTitle>
+            <DialogDescription>Feedback primit de la alți angajatori</DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+            {loadingReviews ? (
+              <p className="text-center text-sm text-muted-foreground">Se încarcă recenziile...</p>
+            ) : !selectedWorkerReviews || selectedWorkerReviews.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-4">Nu există recenzii pentru acest lucrător.</p>
+            ) : (
+              selectedWorkerReviews.map((r: any) => (
+                <div key={r.id} className="p-3 rounded-lg bg-muted/30 border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Rating rating={r.rating} showText={false} />
+                      <span className="text-xs font-semibold">{r.rating}/5</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(r.created_at).toLocaleDateString('ro-RO')}
+                    </span>
+                  </div>
+                  <p className="text-sm italic">"{r.comment || 'Fără comentarii'}"</p>
+                  <p className="text-[10px] text-muted-foreground text-right">— {r.reviewer_name}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

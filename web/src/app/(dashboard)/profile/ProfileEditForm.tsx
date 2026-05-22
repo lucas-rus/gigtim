@@ -26,10 +26,13 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
   const [city, setCity] = useState((profile as any)?.city || '')
   const [county, setCounty] = useState((profile as any)?.county || '')
   const [bio, setBio] = useState((profile as any)?.bio || '')
+  const [cnp, setCnp] = useState((profile as any)?.cnp || '')
+  const [idCardSeries, setIdCardSeries] = useState((profile as any)?.id_card_series || '')
 
   // Employer fields
   const [companyName, setCompanyName] = useState((profile as any)?.company_name || '')
   const [address, setAddress] = useState((profile as any)?.address || '')
+  const [cui, setCui] = useState((profile as any)?.cui || '')
 
   function handleSave() {
     setMessage(null)
@@ -41,11 +44,14 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
       formData.set('city', city)
       formData.set('county', county)
       formData.set('bio', bio)
+      formData.set('cnp', cnp)
+      formData.set('id_card_series', idCardSeries)
     } else {
       formData.set('company_name', companyName)
       formData.set('address', address)
       formData.set('city', city)
       formData.set('county', county)
+      formData.set('cui', cui)
     }
 
     startTransition(async () => {
@@ -98,6 +104,16 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
                     <Input id="edit-city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Timișoara" />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-cnp">CNP</Label>
+                    <Input id="edit-cnp" value={cnp} onChange={(e) => setCnp(e.target.value)} placeholder="13 cifre" maxLength={13} minLength={13} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-id-series">Serie și Număr CI</Label>
+                    <Input id="edit-id-series" value={idCardSeries} onChange={(e) => setIdCardSeries(e.target.value)} placeholder="Ex: TM 123456" />
+                  </div>
+                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-bio">Bio</Label>
                   <Textarea id="edit-bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={3} placeholder="Scrie ceva despre tine..." />
@@ -109,6 +125,10 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
                 <div className="grid gap-2">
                   <Label htmlFor="edit-company">Nume companie</Label>
                   <Input id="edit-company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-cui">CUI</Label>
+                  <Input id="edit-cui" value={cui} onChange={(e) => setCui(e.target.value)} placeholder="Ex: RO12345678" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-address">Adresă</Label>

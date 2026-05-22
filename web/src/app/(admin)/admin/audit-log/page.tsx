@@ -1,5 +1,5 @@
 import { getAdminAuditLog } from '@/lib/supabase/data-actions'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,

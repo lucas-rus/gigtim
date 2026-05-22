@@ -4,7 +4,6 @@ import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { updateUserAvatar } from '@/lib/supabase/auth-actions'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null

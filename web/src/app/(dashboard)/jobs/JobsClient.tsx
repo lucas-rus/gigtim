@@ -24,10 +24,10 @@ function formatDate(iso: string) {
 interface JobsClientProps {
   shifts: any[]
   userRole: UserRole
-  userId: string | null
+  _userId: string | null
 }
 
-export function JobsClient({ shifts, userRole, userId }: JobsClientProps) {
+export function JobsClient({ shifts, userRole, _userId }: JobsClientProps) {
   const [searchCity, setSearchCity] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('ALL')
   const [sortBy, setSortBy] = useState<string>('DATE_ASC')
@@ -85,10 +85,8 @@ export function JobsClient({ shifts, userRole, userId }: JobsClientProps) {
           <div className="space-y-2">
             <Label>Categorie (Rol)</Label>
             <Select value={roleFilter} onValueChange={(val) => setRoleFilter(val ?? 'ALL')}>
-              <SelectTrigger>
-                <span className="truncate">
-                  {roleFilter === 'ALL' ? 'Toate rolurile' : getLabel(skillLabels, roleFilter)}
-                </span>
+              <SelectTrigger className="w-full">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Toate rolurile</SelectItem>
@@ -101,10 +99,8 @@ export function JobsClient({ shifts, userRole, userId }: JobsClientProps) {
           <div className="space-y-2">
             <Label>Sortează după</Label>
             <Select value={sortBy} onValueChange={(val) => setSortBy(val ?? 'DATE_ASC')}>
-              <SelectTrigger>
-                <span className="truncate">
-                  {sortBy === 'DATE_ASC' ? 'Data (cele mai apropiate)' : sortBy === 'PAY_DESC' ? 'Plată (descrescător)' : 'Plată (crescător)'}
-                </span>
+              <SelectTrigger className="w-full">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="DATE_ASC">Data (cele mai apropiate)</SelectItem>

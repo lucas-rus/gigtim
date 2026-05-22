@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
+  Card, CardContent,
 } from '@/components/ui/card'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
@@ -20,7 +19,7 @@ import {
 } from '@/components/ui/table'
 import { skillLabels, shiftStatusLabels, applicationStatusLabels, getLabel } from '@/lib/labels'
 import { createShift } from '@/lib/supabase/data-actions'
-import type { ShiftStatus, WorkerSkill, UserRole } from '@/lib/types/database'
+import type { ShiftStatus, UserRole } from '@/lib/types/database'
 
 const statusColors: Record<ShiftStatus, string> = {
   OPEN: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',

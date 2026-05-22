@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useSyncExternalStore } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -26,16 +26,26 @@ const categoryLabels: Record<ForumCategory, string> = {
   LEGAL: '⚖️ Legal',
 }
 
-interface ForumClientProps {
-  initialPosts: any[]
-  userId: string | null
+const emptySubscribe = () => () => {}
+function useCurrentTime() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => Date.now(),
+    () => 0
+  )
 }
 
-export function ForumClient({ initialPosts, userId }: ForumClientProps) {
+interface ForumClientProps {
+  initialPosts: any[]
+  _userId: string | null
+}
+
+export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
   const [tab, setTab] = useState<string>('ALL')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
+  const now = useCurrentTime()
 
   // New post form
   const [title, setTitle] = useState('')
@@ -95,8 +105,10 @@ export function ForumClient({ initialPosts, userId }: ForumClientProps) {
   }
 
   function timeAgo(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime()
+    if (now === 0) return '...'
+    const diff = now - new Date(iso).getTime()
     const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'acum'
     if (mins < 60) return `${mins}m`
     const hours = Math.floor(mins / 60)
     if (hours < 24) return `${hours}h`

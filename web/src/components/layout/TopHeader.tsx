@@ -21,7 +21,7 @@ interface TopHeaderProps {
 
 export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-4 border-b bg-background/95 px-6 backdrop-blur-sm shadow-sm">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-4 border-b border-border/40 bg-background/40 px-6 backdrop-blur-xl">
       <DropdownMenu>
         <DropdownMenuTrigger render={
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">

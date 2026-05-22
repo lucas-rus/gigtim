@@ -1,12 +1,20 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useRef, useEffect, useSyncExternalStore } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { getChatMessages, sendChatMessage } from '@/lib/supabase/data-actions'
 import { createClient } from '@/lib/supabase/client'
+
+const emptySubscribe = () => () => {}
+function useCurrentTime() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => Date.now(),
+    () => 0
+  )
+}
 
 interface ChatClientProps {
   initialRooms: any[]
@@ -19,6 +27,7 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
   const [newMessage, setNewMessage] = useState('')
   const [isPending, startTransition] = useTransition()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const now = useCurrentTime()
 
   const selectedRoomData = initialRooms.find(r => r.id === selectedRoom)
 
@@ -38,17 +47,22 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
     // Optimistic update
     setMessages(prev => [...prev, {
       id: `temp-${Date.now()}`,
-      content: msg,
+      sender_id: userId,
       sender_name: 'Tu',
       is_mine: true,
+      content: msg,
       created_at: new Date().toISOString(),
     }])
 
     startTransition(async () => {
-      await sendChatMessage(selectedRoom, msg)
-      // Refresh messages to get the real one from DB
-      const updated = await getChatMessages(selectedRoom)
-      setMessages(updated)
+      const result = await sendChatMessage(selectedRoom, msg)
+      if (result.error) {
+        // Simple error logging
+        console.error(result.error)
+      } else {
+        const msgs = await getChatMessages(selectedRoom)
+        setMessages(msgs)
+      }
     })
   }
 
@@ -70,7 +84,7 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
           table: 'chat_messages',
           filter: `room_id=eq.${selectedRoom}`,
         },
-        async (payload) => {
+        async (_payload) => {
           // A new message was inserted via the database
           // Let's refetch all messages to easily ensure we have sender names
           const msgs = await getChatMessages(selectedRoom)
@@ -85,7 +99,8 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
   }, [selectedRoom])
 
   function timeAgo(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime()
+    if (now === 0) return '...'
+    const diff = now - new Date(iso).getTime()
     const mins = Math.floor(diff / 60000)
     if (mins < 1) return 'acum'
     if (mins < 60) return `${mins}m`

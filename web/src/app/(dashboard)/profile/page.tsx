@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { getCurrentProfile } from '@/lib/supabase/auth-actions'
 import { getUserReviews } from '@/lib/supabase/data-actions'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'

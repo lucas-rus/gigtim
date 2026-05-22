@@ -27,13 +27,13 @@ export function DashboardLayoutClient({
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden w-[260px] flex-shrink-0 border-r bg-card/50 backdrop-blur-sm md:block z-40">
+      <aside className="hidden w-[260px] flex-shrink-0 border-r border-border/40 bg-card/30 backdrop-blur-xl md:block z-40">
         <DashboardSidebar userRole={userRole} />
       </aside>
 
       {/* Mobile sidebar */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <div className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur-sm md:hidden">
+        <div className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border/40 bg-background/40 px-4 backdrop-blur-xl md:hidden">
           <div className="flex items-center gap-4">
             <SheetTrigger render={
               <Button variant="ghost" size="sm" className="text-lg">
@@ -61,7 +61,7 @@ export function DashboardLayoutClient({
         </div>
         
         {/* Inner Content Area */}
-        <div className="flex-1 overflow-auto bg-muted/10">
+        <div className="flex-1 overflow-auto bg-background/50">
           <div className="mx-auto max-w-6xl p-4 sm:p-6 md:p-8 pb-20 md:pb-8">
             {children}
           </div>

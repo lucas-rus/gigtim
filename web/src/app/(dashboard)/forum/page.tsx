@@ -10,5 +10,5 @@ export default async function ForumPage() {
     getCurrentProfile(),
   ])
 
-  return <ForumClient initialPosts={posts} userId={profileData?.user.id || null} />
+  return <ForumClient initialPosts={posts} _userId={profileData?.user.id || null} />
 }
