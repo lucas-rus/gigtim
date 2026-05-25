@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>GigTim — Marketplace de Zilieri</title>
+<meta content="Platformă de gig-economy pentru piața HoReCa din România. Conectăm lucrătorii zilieri cu afacerile locale." name="description"/>
+<meta content="zilieri,HoReCa,România,gig economy,muncă temporară" name="keywords"/>
+<link href="/favicon.ico?favicon.0x3dzn~oxb6tn.ico" rel="icon" sizes="256x256" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          background: '#0a0a0c',
+          primary: {
+            DEFAULT: '#4f46e5',
+            foreground: '#ffffff',
+          },
+        },
+        fontFamily: {
+          sans: ['Inter', 'sans-serif'],
+          heading: ['Outfit', 'sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Outfit:wght@500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+</head>
+<body class="min-h-screen bg-background font-sans antialiased text-white selection:bg-indigo-500/30">
+<div class="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+<!-- Background Glows -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[10%] left-[15%] h-[350px] w-[350px] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse"></div>
+<div class="absolute bottom-[15%] right-[10%] h-[400px] w-[400px] rounded-full bg-blue-600/10 blur-[150px]"></div>
+</div>
+<div class="w-full max-w-md space-y-8 relative z-10">
+<!-- Branding -->
+<div class="text-center space-y-3">
+<div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white text-3xl font-bold shadow-lg shadow-indigo-500/20">G</div>
+<h1 class="text-4xl font-extrabold tracking-tight font-heading bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">GigTim</h1>
+<p class="text-sm text-slate-400 font-light tracking-wide">Creează-ți contul în câteva secunde</p>
+</div>
+<!-- Glassmorphic Card -->
+<div class="flex flex-col overflow-hidden rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl shadow-2xl shadow-black/50 transition-all duration-300">
+<div class="px-8 pt-8 pb-6 text-center border-b border-white/5">
+<h2 class="text-2xl font-bold font-heading text-white tracking-tight">Tipul contului</h2>
+<p class="mt-2 text-sm text-slate-400 font-light">Alege cum vrei să folosești platforma</p>
+</div>
+<form action="#" class="flex flex-col">
+<div class="px-8 py-8 space-y-6">
+<!-- Progress Bar -->
+<div class="flex items-center gap-2 mb-2">
+<div class="h-1.5 flex-1 rounded-full transition-colors duration-300 bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.5)]"></div>
+<div class="h-1.5 flex-1 rounded-full transition-colors duration-300 bg-white/10"></div>
+<div class="h-1.5 flex-1 rounded-full transition-colors duration-300 bg-white/10"></div>
+</div>
+<!-- STEP 1: ROLE -->
+<div class="space-y-4 mt-6">
+<label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Tip cont</label>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex flex-col items-center justify-center gap-4 rounded-xl border px-4 py-6 text-sm font-medium transition-all duration-300 border-indigo-500 bg-indigo-500/10 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.15)] scale-[1.02]" type="button">
+<span class="material-symbols-outlined text-4xl text-indigo-400">engineering</span>
+<span class="font-semibold text-white">Zilier / Lucrător</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-4 rounded-xl border px-4 py-6 text-sm font-medium transition-all duration-300 border-white/5 bg-black/20 hover:border-white/10 hover:bg-black/40 text-slate-400" type="button">
+<span class="material-symbols-outlined text-4xl text-slate-400">domain</span>
+<span class="font-semibold text-white">Angajator</span>
+</button>
+</div>
+</div>
+</div>
+<div class="px-8 pb-8 pt-4 bg-black/20 flex flex-col gap-6">
+<div class="flex w-full gap-3">
+<button class="inline-flex w-full h-12 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 hover:from-indigo-400 hover:to-indigo-500 hover:shadow-indigo-500/40 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-background" type="submit">
+  Continuă →
+</button>
+</div>
+<p class="text-center text-sm text-slate-400 font-light">
+  Ai deja cont? 
+  <a class="font-medium text-indigo-400 hover:text-indigo-300 transition-colors" href="/login">Conectează-te</a>
+</p>
+</div>
+</form>
+</div>
+</div>
+</div>
+</body></html>

@@ -8,10 +8,10 @@ export const roleLabels: Record<string, string> = {
 }
 
 export const skillLabels: Record<string, string> = {
-  BARISTA: '☕ Barista',
-  WAITER: '🍽️ Ospătar',
-  DISHWASHER: '🧽 Spălător vase',
-  STAGEHAND: '🎭 Stagehand',
+  BARISTA: 'Barista',
+  WAITER: 'Ospătar',
+  DISHWASHER: 'Spălător vase',
+  STAGEHAND: 'Stagehand',
 }
 
 export const shiftStatusLabels: Record<string, string> = {

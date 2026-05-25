@@ -128,7 +128,7 @@ export async function getMyApplications() {
 
     const { data } = await supabase
       .from('applications')
-      .select('*, job_shifts(role_needed, start_time, end_time, hourly_pay_ron), worker_profiles(full_name, phone_number, city, cnp, id_card_series, reliability_score, total_shifts_completed, skills)')
+      .select('*, job_shifts(role_needed, start_time, end_time, hourly_pay_ron), worker_profiles(user_id, full_name, phone_number, city, cnp, id_card_series, reliability_score, total_shifts_completed, skills, users(avatar_url))')
       .in('shift_id', shiftIds)
       .order('created_at', { ascending: false })
     return data || []
@@ -458,3 +458,123 @@ export async function getUserReviews(userId: string) {
     }
   })
 }
+
+export async function getOrCreateDirectChat(targetUserId: string) {
+  const supabase = await createClient()
+  const dbUser = await getDbUser()
+  if (!dbUser) return { error: 'Neautorizat' }
+
+  // 1. Check if a DIRECT room already exists between these two users
+  const { data: myRooms } = await supabase
+    .from('chat_room_members')
+    .select('room_id')
+    .eq('user_id', dbUser.id)
+
+  const { data: targetRooms } = await supabase
+    .from('chat_room_members')
+    .select('room_id')
+    .eq('user_id', targetUserId)
+
+  let existingRoomId: string | null = null
+
+  if (myRooms && targetRooms) {
+    const myRoomIds = myRooms.map(r => r.room_id)
+    const targetRoomIds = targetRooms.map(r => r.room_id)
+    const commonRoomIds = myRoomIds.filter(id => targetRoomIds.includes(id))
+
+    if (commonRoomIds.length > 0) {
+      // Find if any of these common rooms is a DIRECT room
+      const { data: directRooms } = await supabase
+        .from('chat_rooms')
+        .select('id')
+        .in('id', commonRoomIds)
+        .eq('type', 'DIRECT')
+
+      if (directRooms && directRooms.length > 0) {
+        existingRoomId = directRooms[0].id
+      }
+    }
+  }
+
+  if (existingRoomId) {
+    return { roomId: existingRoomId }
+  }
+
+  // 2. Otherwise, create a new DIRECT room
+  // Find names for room name fallback
+  let workerName = ''
+  let employerName = ''
+  
+  const { data: worker } = await supabase.from('worker_profiles').select('full_name').eq('user_id', dbUser.role === 'WORKER' ? dbUser.id : targetUserId).single()
+  const { data: employer } = await supabase.from('employer_profiles').select('company_name').eq('user_id', dbUser.role === 'EMPLOYER' ? dbUser.id : targetUserId).single()
+  
+  const roomName = `${employer?.company_name || 'Angajator'} & ${worker?.full_name || 'Lucrător'}`
+
+  const { data: newRoom, error: roomError } = await supabase
+    .from('chat_rooms')
+    .insert({
+      type: 'DIRECT',
+      name: roomName
+    })
+    .select('id')
+    .single()
+
+  if (roomError || !newRoom) {
+    return { error: roomError?.message || 'Eroare la crearea camerei' }
+  }
+
+  // Add members
+  const { error: membersError } = await supabase
+    .from('chat_room_members')
+    .insert([
+      { room_id: newRoom.id, user_id: dbUser.id },
+      { room_id: newRoom.id, user_id: targetUserId }
+    ])
+
+  if (membersError) {
+    return { error: membersError.message }
+  }
+
+  return { roomId: newRoom.id }
+}
+
+export async function getPotentialConnections() {
+  const supabase = await createClient()
+  const dbUser = await getDbUser()
+  if (!dbUser) return []
+
+  if (dbUser.role === 'WORKER') {
+    // Get all employers
+    const { data, error } = await supabase
+      .from('employer_profiles')
+      .select('user_id, company_name, city')
+    if (error) {
+      console.error('getPotentialConnections employer error:', error)
+      return []
+    }
+    return data.map(e => ({
+      user_id: e.user_id,
+      name: e.company_name,
+      city: e.city,
+      role: 'EMPLOYER' as const,
+      avatar_url: null
+    }))
+  } else {
+    // Get all workers with avatars
+    const { data, error } = await supabase
+      .from('worker_profiles')
+      .select('user_id, full_name, city, users(avatar_url)')
+    if (error) {
+      console.error('getPotentialConnections worker error:', error)
+      return []
+    }
+    return data.map(w => ({
+      user_id: w.user_id,
+      name: w.full_name,
+      city: w.city,
+      role: 'WORKER' as const,
+      avatar_url: (w.users as any)?.avatar_url || null
+    }))
+  }
+}
+

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GigTim - Turele Mele</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "on-background": "#0b1c30",
+                        "tertiary": "#001c45",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#d8e3fb",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "surface-tint": "#3d5aad",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-container": "#7c97ef",
+                        "secondary-fixed-dim": "#bcc7de",
+                        "outline-variant": "#c4c6d3",
+                        "secondary-container": "#d5e0f8",
+                        "on-tertiary-container": "#6299ff",
+                        "outline": "#747683",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#444651",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-primary-fixed-variant": "#224194",
+                        "on-surface": "#0b1c30",
+                        "surface-container-high": "#dce9ff",
+                        "tertiary-fixed": "#d8e2ff",
+                        "surface-container": "#e5eeff",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary": "#545f73",
+                        "on-primary-fixed": "#00174c",
+                        "inverse-surface": "#213145",
+                        "background": "#f8f9ff",
+                        "primary": "#001851",
+                        "surface": "#f8f9ff",
+                        "primary-container": "#002b7f",
+                        "on-secondary-fixed": "#111c2d",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-container": "#586377",
+                        "tertiary-container": "#00306e",
+                        "surface-bright": "#f8f9ff",
+                        "surface-variant": "#d3e4fe",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary-fixed": "#001a42"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "display-xl": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-xl": ["60px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<aside class="hidden md:flex bg-surface-container-lowest dark:bg-on-background border-r border-outline-variant dark:border-outline fixed left-0 top-0 h-full flex-col py-gutter docked vertical-left w-64 z-20">
+<div class="px-gutter mb-8">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed">GigTim</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1">Day-Labor Platform</p>
+</div>
+<button class="mx-gutter mb-8 bg-primary-container text-on-primary rounded hover:bg-primary transition-colors py-2 px-4 font-label-sm text-label-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            Post a Job
+        </button>
+<nav class="flex-1 flex flex-col gap-1 px-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed font-bold border-r-4 border-primary bg-surface-container-low dark:bg-on-secondary-fixed-variant transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">work</span>
+<span class="font-body-md text-body-md">Browse Jobs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span class="font-body-md text-body-md">My Applications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-body-md text-body-md">Messages</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Earnings</span>
+</a>
+</nav>
+<div class="mt-auto px-4 flex flex-col gap-1 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-outline-variant hover:text-primary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-outline-variant hover:text-primary hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-body-md text-body-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Mobile only in this layout context as side nav takes precedence for desktop, but included per instructions) -->
+<header class="md:hidden bg-surface-container-lowest dark:bg-on-background border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-margin-mobile h-20 sticky top-0 z-20">
+<div class="flex items-center gap-4">
+<button class="text-primary"><span class="material-symbols-outlined">menu</span></button>
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">GigTim</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant"><span class="material-symbols-outlined">notifications</span></button>
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A professional headshot of a young man with a neutral expression, dressed in business casual attire against a clean, light-mode background. The lighting is soft and studio-quality, emphasizing a modern, trustworthy corporate identity within a precise architectural environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCo3wffmsIhptbP3e9Vp1gTrpnFj465n1KmlF0TX57iVNN0ewsp3diu9449Sw2t7EswIBZFIDK4BI8ehSdvu-lkyWANpm8T7PwCRB70trD-u1vgbpXOOBwXRcyhvMdL06ql0l224u9cQL_rzF7CRlFT3FEcvTH_pw-DXvkYf_mF-my9VMg0G-JIyPU5sbzMMR9spzDEFFGnA2G05VTZSppt9yXZXLu8uTc8h7qoOXnxyc2dyM5_7GEcU8R9IDRmAdcycgi9nQz2EDqR"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full flex-1 flex flex-col gap-8">
+<!-- Header Section -->
+<header class="flex flex-col gap-2">
+<h2 class="font-display-xl text-display-xl text-primary-container">Turele Mele</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Gestionează și urmărește activitatea ta de muncă temporară.</p>
+</header>
+<!-- Stats Overview Bento Grid -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-surface-container-lowest border border-surface-dim rounded-lg p-6 flex flex-col gap-2 hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-shadow">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Toate</span>
+<span class="font-headline-lg text-headline-lg text-primary-container font-semibold">24</span>
+</div>
+<div class="bg-surface-container-lowest border border-surface-dim rounded-lg p-6 flex flex-col gap-2 hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-shadow">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Deschise</span>
+<span class="font-headline-lg text-headline-lg text-primary-container font-semibold">3</span>
+</div>
+<div class="bg-surface-container-lowest border border-surface-dim rounded-lg p-6 flex flex-col gap-2 hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-shadow">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Ocupate</span>
+<span class="font-headline-lg text-headline-lg text-primary-container font-semibold">18</span>
+</div>
+<div class="bg-surface-container-low border border-primary-fixed-dim rounded-lg p-6 flex flex-col gap-2 shadow-[0_4px_12px_rgba(15,23,42,0.08)] relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[48px] text-primary-container">sync</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider z-10">În desfășurare</span>
+<span class="font-headline-lg text-headline-lg text-primary-container font-semibold z-10">1</span>
+</div>
+</section>
+<!-- Navigation Tabs -->
+<nav class="border-b border-surface-dim overflow-x-auto hide-scrollbar">
+<ul class="flex gap-8 whitespace-nowrap min-w-max px-2">
+<li class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary cursor-pointer transition-colors font-body-md text-body-md">Toate</li>
+<li class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary cursor-pointer transition-colors font-body-md text-body-md">Deschise</li>
+<li class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary cursor-pointer transition-colors font-body-md text-body-md">Ocupate</li>
+<li class="pb-3 border-b-2 border-primary text-primary-container font-medium cursor-pointer transition-colors font-body-md text-body-md">În desfășurare</li>
+<li class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary cursor-pointer transition-colors font-body-md text-body-md">Finalizat</li>
+<li class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-primary cursor-pointer transition-colors font-body-md text-body-md">Anulat</li>
+</ul>
+</nav>
+<!-- Shift List -->
+<div class="flex flex-col gap-4">
+<!-- Active Shift Card -->
+<article class="bg-surface-container-lowest border border-primary-fixed-dim rounded-lg p-6 shadow-[0_4px_12px_rgba(15,23,42,0.08)] flex flex-col md:flex-row gap-6 items-start md:items-center justify-between transition-all">
+<div class="flex-1 flex flex-col gap-3 w-full">
+<div class="flex items-center justify-between md:justify-start gap-4">
+<h3 class="font-title-md text-title-md text-primary-container">Lucrător Depozit</h3>
+<span class="bg-surface-container-low text-primary-fixed-dim border border-primary-fixed-dim px-2 py-1 rounded font-label-sm text-label-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+                                IN_DESFASURARE
+                            </span>
+</div>
+<div class="flex flex-col md:flex-row gap-4 md:gap-8 text-on-surface-variant font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">domain</span>
+<span>LogisCo Solutions</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">location_on</span>
+<span>Parcul Industrial Vest, Hala 3</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+<span>08:00 - 16:00 (Astăzi)</span>
+</div>
+</div>
+<!-- Progress Bar for Active Shift -->
+<div class="w-full bg-surface-variant rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-primary-container h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>08:00</span>
+<span class="text-primary-container font-medium">5h 12m rămas</span>
+<span>16:00</span>
+</div>
+</div>
+<div class="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-4 border-t md:border-t-0 md:border-l border-surface-dim pt-4 md:pt-0 md:pl-6">
+<div class="text-left md:text-right">
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary-container font-semibold">240 RON</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">30 RON / oră (8h)</div>
+</div>
+<button class="bg-primary-container text-on-primary font-body-md text-body-md py-2 px-6 rounded hover:bg-[#001d57] transition-colors whitespace-nowrap shadow-sm">
+                            Vezi Detalii
+                        </button>
+</div>
+</article>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,459 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { register, resendConfirmation } from '@/lib/supabase/auth-actions'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+
+export default function RegisterPage() {
+  const [error, setError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState(1)
+
+  // Resend Cooldown State
+  const [cooldown, setCooldown] = useState(0)
+
+  // Form State
+  const [role, setRole] = useState<'WORKER' | 'EMPLOYER'>('WORKER')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  
+  // Profile State
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [city, setCity] = useState('')
+  const [county, setCounty] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [cui, setCui] = useState('')
+  const [address, setAddress] = useState('')
+  const [cnp, setCnp] = useState('')
+  const [idSeries, setIdSeries] = useState('')
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (cooldown > 0) {
+      timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
+    }
+    return () => clearTimeout(timer)
+  }, [cooldown])
+
+  const handleNextStep = () => {
+    setError(null)
+    setSuccessMsg(null)
+    if (step === 2) {
+      if (password !== confirmPassword) {
+        setError('Parolele nu coincid.')
+        return
+      }
+      if (password.length < 6) {
+        setError('Parola trebuie să aibă minim 6 caractere.')
+        return
+      }
+    }
+    setStep((s) => s + 1)
+  }
+
+  const handlePrevStep = () => {
+    setError(null)
+    setStep((s) => s - 1)
+  }
+
+  async function handleResend() {
+    if (cooldown > 0) return
+    setLoading(true)
+    setError(null)
+    setSuccessMsg(null)
+    
+    const result = await resendConfirmation(email)
+    if (result?.error) {
+      setError(result.error)
+    } else {
+      setSuccessMsg('Email-ul a fost retrimis cu succes!')
+      setCooldown(60) // 60 seconds cooldown
+    }
+    setLoading(false)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const formData = new FormData()
+    formData.append('role', role)
+    formData.append('email', email)
+    formData.append('password', password)
+    formData.append('phone', phone)
+    formData.append('city', city)
+    formData.append('county', county)
+
+    if (role === 'WORKER') {
+      formData.append('fullName', fullName)
+      formData.append('cnp', cnp)
+      formData.append('idSeries', idSeries)
+    } else {
+      formData.append('companyName', companyName)
+      formData.append('cui', cui)
+      formData.append('address', address)
+    }
+
+    const result = await register(formData)
+    if (result?.error) {
+      setError(result.error)
+      setLoading(false)
+    } else {
+      setStep(4) // Move to success step
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="relative flex min-h-screen items-center justify-center bg-[#0a0a0c] overflow-hidden p-4">
+      {/* Background Radial Glows */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-[10%] left-[15%] h-[350px] w-[350px] rounded-full bg-primary/10 blur-[130px] animate-pulse" />
+        <div className="absolute bottom-[15%] right-[10%] h-[400px] w-[400px] rounded-full bg-indigo-500/5 blur-[160px]" />
+      </div>
+
+      <div className="w-full max-w-md space-y-6 relative z-10">
+        {/* Logo */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground text-2xl font-bold shadow-lg shadow-primary/20">
+            G
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight font-heading bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+            GigTim
+          </h1>
+          <p className="text-sm text-muted-foreground font-light">
+            Creează-ți contul în câteva secunde
+          </p>
+        </div>
+
+        <Card className="border-border/40 bg-card/45 backdrop-blur-xl shadow-2xl shadow-black/40 rounded-2xl transition-all duration-300">
+          <CardHeader className="space-y-1.5 pb-5">
+            <CardTitle className="text-2xl font-bold font-heading text-white">
+              {step === 1 && 'Tipul contului'}
+              {step === 2 && 'Date autentificare'}
+              {step === 3 && 'Profil utilizator'}
+              {step === 4 && 'Verifică email-ul'}
+            </CardTitle>
+            <CardDescription className="text-slate-400 font-light">
+              {step === 1 && 'Alege cum vrei să folosești platforma'}
+              {step === 2 && 'Introdu adresa de email și o parolă sigură'}
+              {step === 3 && 'Completează detaliile pentru a-ți finaliza profilul'}
+              {step === 4 && 'Contul a fost creat cu succes!'}
+            </CardDescription>
+          </CardHeader>
+
+          <form onSubmit={step === 3 ? handleSubmit : (e) => { e.preventDefault(); if (step < 4) handleNextStep(); }}>
+            <CardContent className="space-y-5 pb-4">
+              {/* Progress Bar */}
+              {step < 4 && (
+                <div className="flex items-center gap-2 mb-6">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+                        step >= i ? 'bg-primary' : 'bg-primary/20'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
+                  {error}
+                </div>
+              )}
+              {successMsg && (
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400 animate-in fade-in slide-in-from-top-1 duration-200">
+                  {successMsg}
+                </div>
+              )}
+
+              {/* STEP 1: ROLE */}
+              {step === 1 && (
+                <div className="space-y-4">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tip cont</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRole('WORKER')}
+                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border px-4 py-5 text-sm font-medium transition-all duration-300 ${
+                        role === 'WORKER'
+                          ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/5 scale-[1.02]'
+                          : 'border-border/40 bg-[#121216]/30 hover:border-primary/20 hover:bg-[#121216]/50 text-slate-400'
+                      }`}
+                    >
+                      <span className="text-3xl">👷</span>
+                      <span className="font-semibold text-white">Zilier / Lucrător</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('EMPLOYER')}
+                      className={`flex flex-col items-center justify-center gap-3 rounded-xl border px-4 py-5 text-sm font-medium transition-all duration-300 ${
+                        role === 'EMPLOYER'
+                          ? 'border-primary bg-primary/10 text-primary shadow-lg shadow-primary/5 scale-[1.02]'
+                          : 'border-border/40 bg-[#121216]/30 hover:border-primary/20 hover:bg-[#121216]/50 text-slate-400'
+                      }`}
+                    >
+                      <span className="text-3xl">🏢</span>
+                      <span className="font-semibold text-white">Angajator</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2: CREDENTIALS */}
+              {step === 2 && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="exemplu@email.com"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Parolă</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Minim 6 caractere"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Confirmă Parola</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Rescrie parola"
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* STEP 3: PROFILE */}
+              {step === 3 && (
+                <>
+                  {role === 'WORKER' ? (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullName" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nume complet (conform CI)</Label>
+                        <Input
+                          id="fullName"
+                          placeholder="Ex: Ion Popescu"
+                          required
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="cnp" className="text-xs font-semibold uppercase tracking-wider text-slate-400">CNP</Label>
+                          <Input
+                            id="cnp"
+                            placeholder="13 cifre"
+                            required
+                            minLength={13}
+                            maxLength={13}
+                            value={cnp}
+                            onChange={(e) => setCnp(e.target.value)}
+                            className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="idSeries" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Serie și Număr CI</Label>
+                          <Input
+                            id="idSeries"
+                            placeholder="Ex: TM 123456"
+                            required
+                            value={idSeries}
+                            onChange={(e) => setIdSeries(e.target.value)}
+                            className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="companyName" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nume Companie / SRL</Label>
+                        <Input
+                          id="companyName"
+                          placeholder="Ex: GigTim SRL"
+                          required
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cui" className="text-xs font-semibold uppercase tracking-wider text-slate-400">CUI</Label>
+                        <Input
+                          id="cui"
+                          placeholder="Ex: RO12345678"
+                          required
+                          value={cui}
+                          onChange={(e) => setCui(e.target.value)}
+                          className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="address" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Adresă Sediu</Label>
+                        <Input
+                          id="address"
+                          placeholder="Strada, Număr, Detalii..."
+                          required
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Număr de telefon</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="07XX XXX XXX"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="county" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Județ</Label>
+                      <Input
+                        id="county"
+                        placeholder="Ex: Timiș"
+                        required
+                        value={county}
+                        onChange={(e) => setCounty(e.target.value)}
+                        className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Localitate</Label>
+                      <Input
+                        id="city"
+                        placeholder="Ex: Timișoara"
+                        required
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="bg-[#121216]/50 border-border/40 focus:ring-primary/20 focus:border-primary transition-all duration-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* STEP 4: SUCCESS */}
+              {step === 4 && (
+                <div className="text-center space-y-4 py-4">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+                    <span className="text-3xl text-emerald-500">✉️</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Te-ai înregistrat cu succes!</h3>
+                  <p className="text-sm text-slate-400 font-light leading-relaxed">
+                    Ți-am trimis un link de confirmare la adresa <strong className="text-white">{email}</strong>. 
+                    Te rugăm să îți verifici căsuța de email și să dai click pe link pentru a-ți activa contul.
+                  </p>
+                  
+                  <div className="pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full h-10 rounded-xl border-border/40 hover:bg-[#121216]/50"
+                      onClick={handleResend}
+                      disabled={cooldown > 0 || loading}
+                    >
+                      {cooldown > 0 ? `Așteaptă ${cooldown}s pentru a retrimite` : 'Retrimite email-ul'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+            </CardContent>
+            
+            <CardFooter className="flex flex-col gap-4">
+              {step < 4 && (
+                <div className="flex w-full gap-3">
+                  {step > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePrevStep}
+                      className="w-1/3 h-10 rounded-xl border-border/40 bg-transparent hover:bg-[#121216]/50 text-slate-300"
+                    >
+                      Înapoi
+                    </Button>
+                  )}
+                  <Button
+                    type="submit"
+                    className={`h-10 rounded-xl font-medium bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/95 hover:to-indigo-600/95 shadow-md shadow-primary/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20 active:scale-98 ${step > 1 ? 'w-2/3' : 'w-full'}`}
+                    disabled={loading}
+                  >
+                    {step === 3 
+                      ? (loading ? 'Se creează...' : 'Finalizează contul') 
+                      : 'Continuă →'}
+                  </Button>
+                </div>
+              )}
+              
+              {step === 4 && (
+                <Button render={<Link href="/login" />} className="w-full h-10 rounded-xl bg-gradient-to-r from-primary to-indigo-600 shadow-md">
+                  Mergi la Conectare
+                </Button>
+              )}
+              
+              <p className="text-center text-sm text-slate-400 font-light">
+                Ai deja cont?{' '}
+                <Link
+                  href="/login"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Conectează-te
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    </div>
+  )
+}

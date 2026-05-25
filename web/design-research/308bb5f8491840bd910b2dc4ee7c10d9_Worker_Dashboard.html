@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zilier - Dashboard Zilier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#20ad98",
+                      "on-primary-fixed": "#00174c",
+                      "primary-fixed": "#dbe1ff",
+                      "tertiary": "#00231d",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#f9f9fc",
+                      "on-secondary": "#ffffff",
+                      "tertiary-container": "#003a31",
+                      "surface-container": "#eeeef0",
+                      "error": "#ba1a1a",
+                      "on-tertiary-fixed": "#00201b",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "on-tertiary": "#ffffff",
+                      "on-surface-variant": "#444651",
+                      "surface-tint": "#3d5aad",
+                      "tertiary-fixed": "#7cf7df",
+                      "on-error": "#ffffff",
+                      "outline-variant": "#c4c6d3",
+                      "tertiary-fixed-dim": "#5ddac3",
+                      "inverse-on-surface": "#f0f0f3",
+                      "secondary-fixed": "#ffe17b",
+                      "secondary-container": "#ffd31a",
+                      "on-secondary-fixed": "#231b00",
+                      "on-primary": "#ffffff",
+                      "surface-container-highest": "#e2e2e5",
+                      "surface": "#f9f9fc",
+                      "secondary-fixed-dim": "#ecc300",
+                      "primary-container": "#002b7f",
+                      "on-error-container": "#93000a",
+                      "background": "#f9f9fc",
+                      "on-tertiary-fixed-variant": "#005045",
+                      "surface-variant": "#e2e2e5",
+                      "surface-container-low": "#f3f3f6",
+                      "on-surface": "#1a1c1e",
+                      "on-primary-container": "#7c97ef",
+                      "inverse-primary": "#b5c4ff",
+                      "surface-dim": "#dadadc",
+                      "on-primary-fixed-variant": "#224194",
+                      "surface-container-high": "#e8e8ea",
+                      "on-background": "#1a1c1e",
+                      "outline": "#747683",
+                      "secondary": "#715c00",
+                      "primary": "#001851",
+                      "on-secondary-container": "#705b00",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#554500",
+                      "inverse-surface": "#2f3133"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-padding-desktop": "24px",
+                      "stack-sm": "4px",
+                      "gutter": "16px",
+                      "stack-md": "12px",
+                      "base": "8px",
+                      "stack-lg": "24px",
+                      "container-padding-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "button-text": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "button-text": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body { background-color: #F8F9FA; }
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        /* Hide scrollbar for clean horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background font-body-md antialiased pb-[80px]">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-on-background shadow-sm w-full top-0 sticky z-40 flex justify-between items-center px-container-padding-mobile py-stack-md w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-surface-container-high">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A professional, well-lit headshot of a young male worker wearing a safety vest and hard hat, smiling confidently. The lighting is bright and modern, set against an out-of-focus construction site backdrop. The color palette emphasizes warm skin tones and the bright yellow of the safety gear, fitting the reliable and accessible aesthetic of a labor platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMJ_HdTaRQi5GKNJlwHeofX7o2mjOu0ZkIIepOhzbeQllXtwkG1wziIXTYhBogUBvNAa8Z54nKcPrf5TY1FTLOgFQtlJUBzjUqRwXbNBtw6z0JmojLQWlFNvAC9HSiJdw6eaK9p0UqQK6JIPTgklUN5SYC4EpaFUubv7ieW3acTBkgOaxcFB2aiEwnFa1sla8AeEFGqfIx3cP2z2GlroKuRlziC2xXfn9OmVDcrTzLTELTi5f55xDCWVoIR5ZAEbIuMpp4v2V4VJAh"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Zilier</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Salut, Andrei!</p>
+</div>
+</div>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform text-on-surface-variant dark:text-outline-variant p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+</button>
+</header>
+<main class="max-w-7xl mx-auto px-container-padding-mobile md:px-container-padding-desktop pt-stack-lg pb-stack-lg flex flex-col gap-8">
+<!-- Summary Card: Câștiguri săptămâna asta -->
+<section>
+<div class="glass-card rounded-xl p-6 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] border border-surface-container-low relative overflow-hidden">
+<!-- Decorative Background Element -->
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-secondary-container/20 rounded-full blur-3xl pointer-events-none"></div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2">Câștiguri săptămâna asta</h2>
+<div class="flex items-end gap-3 mb-6">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tight">850 RON</span>
+<span class="font-label-md text-label-md text-on-surface-variant pb-1 flex items-center text-on-tertiary-container">
+<span class="material-symbols-outlined text-[16px] mr-1">trending_up</span> +12%
+                    </span>
+</div>
+<div class="flex gap-4">
+<div class="flex-1 bg-surface-container-low rounded-lg p-3">
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Ore Lucrate</p>
+<p class="font-headline-sm text-headline-sm text-on-surface">32h</p>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-lg p-3">
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Joburi Finalizate</p>
+<p class="font-headline-sm text-headline-sm text-on-surface">4</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Content Area: Joburi Disponibile -->
+<section>
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Joburi Disponibile</h2>
+<button class="font-button-text text-button-text text-primary-container hover:opacity-80 transition-opacity">Vezi toate</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Job Card 1 -->
+<article class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] border border-surface-container-low hover:shadow-[0px_8px_16px_0px_rgba(0,0,0,0.08)] transition-shadow duration-300 relative group flex flex-col justify-between min-h-[180px]">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div class="inline-flex items-center gap-1 bg-[#00A38E]/10 text-on-tertiary-container px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span class="font-label-md text-label-md font-bold">Plată azi</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">200 RON<span class="text-label-md font-normal text-on-surface-variant">/zi</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 leading-tight">Manipulant Marfă</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">domain</span> Depozit Logistics SRL
+                        </p>
+</div>
+<div class="mt-auto">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">location_on</span> 2.5 km • București
+                            </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 08:00 - 16:00
+                            </div>
+</div>
+<button class="w-full bg-secondary-container text-on-secondary-container font-button-text text-button-text py-3 rounded-lg hover:bg-secondary-fixed-dim transition-colors active:scale-[0.98] font-bold">
+                            Aplică Rapid
+                        </button>
+</div>
+</article>
+<!-- Job Card 2 -->
+<article class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] border border-surface-container-low hover:shadow-[0px_8px_16px_0px_rgba(0,0,0,0.08)] transition-shadow duration-300 relative group flex flex-col justify-between min-h-[180px]">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface-variant px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span class="font-label-md text-label-md font-bold">Angajator Verificat</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">250 RON<span class="text-label-md font-normal text-on-surface-variant">/zi</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 leading-tight">Lucrător Construcții (Nespecificat)</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">domain</span> BuildRom Construct
+                        </p>
+</div>
+<div class="mt-auto">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">location_on</span> 4.1 km • Ilfov
+                            </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 07:00 - 17:00
+                            </div>
+</div>
+<button class="w-full bg-secondary-container text-on-secondary-container font-button-text text-button-text py-3 rounded-lg hover:bg-secondary-fixed-dim transition-colors active:scale-[0.98] font-bold">
+                            Aplică Rapid
+                        </button>
+</div>
+</article>
+<!-- Job Card 3 -->
+<article class="bg-surface-container-lowest rounded-xl p-stack-md shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] border border-surface-container-low hover:shadow-[0px_8px_16px_0px_rgba(0,0,0,0.08)] transition-shadow duration-300 relative group flex flex-col justify-between min-h-[180px]">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div class="inline-flex items-center gap-1 bg-[#00A38E]/10 text-on-tertiary-container px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span class="font-label-md text-label-md font-bold">Plată azi</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">180 RON<span class="text-label-md font-normal text-on-surface-variant">/zi</span></span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 leading-tight">Ajutor Bucătar Event</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">domain</span> Catering Premium SA
+                        </p>
+</div>
+<div class="mt-auto">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">location_on</span> 1.2 km • Centru
+                            </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 14:00 - 22:00
+                            </div>
+</div>
+<button class="w-full bg-secondary-container text-on-secondary-container font-button-text text-button-text py-3 rounded-lg hover:bg-secondary-fixed-dim transition-colors active:scale-[0.98] font-bold">
+                            Aplică Rapid
+                        </button>
+</div>
+</article>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface shadow-[0px_-2px_8px_0px_rgba(0,0,0,0.04)] fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-3 pb-safe z-50 md:hidden border-t-0">
+<!-- Tab 1: Caută (Active intent: Explore/Search) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary-fixed-dim text-on-secondary-container dark:text-on-secondary-fixed rounded-xl px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="search">search</span>
+<span class="font-label-md text-label-md mt-1">Caută</span>
+</a>
+<!-- Tab 2: Joburile Mele -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="work_outline">work_outline</span>
+<span class="font-label-md text-label-md mt-1">Joburile Mele</span>
+</a>
+<!-- Tab 3: Mesaje -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform rounded-xl relative" href="#">
+<span class="absolute top-1 right-3 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface-container-lowest"></span>
+<span class="material-symbols-outlined" data-icon="chat_bubble_outline">chat_bubble_outline</span>
+<span class="font-label-md text-label-md mt-1">Mesaje</span>
+</a>
+<!-- Tab 4: Profil -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="person_outline">person_outline</span>
+<span class="font-label-md text-label-md mt-1">Profil</span>
+</a>
+</nav>
+</body></html>

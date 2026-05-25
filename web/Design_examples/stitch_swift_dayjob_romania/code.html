@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zilier Pro - Detalii Job</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&amp;family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Guidelines -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#586377",
+                        "primary-fixed": "#dbe1ff",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-container": "#00306e",
+                        "error": "#ba1a1a",
+                        "surface": "#f8f9ff",
+                        "on-surface": "#0b1c30",
+                        "surface-tint": "#3d5aad",
+                        "on-background": "#0b1c30",
+                        "surface-container": "#e5eeff",
+                        "on-primary-fixed-variant": "#224194",
+                        "secondary-container": "#d5e0f8",
+                        "background": "#f8f9ff",
+                        "on-secondary-fixed": "#111c2d",
+                        "inverse-primary": "#b5c4ff",
+                        "primary": "#001851",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "primary-container": "#002b7f",
+                        "tertiary-fixed": "#d8e2ff",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "secondary-fixed-dim": "#bcc7de",
+                        "on-error": "#ffffff",
+                        "secondary": "#545f73",
+                        "outline": "#747683",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "tertiary": "#001c45",
+                        "on-tertiary-fixed": "#001a42",
+                        "on-primary-container": "#7c97ef",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-high": "#dce9ff",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#d8e3fb",
+                        "on-primary-fixed": "#00174c",
+                        "surface-container-highest": "#d3e4fe",
+                        "outline-variant": "#c4c6d3",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#213145",
+                        "on-surface-variant": "#444651",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary-container": "#6299ff",
+                        "surface-variant": "#d3e4fe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "margin-desktop": "32px",
+                        "unit": "8px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-sm": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "title-md": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "display-xl": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-xl": ["60px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8f9ff;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c4c6d3;
+            border-radius: 4px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col selection:bg-primary-container selection:text-on-primary">
+<!-- TopAppBar (Shared Component injected styles) -->
+<header class="bg-surface dark:bg-surface-dim docked full-width top-0 z-50 border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center w-full px-margin-mobile h-16 fixed">
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors text-on-surface-variant dark:text-surface-variant scale-95 duration-100">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="font-title-md text-title-md font-bold text-primary dark:text-primary-fixed tracking-tight">
+            Zilier Pro
+        </div>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors text-on-surface-variant dark:text-surface-variant scale-95 duration-100">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-16 pb-28 w-full max-w-container-max mx-auto md:px-margin-desktop">
+<!-- Map Header Hero -->
+<div class="w-full h-48 md:h-64 bg-surface-container relative overflow-hidden md:mt-6 md:rounded-xl md:border md:border-outline-variant" data-alt="A clean, highly detailed top-down view of an industrial map layout or logistics park. The color palette is minimal and professional, utilizing soft cool-toned grays, pure whites, and deep indigo accents indicative of a modern light-mode UI. Lighting is flat and shadowless, emphasizing geometric precision and structural clarity, conveying a sense of organized efficiency and industrial-grade stability." data-location="Bucuresti, Sector 6, Romania" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDUGZPSQxDAyvHeB3Nl_E9ni89PNws_iSKOb0CA7zR4yDBrGjMtnNSUA_W123O2orosMvJMzjZA7YSUWPlegNvmVCrDrj8KD7keT-DvWKN6HBQsJg4vudCAbibWX9ydh9XeveImA47KmBwQWf6ty-7DBvn4Q_iDLmPhMsdv8FOXv1r4e4ASGz1XRc2ok-cy5KfLDaS8Y4KSHk5z1V88nhQiOY1syh9r9gy6iIyM8nRZU3HOSOyIetze3UiGGCXeI5tmM-P_XJqfh062'); background-size: cover; background-position: center;">
+<!-- Gradient Overlay for contrast -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+<div class="bg-surface-container-lowest border border-outline-variant px-3 py-1.5 rounded-DEFAULT shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[18px]">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase">Sector 6, Bld. Preciziei</span>
+</div>
+</div>
+</div>
+<div class="px-margin-mobile md:px-0 mt-6 space-y-8">
+<!-- Job Title & Primary Info -->
+<section class="space-y-4">
+<div class="flex justify-between items-start gap-4">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-background tracking-tight">
+                        Manipulant Marfă Depozit
+                    </h1>
+<div class="bg-primary-container text-on-primary px-3 py-1.5 rounded-DEFAULT flex-shrink-0 flex items-center gap-1 shadow-sm">
+<span class="font-title-md text-title-md">250</span>
+<span class="font-label-sm text-label-sm uppercase mt-1">RON/zi</span>
+</div>
+</div>
+<!-- Date & Time Bento Row -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg flex items-start gap-3">
+<div class="p-2 bg-surface-container-low rounded text-primary-container">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Data Start</p>
+<p class="font-title-md text-title-md text-on-surface">12 Oct 2023</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg flex items-start gap-3">
+<div class="p-2 bg-surface-container-low rounded text-primary-container">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Program</p>
+<p class="font-title-md text-title-md text-on-surface">08:00 - 16:30</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Important Details Bento Grid -->
+<section>
+<h2 class="font-title-md text-title-md text-on-background mb-4">Detalii Importante</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Payment -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-shadow">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary-container icon-fill">payments</span>
+<h3 class="font-label-sm text-label-sm text-on-surface uppercase">Plata</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">La finalul zilei, cash sau transfer bancar instant.</p>
+</div>
+<!-- Transport -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-shadow">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary-container icon-fill">directions_bus</span>
+<h3 class="font-label-sm text-label-sm text-on-surface uppercase">Transport</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Asigurat de la statia de metrou Păcii.</p>
+</div>
+<!-- Equipment -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-shadow">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary-container icon-fill">construction</span>
+<h3 class="font-label-sm text-label-sm text-on-surface uppercase">Echipament</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Bocanci cu vârf metalic necesari. Vestă oferită la locație.</p>
+</div>
+</div>
+</section>
+<!-- Description -->
+<section>
+<h2 class="font-title-md text-title-md text-on-background mb-4">Descrierea Muncii</h2>
+<div class="bg-surface-container-lowest border border-outline-variant p-5 rounded-lg space-y-4">
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Căutăm personal necalificat pentru manipulare marfă în depozitul nostru logistic principal. Activitatea constă în descărcarea și sortarea paleților cu bunuri de larg consum, utilizând lize manuale și electrice.
+                    </p>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Este necesară o condiție fizică bună, deoarece mediul de lucru este dinamic. Se lucrează într-un mediu curat, organizat la standarde internaționale de siguranță. Pauza de masă de 45 de minute este inclusă în program.
+                    </p>
+<div class="bg-surface-container-low p-3 rounded border border-surface-variant flex items-start gap-3 mt-4">
+<span class="material-symbols-outlined text-tertiary-container mt-0.5">info</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-wide">Necesar act de identitate la intrarea în tură.</span>
+</div>
+</div>
+</section>
+<!-- Employer Profile Snippet -->
+<section>
+<h2 class="font-title-md text-title-md text-on-background mb-4">Angajator</h2>
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg flex items-center justify-between hover:bg-surface transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant flex-shrink-0" data-alt="A minimalist, high-contrast corporate logo or abstract building facade snippet. Rendered in a cool-toned light mode palette featuring pristine whites, subtle greys, and deep indigo. The image feels structured, authoritative, and perfectly aligned with a professional mid-century modernist aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDqTiW7EE8zcXMhqqN8HnnYQ4xn5H-iBrfWgiIiP7_x0_lSR-X93eDwAFQ4uLs7poTPU4TabJtsVooyyRHz7nLhzKv1tEeddXzsufkQIVw479lRlJEys2coTzChAHpH10NbIjltei5sXWLVAVpbtgQM7WIMZ9GfxM0cpoj-la6mnpSErGEBeZrM-u7cE1YE0evQqCxHKDzacbN754NAAn4onaySzn0Hn5x24HAa1B4kVGm67fLK7Eup1i6l5WLpce01uJgSMTFaPtrq'); background-size: cover; background-position: center;">
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface group-hover:text-primary-container transition-colors">LogiCorp Solutions SRL</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-primary text-[16px] icon-fill">star</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">4.9/5 <span class="text-outline">(124 recenzii)</span></span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary-container transition-colors">chevron_right</span>
+</div>
+</section>
+</div>
+</main>
+<!-- Fixed Bottom Application CTA -->
+<div class="fixed bottom-0 w-full bg-surface-container-lowest border-t border-outline-variant p-4 z-50 pb-safe md:px-margin-desktop shadow-[0_-4px_12px_rgba(15,23,42,0.04)]">
+<div class="max-w-container-max mx-auto flex items-center justify-between gap-4">
+<div class="hidden md:block flex-shrink-0">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Câștig estimat</p>
+<p class="font-title-md text-title-md text-on-surface">250 RON</p>
+</div>
+<button class="w-full md:w-auto flex-grow md:flex-grow-0 bg-primary-container hover:bg-[#001d57] text-on-primary font-title-md text-title-md py-3 px-8 rounded-DEFAULT flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface">
+<span>Aplică Acum</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Safe Area Utility for Mobile Browsers -->
+<style>
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+    </style>
+</body></html>

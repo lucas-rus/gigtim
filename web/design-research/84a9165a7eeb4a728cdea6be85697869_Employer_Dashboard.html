@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+
+<html lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zilier - Panou Angajator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#20ad98",
+                        "on-primary-fixed": "#00174c",
+                        "primary-fixed": "#dbe1ff",
+                        "tertiary": "#00231d",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f9f9fc",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#003a31",
+                        "surface-container": "#eeeef0",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#00201b",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#444651",
+                        "surface-tint": "#3d5aad",
+                        "tertiary-fixed": "#7cf7df",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c4c6d3",
+                        "tertiary-fixed-dim": "#5ddac3",
+                        "inverse-on-surface": "#f0f0f3",
+                        "secondary-fixed": "#ffe17b",
+                        "secondary-container": "#ffd31a",
+                        "on-secondary-fixed": "#231b00",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e2e2e5",
+                        "surface": "#f9f9fc",
+                        "secondary-fixed-dim": "#ecc300",
+                        "primary-container": "#002b7f",
+                        "on-error-container": "#93000a",
+                        "background": "#f9f9fc",
+                        "on-tertiary-fixed-variant": "#005045",
+                        "surface-variant": "#e2e2e5",
+                        "surface-container-low": "#f3f3f6",
+                        "on-surface": "#1a1c1e",
+                        "on-primary-container": "#7c97ef",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-dim": "#dadadc",
+                        "on-primary-fixed-variant": "#224194",
+                        "surface-container-high": "#e8e8ea",
+                        "on-background": "#1a1c1e",
+                        "outline": "#747683",
+                        "secondary": "#715c00",
+                        "primary": "#001851",
+                        "on-secondary-container": "#705b00",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#554500",
+                        "inverse-surface": "#2f3133"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding-desktop": "24px",
+                        "stack-sm": "4px",
+                        "gutter": "16px",
+                        "stack-md": "12px",
+                        "base": "8px",
+                        "stack-lg": "24px",
+                        "container-padding-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "button-text": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "button-text": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-[80px]">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-on-background shadow-sm z-40 flex justify-between items-center px-container-padding-mobile py-stack-md">
+<div class="flex items-center gap-gutter">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden" data-alt="A professional headshot of a middle-aged man in a casual business environment. The lighting is bright and clear, reflecting a modern corporate setting. The background is slightly blurred but suggests a modern office space. The color palette is neutral with soft tones, fitting a reliable and professional aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD02iuRXQY1tIOI4_9NGbq-1Hpa6wi9s8H-tKF6a608MLFzOgullbiBll9LJO4-uAqxgN5AVmquU1--xmc_vsByrIyDStpUAfbogRes6hegy2BwuanCWpcQS6HZnO76B3y37mJcDAb3oj79hjxhT1D-WgnYeV3iE6fbEF-eku8ZyAugdc49eVvHLcaskIXDgctdZ_-P4bnZ6eR6A7ZvnSHt6ppApljRymZiEBX2LDy5Sgcrgo0fs__QGiPfJgJ3ug1bo8bwV-UOcIJ9'); background-size: cover; background-position: center;"></div>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Zilier</span>
+</div>
+<button class="text-on-surface-variant dark:text-outline-variant hover:opacity-80 transition-opacity active:scale-95 transition-transform p-2">
+<span class="material-symbols-outlined text-2xl">location_on</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="px-container-padding-mobile md:px-container-padding-desktop max-w-[1140px] mx-auto py-stack-lg flex flex-col gap-stack-lg">
+<!-- Welcome & CTA Section -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-stack-md">
+<div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface">Panou Angajator</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-stack-sm">Gestionează anunțurile și echipele tale.</p>
+</div>
+<button class="bg-secondary-container text-on-secondary-fixed font-button-text text-button-text px-6 py-3 rounded-lg shadow-[0px_8px_16px_0px_rgba(0,0,0,0.08)] hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 w-full md:w-auto justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+                Postează un Job
+            </button>
+</section>
+<!-- Bento Grid: Active Jobs -->
+<section>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Anunțuri Active</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Job Card 1 -->
+<article class="bg-surface-container-lowest rounded-2xl shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] p-stack-md flex flex-col gap-stack-md relative overflow-hidden border border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div>
+<span class="inline-flex items-center gap-1 bg-[#00A38E]/10 text-[#00A38E] font-label-md text-label-md px-2 py-1 rounded-full mb-2">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                Urgent
+                            </span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Muncitori Construcții</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+                                București, Sector 3
+                            </p>
+</div>
+<div class="text-right">
+<span class="font-headline-sm text-headline-sm text-primary block">250 RON</span>
+<span class="font-label-md text-label-md text-on-surface-variant">/zi</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-stack-sm flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Confirmați:</span>
+<span class="font-headline-sm text-headline-sm text-primary">3 <span class="text-on-surface-variant text-base font-normal">din 5</span></span>
+</div>
+<!-- Applicant Avatars -->
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high" data-alt="Close up portrait of a young male worker in a casual setting. Clear, natural lighting highlighting facial features. Neutral background, modern and clean aesthetic. High contrast, professional photography suitable for a profile picture." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAnJ1zaGs_M8lquvtNQRtb0c8dMAGClqIOUtQYAs1Gcs5BWIV79Ijz0rXhLCAMKIOnsTft8CuZpwNLnQFLbvtnAXr1w9obcMTJMwzNX0PKqi4q1Vd85dGHjk_EhgCWsUocTG__zfR7iKZALonNa3d_3BzO0BB8Jc0k1oR4HYBL_ftuXVTakNDbls3DKGwv7DSzZy751f50h8kHVIbMHZkuJ8xvEd5toeEAXthmzDOihgy4KnkNf1XrMbFpEladgN0qtuWnosWWnti2m'); background-size: cover;"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high" data-alt="Portrait of a mature male professional. Natural light, subtle shadows. The subject is looking directly at the camera with a confident expression. The style is modern corporate, emphasizing reliability and approachability. Background is non-distracting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAJOR7JGpny2OT0ZJnwFR73BImapj2z-e0phiznVIvmK_BwF51huiA2D0JfHcoKCA4CfExtYEVYSoGtSOI1pRvqM1jSsNrdGHHCc9u8_UNOq7jnkJ3h_SBjNv5Ykcasw7YZUWPHqOYLFsSLaXqfKYxFY_3LMxfSvcLJqGLyk4cTb-OuUd_NcFf3fF4opl3Auuwpt116WU2x8xZNxH2IRkBNkLBamLOmmvlp_c8THRwFW74WO2lfcsu2nYXcl_Bciw20IlgNQU7HOWR1'); background-size: cover;"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high" data-alt="A portrait of a male day laborer smiling slightly. Bright daylight illumination, highlighting a sense of readiness and hard work. The photo is styled for a modern app interface, clean and high quality. Simple, uncluttered background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD7G4Svq2QR2n-lgG4Gj6H0xLWxrdgCpI3KeGlNSetY5nQoVQruDz9R4R2JjIa-j-IoS_qhRQnDS4jECMxC7lrZUgE3EKFyVLBWhL8HtwOhM7znJXiEt0s3zKgGCavU1UFTFjEpk-LTp3BdUPHh8X72FrFFhTjFW0rDTLgeXJpHlN7bwFGh3YkRp62DLAwlQaSw4cvlQeSdNqkgdHSB30QMa3cs_Kum2uccVDoGhadSerAwWaxVgk1izVQ_3MztPlxSm8zee3jb5Lhs'); background-size: cover;"></div>
+</div>
+<button class="mt-auto bg-primary-container text-on-primary font-button-text text-button-text py-2 rounded-lg hover:opacity-90 transition-opacity active:scale-95 text-center w-full">
+                        Gestionează
+                    </button>
+</article>
+<!-- Job Card 2 -->
+<article class="bg-surface-container-lowest rounded-2xl shadow-[0px_2px_8px_0px_rgba(0,0,0,0.04)] p-stack-md flex flex-col gap-stack-md relative overflow-hidden border border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div>
+<span class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface-variant font-label-md text-label-md px-2 py-1 rounded-full mb-2">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                                Mâine
+                            </span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Manipulant Marfă</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+                                Ilfov, Otopeni
+                            </p>
+</div>
+<div class="text-right">
+<span class="font-headline-sm text-headline-sm text-primary block">200 RON</span>
+<span class="font-label-md text-label-md text-on-surface-variant">/zi</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-stack-sm flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Confirmați:</span>
+<span class="font-headline-sm text-headline-sm text-primary">1 <span class="text-on-surface-variant text-base font-normal">din 2</span></span>
+</div>
+<!-- Applicant Avatars -->
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container-high" data-alt="Headshot of a male worker in his 30s. The lighting is even and bright, casting minimal shadows. He has a neutral, professional demeanor. The image is cropped closely for a small circular avatar, fitting a modern UI design." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDjiyjAanc1GXoIjYlJff3APbD3yzlans7a3WnQLuMWh2D3yqZg_1uhOPtszLWwmDkITVTv8XvqRmHLMS7SDE3uWWym1gYkgfIL7-kqS3xJJMDToR1kRoKtmnHX8jfbAUWPRc0XZyHaznQVPiwg8VSC8H6DokNtaGwe0l9FCMedKPWO6N2XmLY69gE_VC3M5ca53tzSzbfzvGerYhwAjT1COBGbI_kbL7m9b508J5grgWmXbvj8FoeM9wXLp-djLLNR6n1XsVWWVqV_'); background-size: cover;"></div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-outline-variant text-sm">person</span>
+</div>
+</div>
+<button class="mt-auto bg-primary-container text-on-primary font-button-text text-button-text py-2 rounded-lg hover:opacity-90 transition-opacity active:scale-95 text-center w-full">
+                        Gestionează
+                    </button>
+</article>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-3 pb-safe bg-surface-container-lowest dark:bg-inverse-surface shadow-[0px_-2px_8px_0px_rgba(0,0,0,0.04)] z-50 md:hidden">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl mb-1">search</span>
+<span class="font-label-md text-label-md">Caută</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary-fixed-dim text-on-secondary-container dark:text-on-secondary-fixed rounded-xl px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl mb-1" style="font-variation-settings: 'FILL' 1;">work_outline</span>
+<span class="font-label-md text-label-md">Joburile Mele</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl mb-1">chat_bubble_outline</span>
+<span class="font-label-md text-label-md">Mesaje</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1.5 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl mb-1">person_outline</span>
+<span class="font-label-md text-label-md">Profil</span>
+</button>
+</nav>
+</body></html>

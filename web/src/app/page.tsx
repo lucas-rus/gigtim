@@ -1,16 +1,17 @@
 import Link from 'next/link'
+import { Shield, ClipboardList, MessageSquare, BarChart3, Star, Users2, Zap, CheckCircle2, PhoneCall, Lock } from 'lucide-react'
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans">
       {/* ── Navbar ─────────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-md shadow-primary/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded bg-primary text-primary-foreground text-sm font-bold">
               G
             </div>
-            <span className="text-lg font-bold tracking-tight">GigTim</span>
+            <span className="text-lg font-bold tracking-tight font-heading text-primary dark:text-primary">GigTim</span>
           </Link>
           <div className="hidden items-center gap-8 text-sm md:flex">
             <a href="#features" className="text-muted-foreground transition-colors hover:text-foreground">
@@ -52,7 +53,7 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-28 md:pt-32 md:pb-40">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
+            <div className="mb-6 inline-flex items-center gap-2 rounded border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary font-mono uppercase tracking-wider">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
@@ -60,7 +61,7 @@ export default function LandingPage() {
               Acum activ în toată România 🇷🇴
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+            <h1 className="text-4xl font-bold tracking-tight font-heading sm:text-5xl md:text-6xl lg:text-7xl">
               Găsește zilieri{' '}
               <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">
                 de încredere
@@ -69,7 +70,7 @@ export default function LandingPage() {
               în câteva minute
             </h1>
 
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl font-sans">
               Platformă de gig-economy pentru piața HoReCa din România.
               Conectăm lucrătorii zilieri verificați cu afacerile care au nevoie de ei.
             </p>
@@ -112,7 +113,7 @@ export default function LandingPage() {
       <section id="features" className="border-t border-border/40 bg-card/30">
         <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight font-heading md:text-4xl">
               Tot ce ai nevoie,{' '}
               <span className="text-primary">într-un singur loc</span>
             </h2>
@@ -124,44 +125,44 @@ export default function LandingPage() {
           <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                icon: '🛡️',
+                icon: <Shield className="h-6 w-6 text-primary animate-pulse" />,
                 title: 'Verificare ID automată',
                 desc: 'Identitatea lucrătorilor este verificată automat prin Persona — OCR pe CI + recunoaștere facială.',
               },
               {
-                icon: '📋',
+                icon: <ClipboardList className="h-6 w-6 text-primary" />,
                 title: 'Management ture',
                 desc: 'Publică ture, primește aplicări, acceptă sau respinge candidați — totul dintr-un singur panou.',
               },
               {
-                icon: '💬',
+                icon: <MessageSquare className="h-6 w-6 text-primary" />,
                 title: 'Chat în timp real',
                 desc: 'Comunică instant cu lucrătorii acceptați prin chat-ul integrat, cu notificări push.',
               },
               {
-                icon: '📊',
+                icon: <BarChart3 className="h-6 w-6 text-primary" />,
                 title: 'Export ITM automat',
                 desc: 'Generează automat registrul zilierilor conform Legii 52/2011 — CNP, CI, date complete.',
               },
               {
-                icon: '⭐',
+                icon: <Star className="h-6 w-6 text-primary" />,
                 title: 'Sistem de recenzii',
                 desc: 'Recenzii mutuale după fiecare tură. Scorul de fiabilitate ajută angajatorii să aleagă mai bine.',
               },
               {
-                icon: '🗣️',
+                icon: <Users2 className="h-6 w-6 text-primary" />,
                 title: 'Forum comunitar',
                 desc: 'Sfaturi, întrebări legale, oportunități — o comunitate activă de zilieri și angajatori.',
               },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group rounded-2xl border border-border/50 bg-card/50 p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1"
+                className="group rounded-lg border border-border bg-card p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] hover:-translate-y-1"
               >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-2xl transition-transform duration-300 group-hover:scale-110">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[#eff6ff] dark:bg-muted text-2xl transition-transform duration-300 group-hover:scale-110">
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-semibold">{feature.title}</h3>
+                <h3 className="text-lg font-semibold font-heading">{feature.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {feature.desc}
                 </p>
@@ -175,7 +176,7 @@ export default function LandingPage() {
       <section id="how-it-works" className="border-t border-border/40">
         <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight font-heading md:text-4xl">
               Simplu ca{' '}
               <span className="text-primary">1, 2, 3</span>
             </h2>
@@ -209,7 +210,7 @@ export default function LandingPage() {
                 <div className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white text-xl font-bold shadow-lg`}>
                   {item.step}
                 </div>
-                <h3 className="text-lg font-semibold">{item.title}</h3>
+                <h3 className="text-lg font-semibold font-heading">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {item.desc}
                 </p>
@@ -226,7 +227,7 @@ export default function LandingPage() {
         </div>
         <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight font-heading md:text-4xl">
               De ce aleg afacerile{' '}
               <span className="text-primary">GigTim</span>
             </h2>
@@ -234,15 +235,15 @@ export default function LandingPage() {
 
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: '⚡', value: '< 2 min', label: 'Timp de publicare tură' },
-              { icon: '✅', value: '99.2%', label: 'Rată de prezentare' },
-              { icon: '📱', value: '24/7', label: 'Suport disponibil' },
-              { icon: '🔒', value: '100%', label: 'Conformitate legală' },
+              { icon: <Zap className="h-6 w-6 text-primary" />, value: '< 2 min', label: 'Timp de publicare tură' },
+              { icon: <CheckCircle2 className="h-6 w-6 text-primary" />, value: '99.2%', label: 'Rată de prezentare' },
+              { icon: <PhoneCall className="h-6 w-6 text-primary" />, value: '24/7', label: 'Suport disponibil' },
+              { icon: <Lock className="h-6 w-6 text-primary" />, value: '100%', label: 'Conformitate legală' },
             ].map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-border/50 bg-card/50 p-6 text-center transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
-                <div className="mx-auto mb-3 text-3xl">{stat.icon}</div>
+              <div key={stat.label} className="rounded-lg border border-border bg-card p-6 text-center transition-all duration-300 hover:border-primary/30 hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)]">
+                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded bg-[#eff6ff] dark:bg-muted">{stat.icon}</div>
                 <div className="text-3xl font-bold text-foreground">{stat.value}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
+                <div className="mt-1 text-sm text-muted-foreground font-mono uppercase tracking-wider">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -256,7 +257,7 @@ export default function LandingPage() {
             <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-primary/10 blur-[80px]" />
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-60 w-60 rounded-full bg-purple-500/10 blur-[80px]" />
             <div className="relative mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              <h2 className="text-3xl font-bold tracking-tight font-heading md:text-4xl">
                 Gata să începi?
               </h2>
               <p className="mt-4 text-muted-foreground">

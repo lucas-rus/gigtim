@@ -2,10 +2,13 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { MessageSquare, ArrowLeft } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { getChatMessages, sendChatMessage } from '@/lib/supabase/data-actions'
+import { getChatMessages, sendChatMessage, getOrCreateDirectChat } from '@/lib/supabase/data-actions'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 function useCurrentTime() {
   const [time, setTime] = useState<number>(0)
@@ -20,13 +23,22 @@ function useCurrentTime() {
 interface ChatClientProps {
   initialRooms: any[]
   userId: string | null
+  potentialConnections: any[]
 }
 
-export function ChatClient({ initialRooms, userId }: ChatClientProps) {
+export function ChatClient({ initialRooms, userId, potentialConnections }: ChatClientProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlRoomId = searchParams.get('room')
+
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [showInbox, setShowInbox] = useState(true)
+  const [activeTab, setActiveTab] = useState<'rooms' | 'connections'>('rooms')
+  const [searchQuery, setSearchQuery] = useState('')
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const now = useCurrentTime()
 
@@ -34,11 +46,32 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
 
   function selectRoom(roomId: string) {
     setSelectedRoom(roomId)
+    setShowInbox(false)
     startTransition(async () => {
       const msgs = await getChatMessages(roomId)
       setMessages(msgs)
     })
   }
+
+  function handleStartChatFromConnection(targetUserId: string) {
+    startTransition(async () => {
+      const res = await getOrCreateDirectChat(targetUserId)
+      if (res.roomId) {
+        setActiveTab('rooms')
+        setSearchQuery('')
+        selectRoom(res.roomId)
+        router.replace(`/chat?room=${res.roomId}`)
+      } else if (res.error) {
+        console.error(res.error)
+      }
+    })
+  }
+
+  useEffect(() => {
+    if (urlRoomId && initialRooms.some(r => r.id === urlRoomId)) {
+      selectRoom(urlRoomId)
+    }
+  }, [urlRoomId, initialRooms])
 
   function handleSend() {
     if (!newMessage.trim() || !selectedRoom) return
@@ -58,7 +91,6 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
     startTransition(async () => {
       const result = await sendChatMessage(selectedRoom, msg)
       if (result.error) {
-        // Simple error logging
         console.error(result.error)
       } else {
         const msgs = await getChatMessages(selectedRoom)
@@ -86,8 +118,6 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
           filter: `room_id=eq.${selectedRoom}`,
         },
         async (_payload) => {
-          // A new message was inserted via the database
-          // Let's refetch all messages to easily ensure we have sender names
           const msgs = await getChatMessages(selectedRoom)
           setMessages(msgs)
         }
@@ -110,88 +140,187 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
     return `${Math.floor(hours / 24)}z`
   }
 
-  if (initialRooms.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Mesaje</h1>
-          <p className="text-sm text-muted-foreground">Conversațiile tale</p>
-        </div>
-        <div className="py-12 text-center text-muted-foreground">
-          <p className="text-lg">Niciun chat încă</p>
-          <p className="text-sm mt-1">
-            Chaturile se creează automat când o aplicare este acceptată.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  const filteredConnections = potentialConnections.filter(c => {
+    const q = searchQuery.toLowerCase()
+    return c.name?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q)
+  })
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Mesaje</h1>
-        <p className="text-sm text-muted-foreground">{initialRooms.length} conversații</p>
+        <h1 className="text-2xl font-semibold tracking-tight font-heading text-primary">Mesaje</h1>
+        <p className="text-xs text-muted-foreground font-sans uppercase tracking-widest">{initialRooms.length} conversații</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-220px)]">
-        {/* Room list */}
-        <Card className="border-border/50 overflow-y-auto p-0">
-          {initialRooms.map((room) => (
-            <button
-              key={room.id}
-              onClick={() => selectRoom(room.id)}
-              className={`w-full text-left p-4 border-b border-border/30 hover:bg-accent/50 transition-colors ${
-                selectedRoom === room.id ? 'bg-accent/60' : ''
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 h-[calc(100vh-220px)] min-h-[480px] border border-border/60 rounded-2xl overflow-hidden bg-card/75 dark:bg-card/40 backdrop-blur-md">
+        {/* Sidebar */}
+        <div className={`${showInbox ? 'block' : 'hidden md:block'} border-r border-border/60 bg-card/50 dark:bg-sidebar/20 overflow-y-auto flex flex-col`}>
+          <div className="p-3 border-b border-border/60 bg-muted/30 dark:bg-muted/10 flex gap-2">
+            <Button
+              variant={activeTab === 'rooms' ? 'default' : 'ghost'}
+              size="sm"
+              className={`flex-1 rounded-xl text-xs font-semibold font-sans capitalize h-9 ${
+                activeTab === 'rooms' 
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                  : 'text-foreground hover:bg-muted/55 bg-transparent'
               }`}
+              onClick={() => setActiveTab('rooms')}
             >
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-sm truncate">{room.name || 'Chat'}</p>
-                <span className="text-[10px] text-muted-foreground">{timeAgo(room.last_message_at)}</span>
-              </div>
-              {room.last_message && (
-                <p className="text-xs text-muted-foreground mt-1 truncate">
-                  {room.last_sender_is_me ? 'Tu: ' : ''}{room.last_message}
-                </p>
+              Conversații
+            </Button>
+            <Button
+              variant={activeTab === 'connections' ? 'default' : 'ghost'}
+              size="sm"
+              className={`flex-1 rounded-xl text-xs font-semibold font-sans capitalize h-9 ${
+                activeTab === 'connections' 
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                  : 'text-foreground hover:bg-muted/55 bg-transparent'
+              }`}
+              onClick={() => setActiveTab('connections')}
+            >
+              Conexiuni
+            </Button>
+          </div>
+
+          {activeTab === 'rooms' ? (
+            <div className="flex-1 overflow-y-auto divide-y divide-border/40">
+              {initialRooms.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted-foreground font-sans mt-4">
+                  Nicio conversație activă încă.<br/>Începe un chat din tabul Conexiuni.
+                </div>
+              ) : (
+                initialRooms.map((room) => {
+                  const isSelected = selectedRoom === room.id
+                  return (
+                    <button
+                      key={room.id}
+                      onClick={() => selectRoom(room.id)}
+                      className={`w-full text-left px-4 py-4 transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-accent dark:bg-muted/30 border-l-4 border-l-primary'
+                          : 'bg-transparent hover:bg-muted/20 dark:hover:bg-muted/10 border-l-4 border-l-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`text-sm font-semibold truncate font-sans ${isSelected ? 'text-primary' : 'text-foreground'}`}>{room.name || 'Chat'}</p>
+                        <span className="text-[10px] text-muted-foreground font-sans shrink-0">{timeAgo(room.last_message_at)}</span>
+                      </div>
+                      {room.last_message && (
+                        <p className="text-xs text-muted-foreground mt-1.5 truncate font-sans">
+                          {room.last_sender_is_me ? 'Tu: ' : ''}{room.last_message}
+                        </p>
+                      )}
+                    </button>
+                  )
+                })
               )}
-            </button>
-          ))}
-        </Card>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col overflow-y-auto">
+              <div className="p-3 border-b border-border/40 bg-muted/10">
+                <Input
+                  placeholder="Caută după nume sau oraș..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 rounded-xl bg-background dark:bg-background/20 border border-border/80 text-xs font-sans placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                />
+              </div>
+              <div className="flex-1 overflow-y-auto divide-y divide-border/40">
+                {filteredConnections.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-muted-foreground font-sans">
+                    Nicio conexiune găsită
+                  </div>
+                ) : (
+                  filteredConnections.map((c) => (
+                    <div
+                      key={c.user_id}
+                      className="flex items-center justify-between p-3.5 hover:bg-muted/20 dark:hover:bg-muted/10 transition-colors border-b border-border/40"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-9 w-9 border border-border rounded-xl shrink-0">
+                          {c.avatar_url && (
+                            <AvatarImage
+                              src={c.avatar_url}
+                              alt={c.name}
+                              className="object-cover rounded-xl"
+                            />
+                          )}
+                          <AvatarFallback className="bg-muted dark:bg-accent text-foreground font-bold text-xs font-heading rounded-xl">
+                            {c.name?.split(' ').map((n: string) => n[0]).join('') || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate font-sans leading-snug">{c.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-sans mt-0.5 capitalize leading-none">{c.city || 'Oraș nespecificat'} · {c.role === 'WORKER' ? 'lucrător' : 'angajator'}</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 rounded-xl border border-primary text-primary hover:bg-primary/5 text-xs font-sans font-semibold transition-all px-3"
+                        onClick={() => handleStartChatFromConnection(c.user_id)}
+                        disabled={isPending}
+                      >
+                        Mesaj
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Messages */}
-        <Card className="border-border/50 md:col-span-2 flex flex-col">
+        <div className={`${!showInbox ? 'block' : 'hidden md:block'} md:col-span-2 flex flex-col overflow-hidden bg-card dark:bg-card/45`}>
           {!selectedRoom ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-              Selectează o conversație
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm font-sans p-6">
+              <MessageSquare className="h-10 w-10 text-muted-foreground/60 mb-3" />
+              <p className="font-heading font-semibold text-foreground/75">Selectează o conversație</p>
+              <p className="text-xs text-muted-foreground mt-1">Alege din lista din stânga sau începe una nouă din Conexiuni</p>
             </div>
           ) : (
             <>
               {/* Header */}
-              <div className="p-4 border-b border-border/30">
-                <p className="font-medium">{selectedRoomData?.name || 'Chat'}</p>
+              <div className="px-5 py-4 border-b border-border/60 bg-muted/30 dark:bg-muted/10 flex items-center justify-between">
+                <div className="flex items-center">
+                  {/* Mobile Back Button */}
+                  <Button 
+                    onClick={() => setShowInbox(true)} 
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden h-8 w-8 rounded-xl p-0 mr-3 hover:bg-accent flex items-center justify-center text-foreground transition-all duration-200"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <p className="font-semibold font-heading text-sm text-foreground">{selectedRoomData?.name || 'Chat'}</p>
+                    <p className="text-[10px] font-sans text-muted-foreground uppercase tracking-widest mt-0.5">conversație activă</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-background/50 dark:bg-background/20 scrollbar-thin">
                 {messages.length === 0 ? (
-                  <div className="text-center text-muted-foreground text-sm py-8">
+                  <div className="text-center text-xs text-muted-foreground font-sans py-8">
                     Niciun mesaj încă. Trimite primul mesaj!
                   </div>
                 ) : (
                   messages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.is_mine ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[70%] ${msg.is_mine ? 'order-1' : ''}`}>
+                      <div className={`max-w-[75%] flex flex-col ${msg.is_mine ? 'items-end' : 'items-start'}`}>
                         {!msg.is_mine && (
-                          <p className="text-[10px] text-muted-foreground mb-1">{msg.sender_name}</p>
+                          <p className="text-[10px] font-semibold text-muted-foreground mb-1 font-sans uppercase tracking-widest">{msg.sender_name}</p>
                         )}
-                        <div className={`px-3 py-2 rounded-2xl text-sm ${
+                        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed font-sans shadow-sm ${
                           msg.is_mine
-                            ? 'bg-primary text-primary-foreground rounded-br-md'
-                            : 'bg-accent/60 rounded-bl-md'
+                            ? 'bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground rounded-br-none shadow-primary/5'
+                            : 'bg-muted/80 dark:bg-muted/30 text-foreground rounded-bl-none border border-border/50'
                         }`}>
                           {msg.content}
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                        <p className="text-[10px] text-muted-foreground mt-1 font-sans">
                           {timeAgo(msg.created_at)}
                         </p>
                       </div>
@@ -202,20 +331,25 @@ export function ChatClient({ initialRooms, userId }: ChatClientProps) {
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-border/30 flex gap-2">
+              <div className="p-3 border-t border-border/60 bg-muted/30 dark:bg-muted/10 flex gap-2 items-center">
                 <Input
                   placeholder="Scrie un mesaj..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  className="bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-11 flex-1 text-sm font-sans"
                 />
-                <Button onClick={handleSend} disabled={isPending || !newMessage.trim()}>
+                <Button 
+                  onClick={handleSend} 
+                  disabled={isPending || !newMessage.trim()}
+                  className="h-11 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground transition-all duration-200"
+                >
                   Trimite
                 </Button>
               </div>
             </>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   )

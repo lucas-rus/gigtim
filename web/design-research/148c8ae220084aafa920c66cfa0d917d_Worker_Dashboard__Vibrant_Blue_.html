@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GigTim - Dashboard Muncitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#002b7f",
+                        "surface-tint": "#b5c4ff",
+                        "surface-dim": "#131315",
+                        "surface-container-high": "#2a2a2c",
+                        "on-primary": "#00297a",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#313032",
+                        "outline": "#8e909d",
+                        "indigo-glow": "#6366f1",
+                        "slate-accents": "#1e293b",
+                        "on-primary-fixed-variant": "#224194",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface-container": "#201f21",
+                        "on-tertiary-container": "#918eff",
+                        "on-tertiary": "#1d00a5",
+                        "on-secondary": "#233144",
+                        "on-surface-variant": "#c4c6d3",
+                        "surface-container-lowest": "#0e0e10",
+                        "tertiary-fixed-dim": "#c3c0ff",
+                        "on-background": "#e5e1e4",
+                        "on-secondary-container": "#abb9d2",
+                        "surface": "#131315",
+                        "success-emerald": "#10b981",
+                        "inverse-surface": "#e5e1e4",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "on-tertiary-fixed": "#0f0069",
+                        "tertiary": "#c3c0ff",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "employer-action": "#8b5cf6",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "surface-container-highest": "#353437",
+                        "inverse-primary": "#3d5aad",
+                        "surface-variant": "#353437",
+                        "primary": "#b5c4ff",
+                        "surface-container-low": "#1c1b1d",
+                        "on-tertiary-fixed-variant": "#3323cc",
+                        "secondary-fixed": "#d5e3fd",
+                        "tertiary-fixed": "#e2dfff",
+                        "on-primary-container": "#7c97ef",
+                        "danger-crimson": "#ef4444",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-bright": "#39393b",
+                        "secondary-container": "#3c4a5e",
+                        "on-primary-fixed": "#00174c",
+                        "worker-info": "#3b82f6",
+                        "on-surface": "#e5e1e4",
+                        "background": "#131315",
+                        "outline-variant": "#444651",
+                        "tertiary-container": "#1f00ac",
+                        "error-container": "#93000a",
+                        "secondary": "#b9c7e0"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    spacing: {
+                        "card-padding": "24px",
+                        "section-gap-mobile": "96px",
+                        "base": "4px",
+                        "stack-gap-sm": "8px",
+                        "stack-gap-md": "16px",
+                        "section-gap-desktop": "128px",
+                        "stack-gap-lg": "24px",
+                        "container-max": "1152px",
+                        "input-height": "40px"
+                    },
+                    fontFamily: {
+                        "body-md": ["Inter"],
+                        "button-text": ["Inter"],
+                        "display-hero": ["Outfit"],
+                        "headline-md": ["Outfit"],
+                        "headline-lg": ["Outfit"],
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-hero-mobile": ["Outfit"],
+                        "body-sm": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "button-text": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+                        "display-hero": ["64px", { lineHeight: "72px", letterSpacing: "-0.02em", fontWeight: "800" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700" }],
+                        "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "display-hero-mobile": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }],
+                        "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }]
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            -webkit-font-smoothing: antialiased;
+        }
+        .bg-glow-primary {
+            background: radial-gradient(circle at center, rgba(181, 196, 255, 0.08) 0%, transparent 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="min-h-screen relative pb-[100px] md:pb-0 pt-[80px]">
+<!-- Ambient Glow -->
+<div class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-glow-primary blur-[130px] rounded-full z-[-10] pointer-events-none"></div>
+<!-- TopAppBar (Hidden on Mobile, shown on md up) -->
+<header class="hidden md:flex bg-surface-container border-b border-outline/30 fixed top-0 w-full z-50 flex justify-between items-center px-card-padding h-16">
+<div class="flex items-center gap-stack-gap-md">
+<span class="font-display-hero-mobile text-headline-md text-primary tracking-tight">GigTim</span>
+</div>
+<nav class="flex gap-stack-gap-lg">
+<a class="text-on-surface-variant font-label-caps text-label-caps hover:text-primary transition-colors" href="#">Caută</a>
+<a class="text-on-surface-variant font-label-caps text-label-caps hover:text-primary transition-colors" href="#">Joburile Mele</a>
+<a class="text-on-surface-variant font-label-caps text-label-caps hover:text-primary transition-colors" href="#">Mesaje</a>
+<a class="text-primary font-label-caps text-label-caps bg-primary-container/20 px-3 py-1 rounded-full border border-primary/20" href="#">Profil</a>
+</nav>
+<div class="flex items-center gap-stack-gap-md">
+<span class="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high transition-colors p-2 rounded-full" data-icon="location_on">location_on</span>
+</div>
+</header>
+<!-- Mobile Header (Visible only on mobile) -->
+<div class="md:hidden fixed top-0 w-full z-50 bg-surface-container border-b border-outline/30 flex justify-between items-center px-4 h-16">
+<span class="font-display-hero-mobile text-headline-md text-primary tracking-tight">GigTim</span>
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1 bg-success-emerald/10 border border-success-emerald/30 px-2 py-1 rounded text-success-emerald">
+<span class="material-symbols-outlined text-[14px]" data-icon="verified_user">verified_user</span>
+<span class="font-label-caps text-[10px]">Identitate Verificată</span>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+</div>
+</div>
+<main class="max-w-container-max mx-auto px-4 md:px-card-padding flex flex-col gap-stack-gap-lg">
+<!-- Law Compliance Banner -->
+<div class="mt-4 md:mt-8 bg-primary-container/10 border border-primary-container/30 rounded-xl p-3 flex items-start md:items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 md:mt-0" data-icon="info">info</span>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm text-on-surface">Cont verificat conform Legii 52/2011. CNP-ul și Cartea de Identitate sunt validate pentru prestarea activităților zilnice.</p>
+</div>
+</div>
+<!-- Stats Section -->
+<section class="flex flex-col gap-stack-gap-sm">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary tracking-tight mb-2">Câștiguri săptămâna asta</h1>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-gap-md">
+<!-- Main Earnings Card -->
+<div class="col-span-1 md:col-span-1 bg-surface-container border border-outline/30 rounded-xl p-card-padding flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all"></div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Estimat</span>
+<div class="mt-4 flex items-end gap-2">
+<span class="font-display-hero-mobile text-display-hero-mobile text-primary leading-none">1.250</span>
+<span class="font-body-lg text-body-lg text-primary/70 pb-1">RON</span>
+</div>
+</div>
+<!-- Secondary Stats -->
+<div class="col-span-1 md:col-span-2 grid grid-cols-2 gap-stack-gap-md">
+<div class="bg-surface-container border border-outline/30 rounded-xl p-stack-gap-md flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-worker-info text-[20px]" data-icon="schedule">schedule</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Ore Lucrate</span>
+</div>
+<span class="font-headline-md text-headline-md text-on-surface">32.5h</span>
+</div>
+<div class="bg-surface-container border border-outline/30 rounded-xl p-stack-gap-md flex flex-col justify-center">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-success-emerald text-[20px]" data-icon="task_alt">task_alt</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Joburi Finalizate</span>
+</div>
+<span class="font-headline-md text-headline-md text-on-surface">4</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Job Listings Section -->
+<section class="mt-stack-gap-md">
+<div class="flex justify-between items-center mb-stack-gap-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Joburi Disponibile</h2>
+<button class="font-button-text text-button-text text-primary flex items-center gap-1 hover:text-primary-fixed transition-colors">
+                    Vezi toate <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="flex flex-col gap-stack-gap-md">
+<!-- Job Card 1 -->
+<div class="bg-surface-container border border-outline/30 rounded-xl p-stack-gap-md flex flex-col md:flex-row gap-stack-gap-md hover:border-primary/50 hover:bg-surface-container-high transition-all">
+<div class="flex-1 flex flex-col gap-stack-gap-sm">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface">Manipulant Marfă</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Logistica Depozit SRL</p>
+</div>
+<span class="bg-success-emerald/15 border border-success-emerald/30 text-success-emerald font-label-caps text-label-caps px-2 py-1 rounded">Plată azi</span>
+</div>
+<div class="flex flex-wrap gap-x-stack-gap-md gap-y-2 mt-2">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+<span class="font-body-sm text-body-sm">București, Sector 6</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+<span class="font-body-sm text-body-sm">Azi, 14:00 - 22:00</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="payments">payments</span>
+<span class="font-body-sm text-body-sm">250 RON / zi</span>
+</div>
+</div>
+</div>
+<div class="flex items-end justify-end md:w-auto w-full mt-2 md:mt-0">
+<button class="w-full md:w-auto bg-primary-container text-white border border-primary-container/50 font-button-text text-button-text px-6 py-2 rounded-xl hover:-translate-y-0.5 hover:bg-primary-container/90 transition-transform shadow-md">
+                            Aplică Rapid
+                        </button>
+</div>
+</div>
+<!-- Job Card 2 -->
+<div class="bg-surface-container border border-outline/30 rounded-xl p-stack-gap-md flex flex-col md:flex-row gap-stack-gap-md hover:border-primary/50 hover:bg-surface-container-high transition-all">
+<div class="flex-1 flex flex-col gap-stack-gap-sm">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface">Muncitor Construcții</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">BuildCorp SA</p>
+</div>
+<span class="bg-surface-container-highest border border-outline-variant/60 text-on-surface font-label-caps text-label-caps px-2 py-1 rounded">Săptămânal</span>
+</div>
+<div class="flex flex-wrap gap-x-stack-gap-md gap-y-2 mt-2">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+<span class="font-body-sm text-body-sm">Ilfov, Popești-Leordeni</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+<span class="font-body-sm text-body-sm">Mâine, 08:00 - 17:00</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="payments">payments</span>
+<span class="font-body-sm text-body-sm">300 RON / zi</span>
+</div>
+</div>
+</div>
+<div class="flex items-end justify-end md:w-auto w-full mt-2 md:mt-0">
+<button class="w-full md:w-auto bg-primary-container text-white border border-primary-container/50 font-button-text text-button-text px-6 py-2 rounded-xl hover:-translate-y-0.5 hover:bg-primary-container/90 transition-transform shadow-md">
+                            Aplică Rapid
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Visible on Mobile) -->
+<nav class="md:hidden bg-surface-container border-t border-outline/30 fixed bottom-0 w-full z-50 rounded-t-xl shadow-2xl flex justify-around items-center h-20 pb-safe px-4">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-200 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="search" style="font-variation-settings: 'FILL' 0;">search</span>
+<span class="font-label-caps text-label-caps mt-1">Caută</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-200 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="work_history" style="font-variation-settings: 'FILL' 0;">work_history</span>
+<span class="font-label-caps text-label-caps mt-1 text-center leading-tight">Joburile<br/>Mele</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-200 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble" style="font-variation-settings: 'FILL' 0;">chat_bubble</span>
+<span class="font-label-caps text-label-caps mt-1">Mesaje</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary bg-primary-container/20 border border-primary/20 rounded-xl px-4 py-1 active:scale-90 duration-200 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profil</span>
+</a>
+</nav>
+</body></html>

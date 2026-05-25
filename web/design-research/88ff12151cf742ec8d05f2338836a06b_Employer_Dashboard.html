@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GigTim - Dashboard Angajator</title>
+<!-- Google Fonts: Inter & Outfit -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#002b7f",
+                      "surface-tint": "#b5c4ff",
+                      "surface-dim": "#131315",
+                      "surface-container-high": "#2a2a2c",
+                      "on-primary": "#00297a",
+                      "on-error": "#690005",
+                      "inverse-on-surface": "#313032",
+                      "outline": "#8e909d",
+                      "indigo-glow": "#6366f1",
+                      "slate-accents": "#1e293b",
+                      "on-primary-fixed-variant": "#224194",
+                      "error": "#ffb4ab",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "surface-container": "#201f21",
+                      "on-tertiary-container": "#918eff",
+                      "on-tertiary": "#1d00a5",
+                      "on-secondary": "#233144",
+                      "on-surface-variant": "#c4c6d3",
+                      "surface-container-lowest": "#0e0e10",
+                      "tertiary-fixed-dim": "#c3c0ff",
+                      "on-background": "#e5e1e4",
+                      "on-secondary-container": "#abb9d2",
+                      "surface": "#131315",
+                      "success-emerald": "#10b981",
+                      "inverse-surface": "#e5e1e4",
+                      "secondary-fixed-dim": "#b9c7e0",
+                      "on-tertiary-fixed": "#0f0069",
+                      "tertiary": "#c3c0ff",
+                      "on-secondary-fixed-variant": "#3a485c",
+                      "employer-action": "#8b5cf6",
+                      "on-secondary-fixed": "#0d1c2f",
+                      "surface-container-highest": "#353437",
+                      "inverse-primary": "#3d5aad",
+                      "surface-variant": "#353437",
+                      "primary": "#b5c4ff",
+                      "surface-container-low": "#1c1b1d",
+                      "on-tertiary-fixed-variant": "#3323cc",
+                      "secondary-fixed": "#d5e3fd",
+                      "tertiary-fixed": "#e2dfff",
+                      "on-primary-container": "#7c97ef",
+                      "danger-crimson": "#ef4444",
+                      "on-error-container": "#ffdad6",
+                      "primary-fixed": "#dbe1ff",
+                      "surface-bright": "#39393b",
+                      "secondary-container": "#3c4a5e",
+                      "on-primary-fixed": "#00174c",
+                      "worker-info": "#3b82f6",
+                      "on-surface": "#e5e1e4",
+                      "background": "#131315",
+                      "outline-variant": "#444651",
+                      "tertiary-container": "#1f00ac",
+                      "error-container": "#93000a",
+                      "secondary": "#b9c7e0"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "card-padding": "24px",
+                      "section-gap-mobile": "96px",
+                      "base": "4px",
+                      "stack-gap-sm": "8px",
+                      "stack-gap-md": "16px",
+                      "section-gap-desktop": "128px",
+                      "stack-gap-lg": "24px",
+                      "container-max": "1152px",
+                      "input-height": "40px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "button-text": [
+                              "Inter"
+                      ],
+                      "display-hero": [
+                              "Outfit"
+                      ],
+                      "headline-md": [
+                              "Outfit"
+                      ],
+                      "headline-lg": [
+                              "Outfit"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display-hero-mobile": [
+                              "Outfit"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "button-text": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-hero": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-hero-mobile": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- Ambient Lighting (Atmospheric Depth) -->
+<div class="fixed inset-0 -z-10 pointer-events-none">
+<div class="absolute top-[-10%] right-[-20%] w-[300px] h-[300px] bg-primary-container rounded-full blur-[140px] opacity-40"></div>
+<div class="absolute bottom-[20%] left-[-10%] w-[250px] h-[250px] bg-indigo-glow/20 rounded-full blur-[120px] opacity-30"></div>
+</div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/45 backdrop-blur-xl shadow-primary/5 flex justify-between items-center px-card-padding h-16">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-on-primary font-headline-md text-headline-md">
+                G
+            </div>
+<span class="font-display-hero-mobile text-headline-md text-primary tracking-tight">GigTim</span>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer" data-icon="location_on">location_on</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-container-max mx-auto px-4 pt-24 pb-28 flex flex-col gap-stack-gap-lg">
+<!-- Primary Action Section -->
+<section class="w-full">
+<button class="w-full bg-gradient-to-r from-primary to-indigo-glow text-on-primary font-button-text text-button-text rounded-xl py-4 shadow-primary/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+                Postează un Job
+            </button>
+</section>
+<!-- Active Listings Section -->
+<section class="w-full flex flex-col gap-stack-gap-md">
+<div class="flex justify-between items-end mb-stack-gap-sm">
+<h2 class="font-headline-md text-headline-md text-on-surface">Anunțuri Active</h2>
+<a class="font-body-sm text-body-sm text-primary hover:text-primary-fixed-dim transition-colors" href="#">Vezi toate</a>
+</div>
+<!-- Card 1: Job Listing -->
+<div class="bg-surface/45 backdrop-blur-xl border border-outline-variant/40 rounded-xl p-stack-gap-md flex flex-col gap-stack-gap-md relative overflow-hidden group">
+<!-- Subtle glow effect on hover -->
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300 pointer-events-none"></div>
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-md text-body-lg text-on-surface">Lucrător Comercial</h3>
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="business">business</span>
+                            Supermarket Retail
+                        </div>
+</div>
+<span class="px-2 py-1 rounded bg-success-emerald/15 border border-success-emerald/20 text-success-emerald font-label-caps text-label-caps flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span> Activ
+                    </span>
+</div>
+<div class="flex items-center gap-stack-gap-md py-stack-gap-sm border-y border-outline-variant/40">
+<div class="flex items-center gap-2 flex-1">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="location_on">location_on</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant">LOCAȚIE</span>
+<span class="font-body-sm text-body-sm text-on-surface">București, Sector 2</span>
+</div>
+</div>
+<div class="w-px h-8 bg-outline-variant/40"></div>
+<div class="flex items-center gap-2 flex-1 pl-stack-gap-md">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-success-emerald">
+<span class="material-symbols-outlined text-[18px]" data-icon="payments">payments</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant">PLATA</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">250 RON / zi</span>
+</div>
+</div>
+</div>
+<!-- Status Summary -->
+<div class="flex items-center justify-between mt-1">
+<div class="flex flex-col gap-2 flex-1">
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">3 din 5 confirmați</span>
+<span class="font-body-sm text-body-sm text-primary">60%</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[60%]"></div>
+</div>
+</div>
+<div class="flex -space-x-2 overflow-hidden ml-stack-gap-md">
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface object-cover" data-alt="A close-up headshot of a confident young male professional with a short beard, wearing a casual gray t-shirt against a clean, minimalist studio background. The lighting is soft and cinematic, highlighting his features. The color palette is cool and muted, fitting perfectly within a sleek, modern corporate dashboard environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBGlVv7Hh-RxEBd_9PL_6MroaO-9-qxI3rriWIVQd713jndWfVfqlyjLUyaj4WPhea5IIdXhpQNah-E-ZKVUGxqM2ZttXH73eyKhbjWMnZkFsbvgnflqnAVe48lPN9miiGCZPt1VDH9GDak5NQuojmORZb7oi8aPkW76SSWmeJRUwap0Y_5YzyXGDvq0L1JbCQu7_uLz1-Yz_QmOWKscDIiG2OkXaJ9Jb_-_GvpEiTYoLVnFbS68XVzWLFZfv3fv3-OYnEHzbx1-AX"/>
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface object-cover" data-alt="A portrait of a smiling female professional looking directly at the camera. She has long dark hair and wears a professional dark blouse. The background is slightly blurred and neutral. The high-key lighting creates a crisp, clear image suitable for a high-end application interface, matching the deep dark-mode aesthetic with clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCakFVQz_ROKQw7ikcsoyzJQvcKqrI-wbrL9-hc2N65A_mp4VGJxtHtw_wWHY9566VQzcQizjgG6y5DOpMjLjZNMu031o_nQFlaG-vioxB7PTTfJ3rlPsT4rinn1d_bHzSm61XILFLKTzMSLxT3Zl69ONbpPH41izJdMr2qGJXtZ3JQu5Uh1F_UaCMFT9Us4Tm9C5CgQvXijsCqVyMAniNbFBSU1RBpRPsItvbeSBOpgCeoDyNxhwqmVk2DQ30jF4W3GOXYM0qFF28U"/>
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface object-cover" data-alt="A professional headshot of a middle-aged man with glasses, looking thoughtful. He wears a smart casual blue shirt. The setting is a bright, modern office space with subtle geometric background elements. The image tone is corporate and reliable, designed to sit cleanly within a highly structured, data-driven dark user interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGWJOZZG6YD9b_7dC6hXe_jbhFmlAYJpC3L9C57PtA9iCxVlNsM-e9-bd5SpcyC6hJT18d0y4rjROEclG56eoaemLgg3LM_7UCIUnrmOMgGMUyZpQqVRJzNy7Kf6V99JnG5iM3reoOiKX4lXpTtkBeseo5lDfMLzsd4Jy8A4hH3CLRhVagxRYzh4OTpg6GsnTQUKoX7shl1nLukOLIThQhVryHRVeg7DfNi0Gz6lF-4xMfRDeKP1iaQdhXToB9r1ERW55d5tjEbOxw"/>
+</div>
+</div>
+</div>
+<!-- Card 2: Job Listing -->
+<div class="bg-surface/45 backdrop-blur-xl border border-outline-variant/40 rounded-xl p-stack-gap-md flex flex-col gap-stack-gap-md relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300 pointer-events-none"></div>
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-md text-body-lg text-on-surface">Manipulant Marfă</h3>
+<div class="flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="warehouse">warehouse</span>
+                            Depozit Central Logistic
+                        </div>
+</div>
+<span class="px-2 py-1 rounded bg-success-emerald/15 border border-success-emerald/20 text-success-emerald font-label-caps text-label-caps flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span> Activ
+                    </span>
+</div>
+<div class="flex items-center gap-stack-gap-md py-stack-gap-sm border-y border-outline-variant/40">
+<div class="flex items-center gap-2 flex-1">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="location_on">location_on</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant">LOCAȚIE</span>
+<span class="font-body-sm text-body-sm text-on-surface">Ilfov, Ștefănești</span>
+</div>
+</div>
+<div class="w-px h-8 bg-outline-variant/40"></div>
+<div class="flex items-center gap-2 flex-1 pl-stack-gap-md">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-success-emerald">
+<span class="material-symbols-outlined text-[18px]" data-icon="payments">payments</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-on-surface-variant">PLATA</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">300 RON / zi</span>
+</div>
+</div>
+</div>
+<!-- Status Summary -->
+<div class="flex items-center justify-between mt-1">
+<div class="flex flex-col gap-2 flex-1">
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">1 din 2 confirmați</span>
+<span class="font-body-sm text-body-sm text-primary">50%</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[50%]"></div>
+</div>
+</div>
+<div class="flex -space-x-2 overflow-hidden ml-stack-gap-md">
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface object-cover" data-alt="A side-profile shot of a focused male professional in his late twenties, looking off-camera. He wears a simple dark crewneck sweater. The lighting is dramatic but clean, emphasizing his jawline against a solid dark grey background. The mood is serious and industrious, aligning with a high-end labor management dashboard aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKs25hZK0SJUx3Hd1ENGG1eNzN3m_NAj_J4-_Szvn27gDyaRPlmuP2Lyx3_1fMNQBhVqIa1tkmaqXf0vyl7My1ieQyyH0v6g3h249rBYEQP-KWM37rBju57mr2e_XVN4RM7DwIfsRrJOd5HQDF9X_k86jKLxW3Yl9rzI5fkRohIcRnsnNZWZR-Iq0cI7fDHmXCNQmw2j-w9ULuB0a1Ef6kQfABYeUJYWh4RjATMPHJOwYIlSgmlqojX0NEUHIxl9u33T6KIjjUlPSw"/>
+<!-- Empty slot placeholder -->
+<div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface bg-surface-container-highest border border-dashed border-outline flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant" data-icon="person_add">person_add</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/45 backdrop-blur-xl shadow-2xl flex justify-around items-center h-20 pb-safe px-4">
+<!-- Caută (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-200 gap-1 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-caps text-label-caps">Caută</span>
+</a>
+<!-- Joburile Mele (Active State - Dashboard intent) -->
+<a class="flex flex-col items-center justify-center text-primary-fixed-dim bg-primary-container/30 rounded-full px-4 py-1 hover:text-primary transition-all active:scale-90 duration-200 gap-1 w-20" href="#">
+<span class="material-symbols-outlined" data-icon="work_history" data-weight="fill" style="font-variation-settings: 'FILL' 1;">work_history</span>
+<span class="font-label-caps text-label-caps text-center leading-tight">Joburile<br/>Mele</span>
+</a>
+<!-- Mesaje (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-200 gap-1 w-16 relative" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-caps text-label-caps">Mesaje</span>
+<span class="absolute top-0 right-3 w-2 h-2 rounded-full bg-danger-crimson"></span>
+</a>
+<!-- Profil (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all active:scale-90 duration-200 gap-1 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps">Profil</span>
+</a>
+</nav>
+</body></html>

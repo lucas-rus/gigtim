@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GigTim — Marketplace de Zilieri</title>
+<meta content="Platformă de gig-economy pentru piața HoReCa din România. Conectăm lucrătorii zilieri cu afacerile locale." name="description"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<style>
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#131315",
+                        "background": "#0a0a0c",
+                        "primary": "#b5c4ff",
+                        "primary-gradient-start": "#4f46e5",
+                        "primary-gradient-end": "#7c3aed",
+                        "on-surface": "#e5e1e4",
+                        "on-surface-variant": "#c4c6d3",
+                        "outline": "#8e909d",
+                        "card-bg": "rgba(32, 31, 33, 0.45)"
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif']
+                    },
+                    borderRadius: {
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-background font-sans antialiased selection:bg-primary/30 selection:text-primary">
+<div class="relative flex min-h-screen items-center justify-center overflow-hidden p-6">
+<!-- Background Elements -->
+<div class="absolute inset-0 -z-10 overflow-hidden">
+<div class="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary-gradient-start/10 blur-[120px] animate-pulse"></div>
+<div class="absolute bottom-[0%] right-[-5%] h-[600px] w-[600px] rounded-full bg-primary-gradient-end/5 blur-[150px]"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[800px] w-[800px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_70%)] from-primary/5 to-transparent"></div>
+</div>
+<div class="w-full max-w-[440px] space-y-8 relative z-10">
+<!-- Header Section -->
+<div class="text-center space-y-4">
+<div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-gradient-start to-primary-gradient-end text-white text-3xl font-extrabold shadow-2xl shadow-primary-gradient-start/30 transform hover:scale-105 transition-transform duration-300">
+                    G
+                </div>
+<div class="space-y-1">
+<h1 class="text-4xl font-extrabold tracking-tight font-heading bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        GigTim
+                    </h1>
+<p class="text-on-surface-variant font-light tracking-wide">
+                        Marketplace de zilieri pentru România
+                    </p>
+</div>
+</div>
+<!-- Login Card -->
+<div class="group/card relative overflow-hidden rounded-3xl border border-white/10 bg-card-bg backdrop-blur-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-500 hover:border-white/20">
+<div class="p-8 sm:p-10">
+<div class="mb-8 space-y-2">
+<h2 class="text-2xl font-bold font-heading text-white">Autentificare</h2>
+<p class="text-sm text-on-surface-variant/80 font-light italic">Intră în contul tău pentru a continua</p>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<!-- Email Field -->
+<div class="space-y-2.5">
+<label class="block text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant/70 ml-1" for="email">
+                                Email
+                            </label>
+<input autocomplete="email" class="h-12 w-full px-4 rounded-xl bg-white/5 border border-white/10 text-on-surface placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-primary-gradient-start/30 focus:border-primary-gradient-start/50 outline-none transition-all duration-300" id="email" name="email" placeholder="exemplu@email.com" required="" type="email"/>
+</div>
+<!-- Password Field -->
+<div class="space-y-2.5">
+<div class="flex items-center justify-between px-1">
+<label class="block text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant/70" for="password">
+                                    Parolă
+                                </label>
+<a class="text-[11px] font-semibold text-primary hover:text-white transition-colors" href="/forgot-password">
+                                    Ai uitat parola?
+                                </a>
+</div>
+<input autocomplete="current-password" class="h-12 w-full px-4 rounded-xl bg-white/5 border border-white/10 text-on-surface placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-primary-gradient-start/30 focus:border-primary-gradient-start/50 outline-none transition-all duration-300" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+</div>
+<!-- Submit Button -->
+<div class="pt-2">
+<button class="group/btn relative h-12 w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary-gradient-start to-primary-gradient-end px-6 font-semibold text-white shadow-lg shadow-primary-gradient-start/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary-gradient-start/40 active:translate-y-0 active:scale-[0.98]" type="submit">
+<span class="relative z-10">Conectare</span>
+<div class="absolute inset-0 -z-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+</button>
+</div>
+</form>
+<!-- Card Footer -->
+<div class="mt-8 pt-8 border-t border-white/5 text-center">
+<p class="text-sm text-on-surface-variant/70 font-light">
+                            Nu ai cont? 
+                            <a class="ml-1 font-semibold text-primary underline-offset-4 hover:underline hover:text-white transition-all" href="/register">
+                                Înregistrează-te
+                            </a>
+</p>
+</div>
+</div>
+</div>
+<!-- Legal/Help links (Optional but premium look) -->
+<div class="flex justify-center gap-6 text-[10px] uppercase tracking-widest text-on-surface-variant/40 font-medium">
+<a class="hover:text-on-surface transition-colors" href="#">Termeni</a>
+<a class="hover:text-on-surface transition-colors" href="#">Confidențialitate</a>
+<a class="hover:text-on-surface transition-colors" href="#">Suport</a>
+</div>
+</div>
+</div>
+</body></html>

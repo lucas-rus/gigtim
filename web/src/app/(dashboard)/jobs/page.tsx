@@ -1,4 +1,4 @@
-import { getOpenShifts } from '@/lib/supabase/data-actions'
+import { getOpenShifts, getMyApplications } from '@/lib/supabase/data-actions'
 import { getCurrentProfile } from '@/lib/supabase/auth-actions'
 import { JobsClient } from './JobsClient'
 
@@ -13,5 +13,18 @@ export default async function JobsMarketplacePage() {
   const userRole = profileData?.user.role || 'WORKER'
   const userId = profileData?.user.id || null
 
-  return <JobsClient shifts={shifts} userRole={userRole} _userId={userId} />
+  let initialAppliedShiftIds: string[] = []
+  if (userRole === 'WORKER') {
+    const apps = await getMyApplications()
+    initialAppliedShiftIds = apps.map((a: any) => a.shift_id)
+  }
+
+  return (
+    <JobsClient 
+      shifts={shifts} 
+      userRole={userRole} 
+      _userId={userId} 
+      initialAppliedShiftIds={initialAppliedShiftIds} 
+    />
+  )
 }

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html lang="ro"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zilier Pro - Marketplace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#00306e",
+                      "inverse-on-surface": "#eaf1ff",
+                      "tertiary-fixed": "#d8e2ff",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "secondary-fixed": "#d8e3fb",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed-variant": "#3c475a",
+                      "background": "#f8f9ff",
+                      "secondary": "#545f73",
+                      "tertiary": "#001c45",
+                      "primary": "#001851",
+                      "on-tertiary-fixed-variant": "#004395",
+                      "on-error": "#ffffff",
+                      "outline": "#747683",
+                      "inverse-primary": "#b5c4ff",
+                      "surface-variant": "#d3e4fe",
+                      "error": "#ba1a1a",
+                      "surface-container": "#e5eeff",
+                      "surface-dim": "#cbdbf5",
+                      "surface-container-low": "#eff4ff",
+                      "on-primary-container": "#7c97ef",
+                      "outline-variant": "#c4c6d3",
+                      "on-tertiary-fixed": "#001a42",
+                      "primary-container": "#002b7f",
+                      "tertiary-fixed-dim": "#adc6ff",
+                      "surface-container-high": "#dce9ff",
+                      "on-primary-fixed": "#00174c",
+                      "surface-container-highest": "#d3e4fe",
+                      "secondary-fixed-dim": "#bcc7de",
+                      "on-surface": "#0b1c30",
+                      "on-secondary-fixed": "#111c2d",
+                      "on-surface-variant": "#444651",
+                      "on-background": "#0b1c30",
+                      "surface-bright": "#f8f9ff",
+                      "surface-tint": "#3d5aad",
+                      "on-secondary-container": "#586377",
+                      "primary-fixed": "#dbe1ff",
+                      "on-primary-fixed-variant": "#224194",
+                      "on-primary": "#ffffff",
+                      "surface": "#f8f9ff",
+                      "on-error-container": "#93000a",
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#d5e0f8",
+                      "on-tertiary-container": "#6299ff",
+                      "inverse-surface": "#213145",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px",
+                      "gutter": "24px",
+                      "container-max": "1280px",
+                      "unit": "8px"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "title-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-xl": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-xl": [
+                              "60px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+        .material-symbols-outlined.filled {
+          font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom Input Focus Glow */
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 43, 127, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex font-body-md">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low dark:bg-surface-container-lowest text-primary dark:text-primary-fixed border-r border-outline-variant docked left-0 h-screen w-64 flex flex-col h-full py-unit gap-2 fixed z-40">
+<div class="px-6 py-4 flex flex-col gap-1 border-b border-outline-variant mb-4">
+<h1 class="font-headline-lg text-headline-lg text-primary">Zilier Pro</h1>
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Marketplace</p>
+</div>
+<nav class="flex-1 px-4 flex flex-col gap-2">
+<!-- Active Tab -->
+<a class="bg-primary-container text-on-primary-container font-bold rounded-lg px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined filled">storefront</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Marketplace</span>
+</a>
+<!-- Inactive Tabs -->
+<a class="text-secondary hover:text-primary hover:bg-surface-container-high transition-all px-4 py-3 flex items-center gap-3 rounded-lg scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">event_note</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Shifts</span>
+</a>
+<a class="text-secondary hover:text-primary hover:bg-surface-container-high transition-all px-4 py-3 flex items-center gap-3 rounded-lg scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Applications</span>
+</a>
+<a class="text-secondary hover:text-primary hover:bg-surface-container-high transition-all px-4 py-3 flex items-center gap-3 rounded-lg scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Messages</span>
+</a>
+<a class="text-secondary hover:text-primary hover:bg-surface-container-high transition-all px-4 py-3 flex items-center gap-3 rounded-lg scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Forum</span>
+</a>
+</nav>
+<div class="px-4 pb-6 mt-auto">
+<button class="w-full bg-primary-container text-on-primary py-3 rounded text-center font-label-sm text-label-sm uppercase tracking-wider hover:bg-tertiary-container transition-colors">Post a Job</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 ml-64 flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline docked full-width top-0 flex justify-between items-center h-16 px-margin-desktop w-full z-50 sticky top-0">
+<div class="flex items-center gap-4 w-1/3">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded font-body-md text-body-md focus:border-primary-container transition-colors" placeholder="Caută joburi, abilități..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-tertiary-container transition-colors p-2 rounded-full cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-tertiary-container transition-colors p-2 rounded-full cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-px bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer">
+<img alt="User profile photo" class="w-8 h-8 rounded-full border border-outline-variant object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7SiT5I3xU8kSivdrf51DsuOPyiD27NPOj3Ff4HWs1n9Gss3KCL3P8w26LLSm1lKkO8HTdJu3jy5o7kdtgXmhaLai3W39-PX7tb7ztSo3BkKqFqGzHzZiNDX2NNrxDOy6Aua_DG5PR7MennPPAEPotmbbr0bkmg6lzkbHLO7be8XhXN7NBUoSagQu9PiJom5HNVsl4MXkrDvvOFLxTqXPqXOYAvHG2VIE8qpb2gL_XY5xKmsExEdz7y7OKEOmS7iFWlQ1iChlZyXe8"/>
+<span class="font-label-sm text-label-sm text-secondary hidden lg:block">Logout</span>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 p-margin-desktop overflow-y-auto">
+<div class="max-w-container-max mx-auto">
+<div class="mb-8">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-2">Joburi Disponibile</h2>
+<p class="font-body-lg text-body-lg text-secondary">Găsește oportunități potrivite pentru abilitățile tale.</p>
+</div>
+<!-- Filters Bento Box -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 mb-8 shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div>
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-secondary mb-2">Locație</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary">location_on</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-background border border-outline-variant rounded focus:border-primary-container transition-colors font-body-md" placeholder="București, Cluj..." type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-secondary mb-2">Categorie</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary">category</span>
+<select class="w-full pl-10 pr-10 py-2.5 bg-background border border-outline-variant rounded focus:border-primary-container transition-colors font-body-md appearance-none">
+<option value="">Toate categoriile</option>
+<option value="constructii">Construcții</option>
+<option value="horeca">HoReCa</option>
+<option value="logistica">Logistică</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm uppercase tracking-wider text-secondary mb-2">Plată Minimă (RON/zi)</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary">payments</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-background border border-outline-variant rounded focus:border-primary-container transition-colors font-body-md" placeholder="ex: 200" type="number"/>
+</div>
+</div>
+</div>
+<div class="mt-6 flex justify-end">
+<button class="bg-primary-container text-on-primary px-6 py-2 rounded font-label-sm text-label-sm uppercase tracking-wider hover:bg-tertiary-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span> Aplică Filtre
+                        </button>
+</div>
+</div>
+<!-- Job Listings Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Job Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 hover:shadow-md transition-shadow group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-surface-container rounded border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">construction</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Muncitor Necalificat Construcții</h3>
+<p class="font-body-md text-body-md text-secondary">BuildConstruct SRL</p>
+</div>
+</div>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="bg-surface-container-low text-primary-container px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">payments</span> 250 RON / zi
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">location_on</span> București
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> 8 ore
+                                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">
+                                Căutăm personal pentru ajutor pe șantier rezidențial. Sarcini principale: curățenie, manipulare materiale, asistență meșteri. Se oferă masă de prânz.
+                            </p>
+</div>
+<button class="w-full bg-primary-container text-on-primary py-2.5 rounded font-label-sm text-label-sm uppercase tracking-wider hover:bg-tertiary-container transition-colors opacity-90 group-hover:opacity-100">Apply Now</button>
+</div>
+<!-- Job Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 hover:shadow-md transition-shadow group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-surface-container rounded border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">restaurant</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Ajutor Bucătar (Weekend)</h3>
+<p class="font-body-md text-body-md text-secondary">Bistro Central</p>
+</div>
+</div>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="bg-surface-container-low text-primary-container px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">payments</span> 300 RON / zi
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">location_on</span> Cluj-Napoca
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">calendar_month</span> Weekend
+                                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">
+                                Avem nevoie de ajutor în bucătărie pentru weekendurile aglomerate. Experiența minimă constituie un avantaj, dar nu este obligatorie. Mediu de lucru dinamic.
+                            </p>
+</div>
+<button class="w-full bg-primary-container text-on-primary py-2.5 rounded font-label-sm text-label-sm uppercase tracking-wider hover:bg-tertiary-container transition-colors opacity-90 group-hover:opacity-100">Apply Now</button>
+</div>
+<!-- Job Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 hover:shadow-md transition-shadow group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-surface-container rounded border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">local_shipping</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Manipulant Marfă Depozit</h3>
+<p class="font-body-md text-body-md text-secondary">LogisFast SA</p>
+</div>
+</div>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="bg-surface-container-low text-primary-container px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">payments</span> 280 RON / zi
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">location_on</span> Ilfov
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> Tura de noapte
+                                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">
+                                Activități de descărcare și sortare colete în centrul logistic. Se asigură transport gratuit din București. Spor de noapte inclus în plata afișată.
+                            </p>
+</div>
+<button class="w-full bg-primary-container text-on-primary py-2.5 rounded font-label-sm text-label-sm uppercase tracking-wider hover:bg-tertiary-container transition-colors opacity-90 group-hover:opacity-100">Apply Now</button>
+</div>
+<!-- Job Card 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 hover:shadow-md transition-shadow group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-surface-container rounded border border-outline-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">cleaning_services</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Personal Curățenie Birouri</h3>
+<p class="font-body-md text-body-md text-secondary">CleanPro Services</p>
+</div>
+</div>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">bookmark_border</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="bg-surface-container-low text-primary-container px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">payments</span> 200 RON / zi
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">location_on</span> Timișoara
+                                </span>
+<span class="bg-surface-container-low text-secondary px-3 py-1 rounded font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> 6 ore
+                                </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">
+                                Curățenie generală spații de birouri, program după-amiaza. Echipamentele și soluțiile de curățenie sunt asigurate. Se cere seriozitate și atenție la detalii.
+                            </p>
+</div>
+<button class="w-full bg-primary-container text-on-primary py-2.5 rounded font-label-sm text-label-sm uppercase tracking-wider hover:bg-tertiary-container transition-colors opacity-90 group-hover:opacity-100">Apply Now</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-tertiary dark:bg-on-tertiary-fixed border-t border-tertiary-container full-width bottom-0 w-full py-margin-desktop px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-gutter mt-auto">
+<div class="font-headline-lg text-headline-lg text-on-tertiary">
+                Zilier Pro
+            </div>
+<div class="flex gap-6">
+<a class="text-tertiary-fixed-dim hover:text-on-tertiary font-body-md text-body-md hover:opacity-80 transition-opacity cursor-pointer" href="#">Termeni și Condiții</a>
+<a class="text-tertiary-fixed-dim hover:text-on-tertiary font-body-md text-body-md hover:opacity-80 transition-opacity cursor-pointer" href="#">Confidențialitate</a>
+<a class="text-tertiary-fixed-dim hover:text-on-tertiary font-body-md text-body-md hover:opacity-80 transition-opacity cursor-pointer" href="#">Contact</a>
+<a class="text-tertiary-fixed-dim hover:text-on-tertiary font-body-md text-body-md hover:opacity-80 transition-opacity cursor-pointer" href="#">Despre Noi</a>
+</div>
+<div class="font-body-md text-body-md text-tertiary-fixed-dim">
+                © 2024 Zilier Pro Romania. Toate drepturile rezervate.
+            </div>
+</footer>
+</div>
+</body></html>
