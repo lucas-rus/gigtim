@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { skillLabels, getLabel } from '@/lib/labels'
-import { applyToShift, getOrCreateDirectChat } from '@/lib/supabase/data-actions'
+import { applyToShift, getOrCreateDirectChat } from '@/lib/romarg-data'
 import type { UserRole } from '@/lib/types/database'
 import { useRouter } from 'next/navigation'
 
@@ -29,12 +29,7 @@ interface JobsClientProps {
   initialAppliedShiftIds?: string[]
 }
 
-const englishSkillLabels: Record<string, string> = {
-  BARISTA: 'Barista',
-  WAITER: 'Waiter',
-  DISHWASHER: 'Dishwasher',
-  STAGEHAND: 'Stagehand',
-}
+// Centralized skillLabels in Romanian are used instead of englishSkillLabels
 
 export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds = [] }: JobsClientProps) {
   const router = useRouter()
@@ -51,6 +46,7 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
     startTransition(async () => {
       const res = await getOrCreateDirectChat(employerId)
       if (res.roomId) {
+        router.refresh()
         router.push(`/chat?room=${res.roomId}`)
       } else if (res.error) {
         setMessage(res.error)
@@ -109,7 +105,7 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
 
       {/* Message Toast */}
       {message && (
-        <div className={`text-sm px-4 py-2.5 rounded-xl border font-sans transition-all duration-300 ${message.includes('succes') ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300'}`}>
+        <div className={`text-sm px-4 py-2.5 rounded-xl border font-sans transition-all duration-300 ${message.includes('succes') ? 'bg-secondary/10 dark:bg-secondary/20 border-secondary/30 dark:border-secondary/40 text-secondary dark:text-secondary' : 'bg-destructive/10 dark:bg-destructive/20 border-destructive/30 dark:border-destructive/40 text-destructive dark:text-destructive'}`}>
           {message}
         </div>
       )}
@@ -121,7 +117,7 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
         className="w-full md:hidden h-11 rounded-xl text-sm font-medium border-border/80 hover:bg-accent flex items-center justify-center gap-2"
       >
         <Search className="h-4 w-4" />
-        {showFilters ? 'Hide Filters' : 'Filter & Sort'}
+        {showFilters ? 'Ascunde filtrele' : 'Filtrare și Sortare'}
       </Button>
 
       {/* Filter Card */}
@@ -129,14 +125,16 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label className="block text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 font-sans">
-              Location
+              Locație
             </Label>
             <Select value={searchCity} onValueChange={(val) => setSearchCity(val ?? 'ALL')}>
               <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
-                <span>{searchCity === 'ALL' || !searchCity ? 'All Locations' : searchCity}</span>
+                <SelectValue>
+                  {searchCity === 'ALL' || !searchCity ? 'Toate locațiile' : searchCity}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
-                <SelectItem value="ALL">All Locations</SelectItem>
+                <SelectItem value="ALL">Toate locațiile</SelectItem>
                 {postedCities.map((city) => (
                   <SelectItem key={city} value={city}>{city}</SelectItem>
                 ))}
@@ -145,15 +143,17 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
           </div>
           <div className="space-y-1.5">
             <Label className="block text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 font-sans">
-              Category (Role)
+              Categorie (Rol)
             </Label>
             <Select value={roleFilter} onValueChange={(val) => setRoleFilter(val ?? 'ALL')}>
               <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
-                <span>{roleFilter === 'ALL' ? 'All Roles' : (englishSkillLabels[roleFilter] || roleFilter)}</span>
+                <SelectValue>
+                  {roleFilter === 'ALL' ? 'Toate rolurile' : (skillLabels[roleFilter] || roleFilter)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
-                <SelectItem value="ALL">All Roles</SelectItem>
-                {Object.entries(englishSkillLabels).map(([key, label]) => (
+                <SelectItem value="ALL">Toate rolurile</SelectItem>
+                {Object.entries(skillLabels).map(([key, label]) => (
                   <SelectItem key={key} value={key}>{label}</SelectItem>
                 ))}
               </SelectContent>
@@ -161,22 +161,22 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
           </div>
           <div className="space-y-1.5">
             <Label className="block text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 font-sans">
-              Sort By
+              Sortează după
             </Label>
             <Select value={sortBy} onValueChange={(val) => setSortBy(val ?? 'DATE_ASC')}>
               <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
-                <span>
+                <SelectValue>
                   {sortBy === 'DATE_ASC'
-                    ? 'Date (Nearest First)'
+                    ? 'Dată (Cele mai apropiate)'
                     : sortBy === 'PAY_DESC'
-                      ? 'Pay (High to Low)'
-                      : 'Pay (Low to High)'}
-                </span>
+                      ? 'Plată (Cea mai mare)'
+                      : 'Plată (Cea mai mică)'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
-                <SelectItem value="DATE_ASC">Date (Nearest First)</SelectItem>
-                <SelectItem value="PAY_DESC">Pay (High to Low)</SelectItem>
-                <SelectItem value="PAY_ASC">Pay (Low to High)</SelectItem>
+                <SelectItem value="DATE_ASC">Dată (Cele mai apropiate)</SelectItem>
+                <SelectItem value="PAY_DESC">Plată (Cea mai mare)</SelectItem>
+                <SelectItem value="PAY_ASC">Plată (Cea mai mică)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -210,7 +210,7 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
                         <Briefcase className="h-5 w-5 text-primary" />
                       </div>
                       <div className="space-y-1">
-                        <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim border-none rounded-lg px-2.5 py-0.5 text-[10px] font-semibold tracking-wide capitalize inline-block" variant="outline">
+                        <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2.5 py-0.5 text-[10px] font-semibold tracking-wide capitalize inline-block" variant="outline">
                           {getLabel(skillLabels, job.role_needed)}
                         </Badge>
                         <h3 className="text-base sm:text-lg font-semibold font-heading text-foreground leading-snug">
@@ -219,7 +219,7 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-lg sm:text-xl font-bold text-primary dark:text-primary-fixed-dim font-heading">
+                      <div className="text-lg sm:text-xl font-bold text-primary-strong font-heading">
                         {job.hourly_pay_ron} <span className="text-xs font-normal text-muted-foreground font-sans">RON/h</span>
                       </div>
                       <div className="text-[10px] text-muted-foreground font-sans mt-0.5">Total: ~{totalPay} RON</div>
@@ -228,10 +228,10 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
 
                   {/* Info Chips */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary-fixed-dim px-2.5 py-0.5 rounded-lg font-medium text-xs flex items-center gap-1.5 border border-primary/5">
+                    <span className="bg-primary/5 dark:bg-primary/10 text-primary-strong px-2.5 py-0.5 rounded-lg font-medium text-xs flex items-center gap-1.5 border border-primary/5">
                       <MapPin className="h-3.5 w-3.5" /> {job.employer_profiles?.city || 'Necunoscut'}
                     </span>
-                    <span className="bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary-fixed-dim px-2.5 py-0.5 rounded-lg font-medium text-xs flex items-center gap-1.5 border border-primary/5">
+                    <span className="bg-primary/5 dark:bg-primary/10 text-primary-strong px-2.5 py-0.5 rounded-lg font-medium text-xs flex items-center gap-1.5 border border-primary/5">
                       <Clock className="h-3.5 w-3.5" /> {Math.round(hours)} ore
                     </span>
                   </div>
@@ -263,8 +263,8 @@ export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds =
                     <Button
                       className={`flex-1 h-11 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
                         alreadyApplied 
-                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/10'
-                          : 'bg-gradient-to-r from-primary via-indigo-600 to-primary hover:brightness-110 text-primary-foreground shadow-md shadow-primary/10 hover:shadow-lg hover:shadow-primary/20'
+                          ? 'bg-secondary-strong hover:brightness-108 text-secondary-foreground shadow-md shadow-emerald-500/10'
+                          : 'bg-primary hover:bg-primary/90 hover:brightness-110 text-primary-foreground shadow-md shadow-primary/10 hover:shadow-lg hover:shadow-primary/20'
                       }`}
                       disabled={isPending || alreadyApplied}
                       onClick={() => handleApply(job.id)}

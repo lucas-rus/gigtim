@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { SunIcon, MoonIcon, SearchIcon, User, LogOut } from 'lucide-react'
-import { logout } from '@/lib/supabase/auth-actions'
+import { logout } from '@/lib/romarg-auth'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -55,7 +55,7 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? (
-              <SunIcon className="h-4 w-4 text-amber-500" />
+              <SunIcon className="h-4 w-4 text-accent" />
             ) : (
               <MoonIcon className="h-4 w-4" />
             )}
@@ -67,7 +67,7 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
         <div className="h-6 w-px bg-border mx-1" />
 
         <DropdownMenu>
-          <DropdownMenuTrigger render={
+          <DropdownMenuTrigger>
             <Button variant="ghost" className="relative h-10 w-10 rounded p-0">
               <Avatar className="h-9 w-9 border border-border hover:border-primary cursor-pointer rounded">
                 {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} className="object-cover rounded" />}
@@ -76,7 +76,7 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
                 </AvatarFallback>
               </Avatar>
             </Button>
-          } />
+          </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 border border-border bg-card dark:bg-card rounded shadow-[0_4px_12px_rgba(15,23,42,0.08)]" align="end" sideOffset={8}>
             <DropdownMenuGroup>
               <div className="px-3 py-2">
@@ -87,11 +87,11 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
               </div>
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-border" />
-            <DropdownMenuItem render={
+            <DropdownMenuItem>
               <Link href="/profile" className="cursor-pointer w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent dark:hover:bg-muted transition-colors rounded-sm">
                 <User className="h-4 w-4" /> Profil
               </Link>
-            } />
+            </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuItem className="p-0">
               <form action={logout} className="w-full">

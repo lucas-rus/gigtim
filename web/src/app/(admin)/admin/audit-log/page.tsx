@@ -39,9 +39,9 @@ export default async function AuditLogPage() {
             ) : (
               logs.map((log: any) => (
                 <TableRow key={log.id} className="group hover:bg-[#f8f9ff] transition-colors border-b border-border/50 last:border-b-0">
-                  <TableCell className="font-semibold text-on-background font-sans">{log.action}</TableCell>
+                  <TableCell className="font-semibold text-foreground font-sans">{log.action}</TableCell>
                   <TableCell>
-                    <Badge className="bg-slate-50 text-slate-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded" variant="secondary">
+                    <Badge className="bg-muted text-muted-foreground border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded" variant="secondary">
                       {log.target_table || '—'}
                     </Badge>
                   </TableCell>

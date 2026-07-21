@@ -8,10 +8,10 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded bg-primary text-primary-foreground text-sm font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded bg-primary-strong text-primary-foreground text-sm font-bold">
               G
             </div>
-            <span className="text-lg font-bold tracking-tight font-heading text-primary dark:text-primary">GigTim</span>
+            <span className="text-lg font-bold tracking-tight font-heading text-primary-strong">GigTim</span>
           </Link>
           <div className="hidden items-center gap-8 text-sm md:flex">
             <a href="#features" className="text-muted-foreground transition-colors hover:text-foreground">
@@ -33,7 +33,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/register"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 hover:brightness-110"
+              className="rounded-lg bg-primary-strong px-4 py-2 text-sm font-medium text-primary-foreground shadow-md shadow-primary-strong/20 transition-all duration-200 hover:shadow-lg hover:shadow-primary-strong/30 hover:brightness-110"
             >
               Începe acum
             </Link>
@@ -46,8 +46,8 @@ export default function LandingPage() {
         {/* Background gradient effects */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-primary/8 blur-[120px]" />
-          <div className="absolute top-60 -left-40 h-[400px] w-[400px] rounded-full bg-blue-500/5 blur-[100px]" />
-          <div className="absolute top-40 -right-40 h-[400px] w-[400px] rounded-full bg-purple-500/5 blur-[100px]" />
+          <div className="absolute top-60 -left-40 h-[400px] w-[400px] rounded-full bg-secondary/5 blur-[100px]" />
+          <div className="absolute top-40 -right-40 h-[400px] w-[400px] rounded-full bg-primary/5 blur-[100px]" />
         </div>
 
         <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-28 md:pt-32 md:pb-40">
@@ -63,7 +63,7 @@ export default function LandingPage() {
 
             <h1 className="text-4xl font-bold tracking-tight font-heading sm:text-5xl md:text-6xl lg:text-7xl">
               Găsește zilieri{' '}
-              <span className="bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
                 de încredere
               </span>
               <br />
@@ -79,7 +79,7 @@ export default function LandingPage() {
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/register"
-                className="group relative inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110"
+                className="group relative inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary-strong/30 hover:brightness-110"
               >
                 Creează cont gratuit
                 <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
@@ -197,13 +197,13 @@ export default function LandingPage() {
                 step: '2',
                 title: 'Publică sau aplică',
                 desc: 'Angajatorii publică ture cu detalii complete. Lucrătorii aplică cu un singur click.',
-                gradient: 'from-primary to-purple-400',
+                gradient: 'from-primary to-blue-500',
               },
               {
                 step: '3',
                 title: 'Lucrează și câștigă',
                 desc: 'Prezintă-te la tură, completează munca, primește plata. Lasă o recenzie.',
-                gradient: 'from-purple-500 to-pink-400',
+                gradient: 'from-teal-500 to-emerald-400',
               },
             ].map((item) => (
               <div key={item.step} className="relative text-center">
@@ -253,9 +253,9 @@ export default function LandingPage() {
       {/* ── CTA Banner ─────────────────────────────────────── */}
       <section className="border-t border-border/40">
         <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-purple-500/10 p-10 md:p-16">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-blue-500/10 p-10 md:p-16">
             <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-primary/10 blur-[80px]" />
-            <div className="pointer-events-none absolute -left-20 -bottom-20 h-60 w-60 rounded-full bg-purple-500/10 blur-[80px]" />
+            <div className="pointer-events-none absolute -left-20 -bottom-20 h-60 w-60 rounded-full bg-primary/10 blur-[80px]" />
             <div className="relative mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight font-heading md:text-4xl">
                 Gata să începi?
@@ -267,7 +267,7 @@ export default function LandingPage() {
               <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   href="/register"
-                  className="group inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110"
+                  className="group inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary-strong/30 hover:brightness-110"
                 >
                   Creează cont gratuit
                   <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>

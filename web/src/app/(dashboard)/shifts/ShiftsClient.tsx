@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useTransition, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Calendar } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -19,15 +21,15 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { skillLabels, shiftStatusLabels, applicationStatusLabels, getLabel } from '@/lib/labels'
-import { createShift } from '@/lib/supabase/data-actions'
+import { createShift } from '@/lib/romarg-data'
 import type { ShiftStatus, UserRole } from '@/lib/types/database'
 
 const statusColors: Record<ShiftStatus, string> = {
-  OPEN: 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
-  FILLED: 'bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
-  IN_PROGRESS: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
-  COMPLETED: 'bg-slate-500/10 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
-  CANCELLED: 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  OPEN: 'bg-secondary/10 text-secondary dark:bg-secondary/20 dark:text-secondary font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  FILLED: 'bg-primary/10 text-primary-strong dark:bg-primary/20 dark:text-primary font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  IN_PROGRESS: 'bg-accent/15 text-accent-foreground dark:bg-accent/20 dark:text-accent-foreground font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  COMPLETED: 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  CANCELLED: 'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
 }
 
 function formatDate(iso: string) {
@@ -42,28 +44,30 @@ interface ShiftsClientProps {
 }
 
 export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
+  const router = useRouter()
   const [filter, setFilter] = useState<string>('ALL')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [message, setMessage] = useState<string | null>(null)
   const [roleNeeded, setRoleNeeded] = useState<string>('')
   const formRef = useRef<HTMLFormElement>(null)
 
+  // Filter by shift status only — the tabs represent shift statuses. The
+  // worker's own application status is shown in a separate column and must
+  // not be conflated with the shift status filter (previously broke filtering).
   const filteredShifts = filter === 'ALL'
     ? initialShifts
-    : initialShifts.filter((s) => (s.status || s.my_application_status) === filter)
+    : initialShifts.filter((s) => s.status === filter)
 
   // Compute stats from real data
   const statuses = initialShifts.map(s => s.status).filter(Boolean)
   const stats = [
-    { label: 'Deschise', value: statuses.filter(s => s === 'OPEN').length, color: 'text-primary dark:text-primary-fixed-dim' },
+    { label: 'Deschise', value: statuses.filter(s => s === 'OPEN').length, color: 'text-primary-strong' },
     { label: 'Ocupate', value: statuses.filter(s => s === 'FILLED').length, color: 'text-foreground' },
     { label: 'În desfășurare', value: statuses.filter(s => s === 'IN_PROGRESS').length, color: 'text-foreground' },
-    { label: 'Total ture', value: initialShifts.length, color: 'text-primary dark:text-primary-fixed-dim' },
+    { label: 'Total ture', value: initialShifts.length, color: 'text-primary-strong' },
   ]
 
   function handleCreateShift() {
-    setMessage(null)
     const form = formRef.current
     if (!form) return
 
@@ -76,10 +80,13 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
     startTransition(async () => {
       const result = await createShift(formData)
       if (result.error) {
-        setMessage(result.error)
+        toast.error(result.error)
       } else {
         setDialogOpen(false)
-        setMessage('Tură creată cu succes! ✓')
+        toast.success('Tură creată cu succes!')
+        // Refresh server-component data so the new shift appears immediately
+        // (revalidatePath alone doesn't re-render the mounted client component).
+        router.refresh()
       }
     })
   }
@@ -98,11 +105,11 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
         </div>
         {userRole === 'EMPLOYER' && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger render={
-              <Button className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground shadow-md shadow-primary/10 transition-all duration-300">
+            <DialogTrigger>
+              <Button className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground shadow-md shadow-primary/10 transition-all duration-300">
                 ＋ Creează tură nouă
               </Button>
-            } />
+            </DialogTrigger>
             <DialogContent className="sm:max-w-lg bg-card/95 backdrop-blur-md dark:bg-card border border-border/60 rounded-2xl shadow-xl p-6">
               <DialogHeader className="space-y-1.5 pb-4 border-b border-border/60">
                 <DialogTitle className="text-xl font-semibold font-heading text-foreground">Tură nouă</DialogTitle>
@@ -139,7 +146,7 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
               </form>
               <DialogFooter className="pt-4 gap-2 border-t border-border/60">
                 <Button variant="outline" onClick={() => setDialogOpen(false)} className="h-10 px-5 rounded-xl border border-border/80 bg-transparent hover:bg-muted text-foreground transition-all duration-200 font-sans text-xs font-semibold uppercase tracking-wider">Anulare</Button>
-                <Button onClick={handleCreateShift} disabled={isPending} className="h-10 px-5 rounded-xl font-sans text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground transition-all duration-200">
+                <Button onClick={handleCreateShift} disabled={isPending} className="h-10 px-5 rounded-xl font-sans text-xs font-semibold uppercase tracking-wider bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground transition-all duration-200">
                   {isPending ? 'Se creează...' : 'Publică tura'}
                 </Button>
               </DialogFooter>
@@ -147,13 +154,6 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
           </Dialog>
         )}
       </div>
-
-      {/* Message Toast */}
-      {message && (
-        <div className={`text-sm px-4 py-2.5 rounded-xl border font-sans ${message.includes('succes') ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300'}`}>
-          {message}
-        </div>
-      )}
 
       {/* Stats Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -222,12 +222,12 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
                   <TableCell className="text-sm text-muted-foreground font-sans px-5 py-3.5">
                     {formatDate(shift.start_time)} → {formatDate(shift.end_time)}
                   </TableCell>
-                  <TableCell className="font-semibold text-primary dark:text-primary-fixed-dim px-5 py-3.5 font-heading">
+                  <TableCell className="font-semibold text-primary-strong px-5 py-3.5 font-heading">
                     {shift.hourly_pay_ron} RON
                   </TableCell>
                   {userRole === 'EMPLOYER' && (
                     <TableCell className="px-5 py-3.5">
-                      <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim border-none rounded-lg px-2.5 py-0.5 font-sans text-xs">
+                      <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2.5 py-0.5 font-sans text-xs">
                         {shift.applications?.[0]?.count || 0}
                       </Badge>
                     </TableCell>
@@ -287,7 +287,7 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
               <div className="flex justify-between items-center pt-3 border-t border-border/50">
                 <div>
                   <span className="block text-[9px] text-muted-foreground font-sans uppercase tracking-wider">Tarif</span>
-                  <span className="font-semibold text-primary dark:text-primary-fixed-dim text-base font-heading">
+                  <span className="font-semibold text-primary-strong text-base font-heading">
                     {shift.hourly_pay_ron} RON / h
                   </span>
                 </div>
@@ -295,7 +295,7 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
                 {userRole === 'EMPLOYER' && (
                   <div className="text-right">
                     <span className="block text-[9px] text-muted-foreground font-sans uppercase tracking-wider">Aplicări</span>
-                    <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim border-none rounded-lg px-2 py-0.5 font-sans text-xs mt-0.5 inline-block">
+                    <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2 py-0.5 font-sans text-xs mt-0.5 inline-block">
                       {shift.applications?.[0]?.count || 0} aplicări
                     </Badge>
                   </div>

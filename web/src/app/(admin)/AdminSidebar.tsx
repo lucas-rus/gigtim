@@ -28,12 +28,12 @@ export function AdminSidebar() {
       {/* Brand */}
       <div className="p-6 pb-4">
         <Link href="/admin/users" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-red-600 text-white text-lg font-bold font-heading">
+          <div className="flex h-10 w-10 items-center justify-center rounded bg-primary-strong text-primary-foreground text-lg font-bold font-heading">
             A
           </div>
           <div>
-            <h2 className="text-base font-bold tracking-tight font-heading text-red-600">GigTim</h2>
-            <p className="text-[10px] text-red-600/80 leading-none font-mono uppercase tracking-wider mt-0.5">
+            <h2 className="text-base font-bold tracking-tight font-heading text-primary-strong">GigTim</h2>
+            <p className="text-[10px] text-primary-strong/80 leading-none font-mono uppercase tracking-wider mt-0.5">
               Panou Admin
             </p>
           </div>
@@ -57,7 +57,7 @@ export function AdminSidebar() {
                 className={cn(
                   'flex items-center gap-3 rounded px-3 py-2 text-sm font-medium transition-all duration-150',
                   isActive
-                    ? 'bg-red-50 text-red-700 font-semibold border-l-2 border-red-600 pl-2.5 rounded-l-none'
+                    ? 'bg-destructive/10 text-destructive font-semibold border-l-2 border-primary-strong pl-2.5 rounded-l-none'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >

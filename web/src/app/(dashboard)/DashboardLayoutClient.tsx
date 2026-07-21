@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { logout } from '@/lib/supabase/auth-actions'
+import { logout } from '@/lib/romarg-auth'
 import { DashboardSidebar } from './DashboardSidebar'
 import { TopHeader } from '@/components/layout/TopHeader'
 import type { UserRole } from '@/lib/types/database'
@@ -54,11 +54,11 @@ export function DashboardLayoutClient({
       <Sheet open={open} onOpenChange={setOpen}>
         <div className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border/60 dark:border-sidebar-border bg-card/90 dark:bg-sidebar/95 backdrop-blur-md px-4 md:hidden">
           <div className="flex items-center gap-3">
-            <SheetTrigger render={
+            <SheetTrigger>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-foreground hover:bg-accent dark:hover:bg-sidebar-accent transition-all duration-200">
                 <Menu className="h-5 w-5" />
               </Button>
-            } />
+            </SheetTrigger>
             <Link href="/" className="flex items-center gap-2">
               <span className="text-lg font-bold text-primary font-heading tracking-tight">GigTim</span>
               <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider bg-primary/10 px-1.5 py-0.5 rounded">MP</span>
@@ -76,7 +76,7 @@ export function DashboardLayoutClient({
                 aria-label="Toggle theme"
               >
                 {theme === 'dark' ? (
-                  <SunIcon className="h-4 w-4 text-amber-500" />
+                  <SunIcon className="h-4 w-4 text-accent" />
                 ) : (
                   <MoonIcon className="h-4 w-4" />
                 )}
@@ -86,7 +86,7 @@ export function DashboardLayoutClient({
             )}
 
             <DropdownMenu>
-              <DropdownMenuTrigger render={
+              <DropdownMenuTrigger>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-xl p-0">
                   <Avatar className="h-8 w-8 border border-border/80 hover:border-primary cursor-pointer rounded-xl">
                     {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} className="object-cover rounded-xl" />}
@@ -95,7 +95,7 @@ export function DashboardLayoutClient({
                     </AvatarFallback>
                   </Avatar>
                 </Button>
-              } />
+              </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 border border-border/60 bg-card/95 backdrop-blur-md dark:bg-card rounded-2xl shadow-xl" align="end" sideOffset={8}>
                 <DropdownMenuGroup>
                   <div className="px-3 py-2">
@@ -106,11 +106,11 @@ export function DashboardLayoutClient({
                   </div>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="bg-border/60" />
-                <DropdownMenuItem render={
+                <DropdownMenuItem>
                   <Link href="/profile" className="cursor-pointer w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent dark:hover:bg-muted transition-colors rounded-xl">
                     <User className="h-4 w-4" /> Profil
                   </Link>
-                } />
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-border/60" />
                 <DropdownMenuItem className="p-0">
                   <form action={logout} className="w-full">

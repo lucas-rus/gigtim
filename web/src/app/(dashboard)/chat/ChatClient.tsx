@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button'
 import { MessageSquare, ArrowLeft } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { getChatMessages, sendChatMessage, getOrCreateDirectChat } from '@/lib/supabase/data-actions'
-import { createClient } from '@/lib/supabase/client'
+import { getChatMessages, sendChatMessage, getOrCreateDirectChat } from '@/lib/romarg-data'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -106,26 +105,13 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
   useEffect(() => {
     if (!selectedRoom) return
     
-    const supabase = createClient()
-    const channel = supabase
-      .channel(`room:${selectedRoom}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-          filter: `room_id=eq.${selectedRoom}`,
-        },
-        async (_payload) => {
-          const msgs = await getChatMessages(selectedRoom)
-          setMessages(msgs)
-        }
-      )
-      .subscribe()
+    const interval = setInterval(async () => {
+      const msgs = await getChatMessages(selectedRoom)
+      setMessages(msgs)
+    }, 3000)
 
     return () => {
-      supabase.removeChannel(channel)
+      clearInterval(interval)
     }
   }, [selectedRoom])
 
@@ -315,7 +301,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                         )}
                         <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed font-sans shadow-sm ${
                           msg.is_mine
-                            ? 'bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground rounded-br-none shadow-primary/5'
+                            ? 'bg-primary text-primary-foreground rounded-br-none shadow-primary/5'
                             : 'bg-muted/80 dark:bg-muted/30 text-foreground rounded-bl-none border border-border/50'
                         }`}>
                           {msg.content}
@@ -342,7 +328,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                 <Button 
                   onClick={handleSend} 
                   disabled={isPending || !newMessage.trim()}
-                  className="h-11 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground transition-all duration-200"
+                  className="h-11 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary hover:bg-primary/90 hover:brightness-110 text-primary-foreground transition-all duration-200"
                 >
                   Trimite
                 </Button>

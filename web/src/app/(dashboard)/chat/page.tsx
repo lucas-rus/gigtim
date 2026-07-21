@@ -1,11 +1,11 @@
-import { getChatRooms, getPotentialConnections } from '@/lib/supabase/data-actions'
-import { getCurrentProfile } from '@/lib/supabase/auth-actions'
+import { getChatRooms, getPotentialConnections } from '@/lib/romarg-data'
+import { getCurrentProfile } from '@/lib/romarg-auth'
 import { ChatClient } from './ChatClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ChatPage() {
-  const [rooms, profileData, connections] = await Promise.all([
+  const [rooms, profile, connections] = await Promise.all([
     getChatRooms(),
     getCurrentProfile(),
     getPotentialConnections(),
@@ -14,7 +14,7 @@ export default async function ChatPage() {
   return (
     <ChatClient 
       initialRooms={rooms} 
-      userId={profileData?.user.id || null} 
+      userId={profile?.id || null} 
       potentialConnections={connections}
     />
   )

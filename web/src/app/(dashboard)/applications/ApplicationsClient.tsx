@@ -10,17 +10,17 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { skillLabels, applicationStatusLabels, getLabel } from '@/lib/labels'
-import { updateApplicationStatus, getUserReviews, getOrCreateDirectChat } from '@/lib/supabase/data-actions'
+import { updateApplicationStatus, getUserReviews, getOrCreateDirectChat } from '@/lib/romarg-data'
 import type { ApplicationStatus, UserRole } from '@/lib/types/database'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Rating } from '@/components/ui/rating'
 import { useRouter } from 'next/navigation'
 
 const statusColors: Record<ApplicationStatus, string> = {
-  PENDING: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
-  ACCEPTED: 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
-  REJECTED: 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
-  NO_SHOW: 'bg-slate-500/10 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400 font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  PENDING: 'bg-accent/15 text-accent-foreground dark:bg-accent/20 dark:text-accent-foreground font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  ACCEPTED: 'bg-secondary/10 text-secondary dark:bg-secondary/20 dark:text-secondary font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  REJECTED: 'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
+  NO_SHOW: 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground font-sans text-[11px] font-medium px-2.5 py-0.5 rounded-full border-none capitalize',
 }
 
 function formatDate(iso: string) {
@@ -52,10 +52,17 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
   const [apps, setApps] = useState(initialApplications)
   const [isPending, startTransition] = useTransition()
   const [selectedWorkerReviews, setSelectedWorkerReviews] = useState<any[] | null>(null)
+  const [selectedWorker, setSelectedWorker] = useState<any | null>(null)
   const [selectedWorkerName, setSelectedWorkerName] = useState<string>('')
   const [reviewsDialogOpen, setReviewsDialogOpen] = useState(false)
   const [loadingReviews, setLoadingReviews] = useState(false)
-  const [selectedWorker, setSelectedWorker] = useState<any | null>(null)
+  const getAvatarUrl = (users: any) => {
+    if (!users) return null
+    if (Array.isArray(users)) {
+      return users[0]?.avatar_url || null
+    }
+    return users.avatar_url || null
+  }
 
   function handleViewWorkerProfile(worker: any) {
     setSelectedWorker(worker)
@@ -79,6 +86,7 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
     startTransition(async () => {
       const res = await getOrCreateDirectChat(workerUserId)
       if (res.roomId) {
+        router.refresh()
         router.push(`/chat?room=${res.roomId}`)
       }
     })
@@ -181,7 +189,7 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
           {pending.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-xs font-semibold font-sans text-primary uppercase tracking-widest flex items-center gap-2 ml-1">
-                <span className="w-2 h-2 rounded-full bg-amber-400 dark:bg-amber-300 inline-block animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-accent dark:bg-accent inline-block animate-pulse"></span>
                 În așteptare ({pending.length})
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -199,9 +207,9 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                               className="flex gap-3 sm:gap-4 text-left hover:opacity-80 transition-opacity cursor-pointer group"
                             >
                               <Avatar className="h-10 w-10 border border-border rounded-xl group-hover:border-primary transition-colors">
-                                {worker.users?.avatar_url && (
+                                {getAvatarUrl(worker.users) && (
                                   <AvatarImage 
-                                    src={worker.users.avatar_url} 
+                                    src={getAvatarUrl(worker.users)!} 
                                     alt={worker.full_name} 
                                     className="object-cover rounded-xl"
                                   />
@@ -231,7 +239,7 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                                 <button
                                   type="button"
                                   onClick={() => handleViewWorkerProfile(worker)}
-                                  className="text-sm font-bold text-primary dark:text-primary-fixed-dim hover:underline font-heading cursor-pointer block w-full text-right"
+                                  className="text-sm font-bold text-primary-strong hover:underline font-heading cursor-pointer block w-full text-right"
                                 >
                                   ★ {Number(worker.reliability_score) === 5 ? '5/5' : `${Number(worker.reliability_score).toFixed(1)}/5`}
                                 </button>
@@ -251,7 +259,7 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                         {worker.skills && worker.skills.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
                             {worker.skills.map((s: string) => (
-                              <Badge key={s} variant="secondary" className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim border-none rounded-lg px-2 py-0.5 text-[10px] font-sans font-medium uppercase tracking-wider">{getLabel(skillLabels, s)}</Badge>
+                              <Badge key={s} variant="secondary" className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2 py-0.5 text-[10px] font-sans font-medium uppercase tracking-wider">{getLabel(skillLabels, s)}</Badge>
                             ))}
                           </div>
                         )}
@@ -281,7 +289,7 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 h-10 rounded-xl border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-500/10 bg-transparent transition-colors text-xs font-semibold font-sans"
+                            className="flex-1 h-10 rounded-xl border border-red-200 dark:border-red-900/60 text-primary-strong dark:text-red-400 hover:bg-red-500/10 bg-transparent transition-colors text-xs font-semibold font-sans"
                             disabled={isPending}
                             onClick={() => handleStatusUpdate(app.id, 'REJECTED')}
                           >
@@ -306,11 +314,15 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                   return (
                     <Card key={app.id} className="border border-border/60 bg-card dark:bg-card/40 rounded-2xl hover:shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition-all duration-300">
                       <CardContent className="flex items-center justify-between p-5 gap-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border border-border rounded-xl">
-                            {worker.users?.avatar_url && (
+                        <button
+                          type="button"
+                          onClick={() => handleViewWorkerProfile(worker)}
+                          className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity cursor-pointer group flex-1"
+                        >
+                          <Avatar className="h-9 w-9 border border-border rounded-xl group-hover:border-primary transition-colors">
+                            {getAvatarUrl(worker.users) && (
                               <AvatarImage 
-                                src={worker.users.avatar_url} 
+                                src={getAvatarUrl(worker.users)!} 
                                 alt={worker.full_name} 
                                 className="object-cover rounded-xl"
                               />
@@ -320,10 +332,10 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-semibold text-foreground font-sans leading-none">{worker.full_name}</p>
+                            <p className="text-sm font-semibold text-foreground font-sans leading-none group-hover:text-primary transition-colors">{worker.full_name}</p>
                             <p className="text-xs text-muted-foreground font-sans mt-1.5">{worker.city}</p>
                           </div>
-                        </div>
+                        </button>
                         <div className="flex items-center gap-2 shrink-0">
                           <Button
                             size="sm"
@@ -362,9 +374,9 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/60 bg-muted/20 dark:bg-muted/10">
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 border-2 border-primary rounded-xl">
-                {selectedWorker?.users?.avatar_url && (
+                {getAvatarUrl(selectedWorker?.users) && (
                   <AvatarImage 
-                    src={selectedWorker.users.avatar_url} 
+                    src={getAvatarUrl(selectedWorker.users)!} 
                     alt={selectedWorkerName} 
                     className="object-cover rounded-xl"
                   />
@@ -469,7 +481,7 @@ export function ApplicationsClient({ userRole, initialApplications }: Props) {
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
                           <Rating rating={r.rating} showText={false} size={12} />
-                          <span className="text-[10px] font-semibold font-sans text-primary dark:text-primary-fixed-dim">{r.rating}/5</span>
+                          <span className="text-[10px] font-semibold font-sans text-primary-strong">{r.rating}/5</span>
                         </div>
                         <span className="text-[10px] text-muted-foreground font-sans">
                           {new Date(r.created_at).toLocaleDateString('ro-RO')}

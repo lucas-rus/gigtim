@@ -18,9 +18,9 @@ export function Rating({ rating, maxRating = 5, className, showText = true, size
     <div className={cn("flex items-center gap-1.5", className)}>
       <div className="flex">
         {[...Array(fullStars)].map((_, i) => (
-          <Star key={`full-${i}`} size={size} className="fill-amber-400 text-amber-400" />
+          <Star key={`full-${i}`} size={size} className="fill-accent text-accent" />
         ))}
-        {hasHalfStar && <StarHalf size={size} className="fill-amber-400 text-amber-400" />}
+        {hasHalfStar && <StarHalf size={size} className="fill-accent text-accent" />}
         {[...Array(emptyStars)].map((_, i) => (
           <Star key={`empty-${i}`} size={size} className="text-muted-foreground/30" />
         ))}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,7 +18,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { createForumPost, getForumComments, createForumComment } from '@/lib/supabase/data-actions'
+import { createForumPost, getForumComments, createForumComment } from '@/lib/romarg-data'
 import type { ForumCategory } from '@/lib/types/database'
 
 const categoryLabels: Record<ForumCategory, string> = {
@@ -43,6 +44,7 @@ interface ForumClientProps {
 }
 
 export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
+  const router = useRouter()
   const [tab, setTab] = useState<string>('ALL')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -57,13 +59,14 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
   // Comments
   const [expandedPost, setExpandedPost] = useState<string | null>(null)
   const [comments, setComments] = useState<Record<string, any[]>>({})
-  const [commentText, setCommentText] = useState('')
+  // Per-post comment draft state — a single shared string previously leaked
+  // typed text between posts when toggling expansion.
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
 
   const tabs = ['ALL', 'GENERAL', 'TIPS', 'JOBS', 'LEGAL'] as const
   const filteredPosts = tab === 'ALL' ? initialPosts : initialPosts.filter(p => p.category === tab)
 
   function handlePost() {
-    setMessage(null)
     const formData = new FormData()
     formData.set('title', title)
     formData.set('content', content)
@@ -77,7 +80,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
         setDialogOpen(false)
         setTitle('')
         setContent('')
-        window.location.reload()
+        router.refresh()
       }
     })
   }
@@ -95,11 +98,12 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
   }
 
   function handleComment(postId: string) {
-    if (!commentText.trim()) return
+    const draft = (commentDrafts[postId] || '').trim()
+    if (!draft) return
     startTransition(async () => {
-      const result = await createForumComment(postId, commentText.trim())
+      const result = await createForumComment(postId, draft)
       if (!result.error) {
-        setCommentText('')
+        setCommentDrafts(prev => ({ ...prev, [postId]: '' }))
         const updated = await getForumComments(postId)
         setComments(prev => ({ ...prev, [postId]: updated }))
       }
@@ -125,9 +129,9 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
           <p className="text-sm text-muted-foreground font-sans mt-0.5">Discuții, sfaturi și anunțuri pentru comunitate</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger render={
-            <Button className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground shadow-md shadow-primary/10 transition-all duration-300">＋ Postare nouă</Button>
-          } />
+          <DialogTrigger>
+            <Button className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground shadow-md shadow-primary/10 transition-all duration-300">＋ Postare nouă</Button>
+          </DialogTrigger>
           <DialogContent className="sm:max-w-lg bg-card/95 backdrop-blur-md dark:bg-card border border-border/60 rounded-2xl shadow-xl p-0">
             <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/60">
               <DialogTitle className="text-xl font-semibold font-heading text-foreground">Postare nouă</DialogTitle>
@@ -155,7 +159,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
             </div>
             <DialogFooter className="px-6 pb-6 pt-4 border-t border-border/60 gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setDialogOpen(false)} className="h-10 px-4 rounded-xl border border-border/80 bg-transparent hover:bg-muted text-foreground transition-colors text-xs font-semibold font-sans">Anulare</Button>
-              <Button onClick={handlePost} disabled={isPending || !title.trim()} className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground transition-all duration-200">
+              <Button onClick={handlePost} disabled={isPending || !title.trim()} className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground transition-all duration-200">
                 {isPending ? 'Se publică...' : 'Publică'}
               </Button>
             </DialogFooter>
@@ -213,7 +217,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim border-none rounded-lg px-2.5 py-0.5 text-[10px] font-sans font-semibold shrink-0 capitalize tracking-wide">
+                  <Badge variant="outline" className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2.5 py-0.5 text-[10px] font-sans font-semibold shrink-0 capitalize tracking-wide">
                     {categoryLabels[post.category as ForumCategory] || post.category}
                   </Badge>
                 </div>
@@ -224,7 +228,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                 <div className="flex items-center gap-3 pt-3 border-t border-border/60">
                   <button 
                     onClick={() => handleLoadComments(post.id)}
-                    className="text-xs font-semibold text-primary dark:text-primary-fixed-dim font-sans hover:underline flex items-center gap-1.5 cursor-pointer capitalize"
+                    className="text-xs font-semibold text-primary-strong font-sans hover:underline flex items-center gap-1.5 cursor-pointer capitalize"
                   >
                     <MessageSquare className="h-3.5 w-3.5" /> {post.comment_count || 0} comentarii
                   </button>
@@ -259,8 +263,8 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                     <div className="flex gap-2 pt-3 border-t border-border/60">
                       <Input
                         placeholder="Scrie un comentariu..."
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
+                        value={commentDrafts[post.id] || ''}
+                        onChange={(e) => setCommentDrafts(prev => ({ ...prev, [post.id]: e.target.value }))}
                         onKeyDown={(e) => e.key === 'Enter' && handleComment(post.id)}
                         className="bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 text-xs flex-1 font-sans"
                       />
@@ -268,7 +272,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                         size="sm" 
                         onClick={() => handleComment(post.id)} 
                         disabled={isPending}
-                        className="h-10 px-4 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground transition-all duration-200 shrink-0"
+                        className="h-10 px-4 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground transition-all duration-200 shrink-0"
                       >
                         Trimite
                       </Button>

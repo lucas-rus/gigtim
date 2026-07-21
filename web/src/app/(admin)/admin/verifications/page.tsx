@@ -10,11 +10,11 @@ import type { VerificationStatus } from '@/lib/types/database'
 export const dynamic = 'force-dynamic'
 
 const statusColors: Record<VerificationStatus, string> = {
-  PENDING: 'bg-amber-50 text-amber-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
-  APPROVED: 'bg-emerald-50 text-emerald-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
-  REJECTED: 'bg-red-50 text-red-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
-  EXPIRED: 'bg-slate-50 text-slate-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
-  NEEDS_REVIEW: 'bg-purple-50 text-purple-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  PENDING: 'bg-accent/15 text-accent-foreground border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  APPROVED: 'bg-secondary/10 text-secondary border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  REJECTED: 'bg-destructive/10 text-destructive border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  EXPIRED: 'bg-muted text-muted-foreground border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  NEEDS_REVIEW: 'bg-accent/15 text-accent-foreground border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
 }
 
 const statColors: Record<string, string> = {
@@ -76,7 +76,7 @@ export default async function VerificationsPage() {
             ) : (
               verifications.map((v: any) => (
                 <TableRow key={v.id} className="group hover:bg-[#f8f9ff] transition-colors border-b border-border/50 last:border-b-0">
-                  <TableCell className="font-semibold text-on-background font-sans">
+                  <TableCell className="font-semibold text-foreground font-sans">
                     {v.worker_profiles?.full_name || 'Necunoscut'}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground font-sans">

@@ -29,9 +29,9 @@ import { roleLabels, getLabel } from '@/lib/labels'
 import type { UserRole } from '@/lib/types/database'
 
 const roleColors: Record<UserRole, string> = {
-  WORKER: 'bg-blue-50 text-blue-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
-  EMPLOYER: 'bg-purple-50 text-purple-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
-  ADMIN: 'bg-red-50 text-red-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  WORKER: 'bg-primary/10 text-primary-strong border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  EMPLOYER: 'bg-accent/15 text-accent-foreground border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
+  ADMIN: 'bg-destructive/10 text-destructive border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded',
 }
 
 export type AdminUser = {
@@ -132,7 +132,7 @@ export function UsersClient({ initialUsers }: { initialUsers: AdminUser[] }) {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold text-on-background font-sans">{user.name}</p>
+                      <p className="text-sm font-semibold text-foreground font-sans">{user.name}</p>
                       <p className="text-xs text-muted-foreground font-sans">{user.email}</p>
                     </div>
                   </div>
@@ -145,8 +145,8 @@ export function UsersClient({ initialUsers }: { initialUsers: AdminUser[] }) {
                 <TableCell className="text-xs text-muted-foreground font-sans">{user.city}</TableCell>
                 <TableCell>
                   {user.verified
-                    ? <Badge className="bg-emerald-50 text-emerald-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded" variant="outline">✓ Da</Badge>
-                    : <Badge className="bg-slate-50 text-slate-700 border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded" variant="outline">Nu</Badge>
+                    ? <Badge className="bg-secondary/10 text-secondary border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded" variant="outline">✓ Da</Badge>
+                    : <Badge className="bg-muted text-muted-foreground border-none font-mono text-2xs uppercase tracking-wider px-2 py-0.5 rounded" variant="outline">Nu</Badge>
                   }
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground font-mono">{user.created}</TableCell>

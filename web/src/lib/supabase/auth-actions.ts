@@ -26,67 +26,53 @@ export async function register(formData: FormData) {
   const password = formData.get('password') as string
   const role = (formData.get('role') as UserRole) || 'WORKER'
 
+  if (!email || !password) return { error: 'Emailul și parola sunt obligatorii.' }
+  if (password.length < 6) return { error: 'Parola trebuie să aibă minim 6 caractere.' }
+
+  // Block privilege escalation: role MUST be WORKER or EMPLOYER (never ADMIN).
+  if (role !== 'WORKER' && role !== 'EMPLOYER') return { error: 'Rol invalid.' }
+
+  // Validate role-specific fields BEFORE creating the auth user,
+  // so we never create an orphaned auth user for invalid input.
+  const fullName = (formData.get('fullName') as string) || ''
+  const cui = ((formData.get('cui') as string) || '').trim()
+  const phone = (formData.get('phone') as string) || ''
+  const city = (formData.get('city') as string) || ''
+  const county = (formData.get('county') as string) || ''
+  const companyName = (formData.get('companyName') as string) || ''
+  const address = (formData.get('address') as string) || ''
+
+  // CNP and Serie CI are NOT required at registration — they are added later
+  // via the identity verification step in the profile screen.
+  // This is legally safer: we collect only minimum data at signup.
+
+  if (role === 'EMPLOYER') {
+    if (!/^(RO)?\d{2,10}$/i.test(cui)) return { error: 'CUI-ul este invalid. Ex: RO12345678.' }
+  }
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        role,
+        full_name: fullName || null,
+        phone: phone || null,
+        city,
+        county,
+        company_name: companyName || null,
+        cui,
+        address,
+      },
+    },
   })
 
   if (authError) {
     return { error: authError.message }
   }
 
-  if (authData.user) {
-    const { createClient: createServiceClient } = await import('@supabase/supabase-js')
-    const adminClient = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const { data: userData, error: insertError } = await adminClient.from('users').insert({
-      auth_id: authData.user.id,
-      role,
-    }).select('id').single()
-
-    if (insertError || !userData) {
-      return { error: insertError?.message || 'Failed to create user record' }
-    }
-
-    const userId = userData.id
-
-    // Insert into respective profile table
-    const city = formData.get('city') as string || ''
-    const county = formData.get('county') as string || ''
-
-    if (role === 'WORKER') {
-      const fullName = formData.get('fullName') as string || ''
-      const phone = formData.get('phone') as string || ''
-      const cnp = formData.get('cnp') as string || ''
-      const idSeries = formData.get('idSeries') as string || ''
-
-      await adminClient.from('worker_profiles').insert({
-        user_id: userId,
-        full_name: fullName,
-        phone_number: phone,
-        city,
-        county,
-        cnp,
-        id_card_series: idSeries
-      })
-    } else if (role === 'EMPLOYER') {
-      const companyName = formData.get('companyName') as string || ''
-      const cui = formData.get('cui') as string || ''
-      const address = formData.get('address') as string || ''
-
-      await adminClient.from('employer_profiles').insert({
-        user_id: userId,
-        company_name: companyName,
-        cui,
-        address,
-        city,
-        county
-      })
-    }
-  }
+  // Profile rows are auto-created by the on_auth_user_created trigger
+  // on auth.users — no RPC needed. Email confirmation is handled by Supabase.
 
   return { success: true }
 }
@@ -176,7 +162,7 @@ export async function getCurrentProfile() {
       .from('worker_profiles')
       .select('*')
       .eq('user_id', dbUser.id)
-      .single()
+      .maybeSingle()
     return { user: dbUser, profile, profileType: 'worker' as const, email }
   }
 
@@ -185,7 +171,7 @@ export async function getCurrentProfile() {
       .from('employer_profiles')
       .select('*')
       .eq('user_id', dbUser.id)
-      .single()
+      .maybeSingle()
     return { user: dbUser, profile, profileType: 'employer' as const, email }
   }
 
@@ -193,6 +179,18 @@ export async function getCurrentProfile() {
 }
 
 export async function getAdminUsers() {
+  // Defense-in-depth: verify the caller is ADMIN before using the service-role
+  // client to list all users. (The (admin)/layout also guards this route.)
+  const supabase = await createClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) return []
+  const { data: caller } = await supabase
+    .from('users')
+    .select('role')
+    .eq('auth_id', authUser.id)
+    .maybeSingle()
+  if (!caller || caller.role !== 'ADMIN') return []
+
   const { createClient: createServiceClient } = await import('@supabase/supabase-js')
   const adminClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

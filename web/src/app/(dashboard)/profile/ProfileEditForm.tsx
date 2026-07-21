@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog'
-import { updateWorkerProfile, updateEmployerProfile } from '@/lib/supabase/data-actions'
+import { updateWorkerProfile, updateEmployerProfile } from '@/lib/romarg-data'
 
 interface ProfileEditFormProps {
   profileType: 'worker' | 'employer' | 'admin'
@@ -16,6 +18,7 @@ interface ProfileEditFormProps {
 }
 
 export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
@@ -35,7 +38,6 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
   const [cui, setCui] = useState((profile as any)?.cui || '')
 
   function handleSave() {
-    setMessage(null)
     const formData = new FormData()
 
     if (profileType === 'worker') {
@@ -61,9 +63,11 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
 
       if (result.error) {
         setMessage(result.error)
+        toast.error(result.error)
       } else {
         setOpen(false)
-        window.location.reload()
+        toast.success('Profil actualizat!')
+        router.refresh()
       }
     })
   }
@@ -76,9 +80,9 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
         <div className="text-sm px-4 py-2.5 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive font-sans mb-3">{message}</div>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger render={
+        <DialogTrigger>
           <Button variant="outline" className="h-10 px-5 rounded-xl border border-border/80 bg-transparent hover:bg-accent text-foreground transition-all duration-200 text-xs font-semibold uppercase tracking-wider">Editează Profilul</Button>
-        } />
+        </DialogTrigger>
         <DialogContent className="max-w-md bg-card/95 backdrop-blur-md dark:bg-card border border-border/60 rounded-2xl shadow-xl p-0">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/60">
             <DialogTitle className="text-lg font-semibold font-heading text-foreground">Editează Profilul</DialogTitle>
@@ -149,7 +153,7 @@ export function ProfileEditForm({ profileType, profile }: ProfileEditFormProps) 
           </div>
           <DialogFooter className="px-6 pb-6 pt-4 border-t border-border/60 gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setOpen(false)} className="h-10 px-4 rounded-xl border border-border/80 bg-transparent hover:bg-muted text-foreground transition-colors text-xs font-semibold font-sans">Anulare</Button>
-            <Button onClick={handleSave} disabled={isPending} className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:brightness-110 text-primary-foreground transition-all duration-200">
+            <Button onClick={handleSave} disabled={isPending} className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary hover:bg-primary/90 hover:brightness-110 text-primary-foreground transition-all duration-200">
               {isPending ? 'Se salvează...' : 'Salvează'}
             </Button>
           </DialogFooter>

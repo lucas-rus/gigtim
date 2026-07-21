@@ -1,17 +1,17 @@
-import { getOpenShifts, getMyApplications } from '@/lib/supabase/data-actions'
-import { getCurrentProfile } from '@/lib/supabase/auth-actions'
+import { getOpenShifts, getMyApplications } from '@/lib/romarg-data'
+import { getCurrentProfile } from '@/lib/romarg-auth'
 import { JobsClient } from './JobsClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function JobsMarketplacePage() {
-  const [shifts, profileData] = await Promise.all([
+  const [shifts, profile] = await Promise.all([
     getOpenShifts(),
     getCurrentProfile(),
   ])
 
-  const userRole = profileData?.user.role || 'WORKER'
-  const userId = profileData?.user.id || null
+  const userRole = profile?.role || 'WORKER'
+  const userId = profile?.id || null
 
   let initialAppliedShiftIds: string[] = []
   if (userRole === 'WORKER') {

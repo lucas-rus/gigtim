@@ -77,7 +77,7 @@ export default function UpdatePasswordPage() {
             
             {success ? (
               <div className="text-center space-y-6">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary dark:text-secondary border border-emerald-500/20">
                   <span className="material-symbols-outlined text-3xl">check_circle</span>
                 </div>
                 <h3 className="text-xl font-bold font-heading text-foreground">Parola a fost actualizată!</h3>

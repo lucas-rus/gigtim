@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { isValidCNP, isValidCUI, isValidRole, isValidMessageBody } from '@/lib/validation'
 
 // ─── Helpers ────────────────────────────────────────────────
 
@@ -15,6 +16,17 @@ async function getDbUser() {
     .eq('auth_id', authUser.id)
     .single()
   return data
+}
+
+/** Verifies the current user is a member of the given chat room. */
+async function isRoomMember(supabase: Awaited<ReturnType<typeof createClient>>, roomId: string, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('chat_room_members')
+    .select('room_id')
+    .eq('room_id', roomId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  return !!data
 }
 
 // ─── JOBS / MARKETPLACE ─────────────────────────────────────
@@ -38,6 +50,27 @@ export async function applyToShift(shiftId: string) {
   const supabase = await createClient()
   const dbUser = await getDbUser()
   if (!dbUser || dbUser.role !== 'WORKER') return { error: 'Trebuie să fii lucrător pentru a aplica.' }
+
+  // Identity verification gate: worker must have CNP + Serie CI on file
+  // (conform Legea 52/2011 — Registrul Zilierilor ITM)
+  const { data: workerProfile } = await supabase
+    .from('worker_profiles')
+    .select('cnp, id_card_series')
+    .eq('user_id', dbUser.id)
+    .maybeSingle()
+  if (!workerProfile?.cnp || !workerProfile?.id_card_series) {
+    return { error: 'Verifică-ți identitatea în profil (CNP + Serie CI) pentru a aplica la ture.' }
+  }
+
+  // Verify the shift is still OPEN (defense-in-depth; RLS also guards this).
+  const { data: shift, error: shiftError } = await supabase
+    .from('job_shifts')
+    .select('status')
+    .eq('id', shiftId)
+    .maybeSingle()
+
+  if (shiftError || !shift) return { error: 'Tura nu a fost găsită.' }
+  if (shift.status !== 'OPEN') return { error: 'Această tură nu mai acceptă aplicări.' }
 
   const { error } = await supabase
     .from('applications')
@@ -86,16 +119,27 @@ export async function createShift(formData: FormData) {
   const dbUser = await getDbUser()
   if (!dbUser || dbUser.role !== 'EMPLOYER') return { error: 'Doar angajatorii pot crea ture.' }
 
+  const roleNeeded = (formData.get('role_needed') as string) || ''
+  const startTime = formData.get('start_time') as string
+  const endTime = formData.get('end_time') as string
+  const hourlyPay = Number(formData.get('hourly_pay_ron'))
+
+  if (!isValidRole(roleNeeded)) return { error: 'Rolul necesar este invalid.' }
+  if (!startTime || !endTime) return { error: 'Timpul de început și de sfârșit sunt obligatorii.' }
+  if (new Date(endTime) <= new Date(startTime)) return { error: 'Timpul de sfârșit trebuie să fie după cel de început.' }
+  if (!Number.isFinite(hourlyPay) || hourlyPay <= 0) return { error: 'Plata pe oră trebuie să fie mai mare decât zero.' }
+
   const { error } = await supabase.from('job_shifts').insert({
     employer_id: dbUser.id,
-    role_needed: formData.get('role_needed') as string,
-    start_time: formData.get('start_time') as string,
-    end_time: formData.get('end_time') as string,
-    hourly_pay_ron: Number(formData.get('hourly_pay_ron')),
+    role_needed: roleNeeded,
+    start_time: startTime,
+    end_time: endTime,
+    hourly_pay_ron: hourlyPay,
   })
 
   if (error) return { error: error.message }
   revalidatePath('/shifts')
+  revalidatePath('/jobs')
   return { success: true }
 }
 
@@ -139,6 +183,20 @@ export async function getMyApplications() {
 
 export async function updateApplicationStatus(applicationId: string, status: 'ACCEPTED' | 'REJECTED') {
   const supabase = await createClient()
+  const dbUser = await getDbUser()
+  if (!dbUser || dbUser.role !== 'EMPLOYER') return { error: 'Doar angajatorii pot actualiza aplicările.' }
+  if (status !== 'ACCEPTED' && status !== 'REJECTED') return { error: 'Status invalid.' }
+
+  // Verify the caller owns the shift this application belongs to.
+  const { data: application, error: appError } = await supabase
+    .from('applications')
+    .select('shift_id, job_shifts!inner(employer_id)')
+    .eq('id', applicationId)
+    .maybeSingle()
+
+  if (appError || !application) return { error: 'Aplicarea nu a fost găsită.' }
+  const shiftOwner = (application.job_shifts as any)?.employer_id
+  if (shiftOwner !== dbUser.id) return { error: 'Nu ești autorizat să modifici această aplicare.' }
 
   const { error } = await supabase
     .from('applications')
@@ -195,11 +253,20 @@ export async function createForumPost(formData: FormData) {
   const dbUser = await getDbUser()
   if (!dbUser) return { error: 'Neautorizat' }
 
+  const title = ((formData.get('title') as string) || '').trim()
+  const content = ((formData.get('content') as string) || '').trim()
+  const category = (formData.get('category') as string) || 'GENERAL'
+
+  if (title.length < 3) return { error: 'Titlul trebuie să aibă minim 3 caractere.' }
+  if (title.length > 120) return { error: 'Titlul este prea lung (max 120).' }
+  if (!content || content.length > 5000) return { error: 'Conținutul este invalid (max 5000 caractere).' }
+  if (!['GENERAL', 'TIPS', 'JOBS', 'LEGAL'].includes(category)) return { error: 'Categorie invalidă.' }
+
   const { error } = await supabase.from('forum_posts').insert({
     author_id: dbUser.id,
-    title: formData.get('title') as string,
-    content: formData.get('content') as string,
-    category: formData.get('category') as string,
+    title,
+    content,
+    category,
   })
 
   if (error) return { error: error.message }
@@ -241,10 +308,12 @@ export async function createForumComment(postId: string, content: string) {
   const dbUser = await getDbUser()
   if (!dbUser) return { error: 'Neautorizat' }
 
+  if (!isValidMessageBody(content, 2000)) return { error: 'Comentariul este invalid.' }
+
   const { error } = await supabase.from('forum_comments').insert({
     post_id: postId,
     author_id: dbUser.id,
-    content,
+    content: content.trim(),
   })
 
   if (error) return { error: error.message }
@@ -301,6 +370,9 @@ export async function getChatMessages(roomId: string) {
   const dbUser = await getDbUser()
   if (!dbUser) return []
 
+  // Verify the caller is a member of this room.
+  if (!(await isRoomMember(supabase, roomId, dbUser.id))) return []
+
   const { data } = await supabase
     .from('chat_messages')
     .select('*')
@@ -328,10 +400,17 @@ export async function sendChatMessage(roomId: string, content: string) {
   const dbUser = await getDbUser()
   if (!dbUser) return { error: 'Neautorizat' }
 
+  if (!isValidMessageBody(content)) return { error: 'Mesajul nu poate fi gol.' }
+
+  // Verify the caller is a member of this room.
+  if (!(await isRoomMember(supabase, roomId, dbUser.id))) {
+    return { error: 'Nu ești membru al acestei conversații.' }
+  }
+
   const { error } = await supabase.from('chat_messages').insert({
     room_id: roomId,
     sender_id: dbUser.id,
-    content,
+    content: content.trim(),
   })
 
   if (error) return { error: error.message }
@@ -342,6 +421,8 @@ export async function sendChatMessage(roomId: string, content: string) {
 
 export async function getAdminAuditLog() {
   const supabase = await createClient()
+  const dbUser = await getDbUser()
+  if (!dbUser || dbUser.role !== 'ADMIN') return []
 
   const { data } = await supabase
     .from('admin_audit_log')
@@ -354,6 +435,8 @@ export async function getAdminAuditLog() {
 
 export async function getAdminVerifications() {
   const supabase = await createClient()
+  const dbUser = await getDbUser()
+  if (!dbUser || dbUser.role !== 'ADMIN') return []
 
   const { data } = await supabase
     .from('id_verifications')
@@ -368,17 +451,21 @@ export async function getAdminVerifications() {
 export async function updateWorkerProfile(formData: FormData) {
   const supabase = await createClient()
   const dbUser = await getDbUser()
-  if (!dbUser) return { error: 'Neautorizat' }
+  if (!dbUser || dbUser.role !== 'WORKER') return { error: 'Doar lucrătorii pot edita profilul de lucrător.' }
 
-  // Use upsert to handle legacy users who might not have a profile row
+  // Preserve existing CNP/CI if the user doesn't resubmit them; never store
+  // placeholder PII — reject if neither new nor existing value is valid.
   const { data: existing } = await supabase
     .from('worker_profiles')
     .select('cnp, id_card_series')
     .eq('user_id', dbUser.id)
-    .single()
+    .maybeSingle()
 
-  const cnp = (formData.get('cnp') as string) || existing?.cnp || '0000000000000'
-  const id_card_series = (formData.get('id_card_series') as string) || existing?.id_card_series || 'XX000000'
+  const cnp = ((formData.get('cnp') as string) || '').trim() || existing?.cnp || ''
+  const id_card_series = ((formData.get('id_card_series') as string) || '').trim() || existing?.id_card_series || ''
+
+  if (!isValidCNP(cnp)) return { error: 'CNP-ul trebuie să conțină exact 13 cifre.' }
+  if (!id_card_series) return { error: 'Seria cărții de identitate este obligatorie.' }
 
   const { error } = await supabase
     .from('worker_profiles')
@@ -401,15 +488,16 @@ export async function updateWorkerProfile(formData: FormData) {
 export async function updateEmployerProfile(formData: FormData) {
   const supabase = await createClient()
   const dbUser = await getDbUser()
-  if (!dbUser) return { error: 'Neautorizat' }
+  if (!dbUser || dbUser.role !== 'EMPLOYER') return { error: 'Doar angajatorii pot edita profilul de angajator.' }
 
   const { data: existing } = await supabase
     .from('employer_profiles')
     .select('cui')
     .eq('user_id', dbUser.id)
-    .single()
+    .maybeSingle()
 
-  const cui = (formData.get('cui') as string) || existing?.cui || 'RO000000'
+  const cui = ((formData.get('cui') as string) || '').trim() || existing?.cui || ''
+  if (!isValidCUI(cui)) return { error: 'CUI-ul este invalid. Ex: RO12345678.' }
 
   const { error } = await supabase
     .from('employer_profiles')
@@ -463,6 +551,8 @@ export async function getOrCreateDirectChat(targetUserId: string) {
   const supabase = await createClient()
   const dbUser = await getDbUser()
   if (!dbUser) return { error: 'Neautorizat' }
+  if (!targetUserId) return { error: 'Destinatar invalid.' }
+  if (targetUserId === dbUser.id) return { error: 'Nu poți începe o conversație cu tine însuți.' }
 
   // 1. Check if a DIRECT room already exists between these two users
   const { data: myRooms } = await supabase
@@ -500,14 +590,11 @@ export async function getOrCreateDirectChat(targetUserId: string) {
     return { roomId: existingRoomId }
   }
 
-  // 2. Otherwise, create a new DIRECT room
-  // Find names for room name fallback
-  let workerName = ''
-  let employerName = ''
-  
-  const { data: worker } = await supabase.from('worker_profiles').select('full_name').eq('user_id', dbUser.role === 'WORKER' ? dbUser.id : targetUserId).single()
-  const { data: employer } = await supabase.from('employer_profiles').select('company_name').eq('user_id', dbUser.role === 'EMPLOYER' ? dbUser.id : targetUserId).single()
-  
+  // 2. Otherwise, create a new DIRECT room.
+  // Find names for room name fallback (maybeSingle avoids errors when missing).
+  const { data: worker } = await supabase.from('worker_profiles').select('full_name').eq('user_id', dbUser.role === 'WORKER' ? dbUser.id : targetUserId).maybeSingle()
+  const { data: employer } = await supabase.from('employer_profiles').select('company_name').eq('user_id', dbUser.role === 'EMPLOYER' ? dbUser.id : targetUserId).maybeSingle()
+
   const roomName = `${employer?.company_name || 'Angajator'} & ${worker?.full_name || 'Lucrător'}`
 
   const { data: newRoom, error: roomError } = await supabase
@@ -535,6 +622,7 @@ export async function getOrCreateDirectChat(targetUserId: string) {
     return { error: membersError.message }
   }
 
+  revalidatePath('/chat')
   return { roomId: newRoom.id }
 }
 

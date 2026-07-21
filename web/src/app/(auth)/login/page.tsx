@@ -2,18 +2,39 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { login } from '@/lib/supabase/auth-actions'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setLoading(true)
     setError(null)
-    const result = await login(formData)
-    if (result?.error) {
-      setError(result.error)
+
+    try {
+      const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value
+      const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement).value
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok || data?.error) {
+        setError(data?.error || 'Email sau parolă incorectă.')
+        setLoading(false)
+        return
+      }
+
+      // Hard navigation: the Set-Cookie header from /api/auth/login is already
+      // committed to the browser's cookie jar before this navigation begins,
+      // so /shifts will be requested with the session cookie attached.
+      window.location.assign('/shifts')
+    } catch (err: any) {
+      setError('Eroare de rețea: ' + (err?.message || 'necunoscută'))
       setLoading(false)
     }
   }
@@ -50,7 +71,7 @@ export default function LoginPage() {
               <p className="text-sm text-muted-foreground font-light italic">Intră în contul tău pentru a continua</p>
             </div>
 
-            <form action={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive font-sans">
                   {error}
@@ -66,63 +87,46 @@ export default function LoginPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="exemplu@email.com"
                   required
-                  autoComplete="email"
-                  className="h-12 w-full px-4 rounded-xl bg-background dark:bg-background/40 border border-border/80 text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all duration-300"
+                  placeholder="nume@example.ro"
+                  className="w-full rounded-2xl border border-border/80 bg-background/50 dark:bg-background/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 transition-all duration-200 focus:border-primary focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10"
                 />
               </div>
 
               {/* Password Field */}
               <div className="space-y-2.5">
-                <div className="flex items-center justify-between px-1">
+                <div className="flex items-center justify-between ml-1">
                   <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground" htmlFor="password">
                     Parolă
                   </label>
-                  <Link className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors" href="/forgot-password">
-                    Ai uitat parola?
-                  </Link>
                 </div>
                 <input
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="••••••••"
                   required
-                  autoComplete="current-password"
-                  className="h-12 w-full px-4 rounded-xl bg-background dark:bg-background/40 border border-border/80 text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all duration-300"
+                  placeholder="••••••••"
+                  className="w-full rounded-2xl border border-border/80 bg-background/50 dark:bg-background/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 transition-all duration-200 focus:border-primary focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10"
                 />
               </div>
 
               {/* Submit Button */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="relative h-12 w-full overflow-hidden rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 px-6 font-semibold shadow-lg shadow-primary/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/20 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  <span className="relative z-10">{loading ? 'Se conectează...' : 'Conectare'}</span>
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-primary-strong py-3.5 text-sm font-semibold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:brightness-108 active:scale-[0.99] disabled:opacity-50"
+              >
+                {loading ? 'Se conectează...' : 'Conectează-te'}
+              </button>
             </form>
 
-            {/* Card Footer */}
-            <div className="mt-8 pt-8 border-t border-border/60 text-center">
-              <p className="text-sm text-muted-foreground font-light">
-                Nu ai cont?{' '}
-                <Link className="ml-1 font-semibold text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-all" href="/register">
-                  Înregistrează-te
-                </Link>
-              </p>
+            <div className="mt-8 text-center text-xs text-muted-foreground">
+              Nu ai un cont?{' '}
+              <Link href="/register" className="font-semibold text-primary hover:underline">
+                Creează cont nou
+              </Link>
             </div>
           </div>
-        </div>
-
-        {/* Legal/Help links */}
-        <div className="flex justify-center gap-6 text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">
-          <a className="hover:text-foreground transition-colors" href="#">Termeni</a>
-          <a className="hover:text-foreground transition-colors" href="#">Confidențialitate</a>
-          <a className="hover:text-foreground transition-colors" href="#">Suport</a>
         </div>
       </div>
     </div>

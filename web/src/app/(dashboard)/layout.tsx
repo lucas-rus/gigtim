@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getCurrentProfile } from '@/lib/supabase/auth-actions'
+import { getCurrentProfile } from '@/lib/romarg-auth'
 import { DashboardLayoutClient } from './DashboardLayoutClient'
 
 export default async function DashboardLayout({
@@ -7,22 +7,21 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const data = await getCurrentProfile()
+  const profile = await getCurrentProfile()
 
-  if (!data) {
+  if (!profile) {
     redirect('/login')
   }
 
-  const { user, profile, profileType } = data
-  const role = user.role || 'WORKER'
-  const name = profileType === 'worker' ? (profile as any)?.full_name : (profile as any)?.company_name
-  const userName = name || user.email || 'Utilizator'
+  const role = profile.role || 'WORKER'
+  const name = role === 'WORKER' ? profile.full_name : profile.company_name
+  const userName = name || profile.email || 'Utilizator'
   const fallbackText = userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || '?'
 
   return (
     <DashboardLayoutClient 
       userRole={role} 
-      avatarUrl={user.avatar_url}
+      avatarUrl={profile.avatar_url}
       userName={userName}
       fallbackText={fallbackText}
     >
