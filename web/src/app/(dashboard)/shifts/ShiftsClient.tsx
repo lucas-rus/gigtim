@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar } from 'lucide-react'
+import { Calendar, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -106,8 +106,8 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
         {userRole === 'EMPLOYER' && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger>
-              <Button className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground shadow-md shadow-primary/10 transition-all duration-300">
-                ＋ Creează tură nouă
+              <Button className="h-10 px-5 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground shadow-md shadow-primary/10 transition-all duration-300 flex items-center gap-1.5">
+                <Plus className="h-4 w-4" aria-hidden="true" /> Creează tură nouă
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg bg-card/95 backdrop-blur-md dark:bg-card border border-border/60 rounded-2xl shadow-xl p-6">
@@ -158,7 +158,7 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
       {/* Stats Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-card dark:bg-card/40 border border-border/60 rounded-2xl p-5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition-all duration-300">
+          <div key={stat.label} className="bg-card dark:bg-card/40 border border-border/60 rounded-2xl p-5 hover:shadow-[0_8px_24px_rgba(60,35,20,0.06)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all duration-300">
             <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 font-sans">
               {stat.label}
             </p>
@@ -197,6 +197,7 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
           <TableHeader className="bg-muted/30 dark:bg-muted/10 border-b border-border/60">
             <TableRow>
               <TableHead className="font-sans text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 py-3.5 px-5">Rol</TableHead>
+              {userRole === 'WORKER' && <TableHead className="font-sans text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 py-3.5 px-5">Angajator</TableHead>}
               <TableHead className="font-sans text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 py-3.5 px-5">Perioadă</TableHead>
               <TableHead className="font-sans text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 py-3.5 px-5">Plată/oră</TableHead>
               {userRole === 'EMPLOYER' && <TableHead className="font-sans text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 py-3.5 px-5">Aplicări</TableHead>}
@@ -219,16 +220,21 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
                   <TableCell className="font-semibold text-foreground px-5 py-3.5 font-sans">
                     {getLabel(skillLabels, shift.role_needed)}
                   </TableCell>
+                  {userRole === 'WORKER' && (
+                    <TableCell className="text-sm text-muted-foreground font-sans px-5 py-3.5">
+                      {shift.company_name || '—'}
+                    </TableCell>
+                  )}
                   <TableCell className="text-sm text-muted-foreground font-sans px-5 py-3.5">
                     {formatDate(shift.start_time)} → {formatDate(shift.end_time)}
                   </TableCell>
-                  <TableCell className="font-semibold text-primary-strong px-5 py-3.5 font-heading">
-                    {shift.hourly_pay_ron} RON
+                  <TableCell className="font-semibold text-foreground px-5 py-3.5 font-mono">
+                    {Number(shift.hourly_pay_ron)} RON
                   </TableCell>
                   {userRole === 'EMPLOYER' && (
                     <TableCell className="px-5 py-3.5">
                       <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2.5 py-0.5 font-sans text-xs">
-                        {shift.applications?.[0]?.count || 0}
+                        {shift.application_count || 0}
                       </Badge>
                     </TableCell>
                   )}
@@ -271,6 +277,9 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
                   <h3 className="font-semibold font-heading text-foreground text-base mt-0.5">
                     {getLabel(skillLabels, shift.role_needed)}
                   </h3>
+                  {userRole === 'WORKER' && shift.company_name && (
+                    <p className="text-xs text-muted-foreground font-sans mt-0.5">{shift.company_name}</p>
+                  )}
                 </div>
                 <Badge className={statusColors[shift.status as ShiftStatus] || ''} variant="outline">
                   {getLabel(shiftStatusLabels, shift.status)}
@@ -287,8 +296,8 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
               <div className="flex justify-between items-center pt-3 border-t border-border/50">
                 <div>
                   <span className="block text-[9px] text-muted-foreground font-sans uppercase tracking-wider">Tarif</span>
-                  <span className="font-semibold text-primary-strong text-base font-heading">
-                    {shift.hourly_pay_ron} RON / h
+                  <span className="font-semibold text-foreground text-base font-mono">
+                    {Number(shift.hourly_pay_ron)} RON / h
                   </span>
                 </div>
 
@@ -296,7 +305,7 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
                   <div className="text-right">
                     <span className="block text-[9px] text-muted-foreground font-sans uppercase tracking-wider">Aplicări</span>
                     <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2 py-0.5 font-sans text-xs mt-0.5 inline-block">
-                      {shift.applications?.[0]?.count || 0} aplicări
+                      {shift.application_count || 0} aplicări
                     </Badge>
                   </div>
                 )}

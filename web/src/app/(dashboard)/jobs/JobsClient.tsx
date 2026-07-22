@@ -1,26 +1,23 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { Search, Briefcase, MapPin, Clock, MessageSquare } from 'lucide-react'
+import { useMemo, useState, useTransition } from 'react'
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
+import {
+  Map as MapIcon, List, MapPin, Calendar, CircleDollarSign, CheckCircle2,
+  MessageSquare, Star, X, Briefcase,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
-import {
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
-} from '@/components/ui/card'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { skillLabels, getLabel } from '@/lib/labels'
 import { applyToShift, getOrCreateDirectChat } from '@/lib/romarg-data'
 import type { UserRole } from '@/lib/types/database'
-import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import type { MapShiftPin } from '@/components/map/LeafletMap'
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('ro-RO', {
-    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-  })
-}
+// Leaflet needs `window` — load client-side only
+const LeafletMap = dynamic(() => import('@/components/map/LeafletMap'), { ssr: false })
 
 interface JobsClientProps {
   shifts: any[]
@@ -29,259 +26,400 @@ interface JobsClientProps {
   initialAppliedShiftIds?: string[]
 }
 
-// Centralized skillLabels in Romanian are used instead of englishSkillLabels
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('ro-RO', {
+    weekday: 'short', day: 'numeric', month: 'short',
+  })
+}
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
+}
 
-export function JobsClient({ shifts, userRole, _userId, initialAppliedShiftIds = [] }: JobsClientProps) {
+export function JobsClient({ shifts, userRole, initialAppliedShiftIds = [] }: JobsClientProps) {
   const router = useRouter()
-  const [searchCity, setSearchCity] = useState('ALL')
-  const [roleFilter, setRoleFilter] = useState<string>('ALL')
-  const [sortBy, setSortBy] = useState<string>('DATE_ASC')
-  const [isPending, startTransition] = useTransition()
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map')
+  const [activeFilter, setActiveFilter] = useState<string | null>(null)
+  const [selectedShift, setSelectedShift] = useState<any | null>(null)
   const [appliedIds, setAppliedIds] = useState<Set<string>>(() => new Set(initialAppliedShiftIds))
-  const [message, setMessage] = useState<string | null>(null)
-  const [showFilters, setShowFilters] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  // Filter chips derived from actually-posted shifts (mobile parity)
+  const availableCategories = useMemo(
+    () => Array.from(new Set(shifts.map((s) => s.role_needed).filter(Boolean))),
+    [shifts]
+  )
+
+  const filteredShifts = useMemo(
+    () => (activeFilter ? shifts.filter((s) => s.role_needed === activeFilter) : shifts),
+    [shifts, activeFilter]
+  )
+
+  // Map pins: only shifts with resolvable coordinates.
+  // NOTE (mobile bug fixed here): mobile drops non-geo shifts from BOTH map and
+  // list. Web keeps them in the list; they just don't get a pin.
+  const pins: MapShiftPin[] = useMemo(
+    () =>
+      filteredShifts
+        .filter((s) => typeof s.employer_lat === 'number' && typeof s.employer_lng === 'number')
+        .map((s) => ({
+          id: s.id,
+          lat: s.employer_lat,
+          lng: s.employer_lng,
+          applied: appliedIds.has(s.id),
+        })),
+    [filteredShifts, appliedIds]
+  )
+
+  function handleFilterChange(cat: string | null) {
+    setActiveFilter(cat)
+    setSelectedShift(null)
+  }
+
+  function handleApply(shiftId: string) {
+    startTransition(async () => {
+      const result = await applyToShift(shiftId)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        setAppliedIds((prev) => new Set([...prev, shiftId]))
+        toast.success('Aplicația a fost înregistrată! Angajatorul va fi notificat.')
+        setSelectedShift(null)
+        router.refresh()
+      }
+    })
+  }
 
   function handleStartChat(employerId: string) {
     if (!employerId) return
     startTransition(async () => {
       const res = await getOrCreateDirectChat(employerId)
       if (res.roomId) {
-        router.refresh()
+        setSelectedShift(null)
         router.push(`/chat?room=${res.roomId}`)
       } else if (res.error) {
-        setMessage(res.error)
+        toast.error(res.error)
       }
     })
   }
 
-  // Extract unique posted cities
-  const postedCities = Array.from(
-    new Set(
-      shifts
-        .map((j) => j.employer_profiles?.city)
-        .filter((city): city is string => typeof city === 'string' && city.trim() !== '')
-    )
-  ).sort()
-
-  const filteredJobs = shifts
-    .filter((j) => {
-      const city = j.employer_profiles?.city || ''
-      const matchesCity = searchCity === 'ALL' || !searchCity ? true : city.toLowerCase() === searchCity.toLowerCase()
-      const matchesRole = roleFilter === 'ALL' || j.role_needed === roleFilter
-      return matchesCity && matchesRole
-    })
-    .sort((a, b) => {
-      if (sortBy === 'PAY_DESC') return b.hourly_pay_ron - a.hourly_pay_ron
-      if (sortBy === 'PAY_ASC') return a.hourly_pay_ron - b.hourly_pay_ron
-      return new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-    })
-
-  function handleApply(shiftId: string) {
-    setMessage(null)
-    startTransition(async () => {
-      const result = await applyToShift(shiftId)
-      if (result.error) {
-        setMessage(result.error)
-      } else {
-        setAppliedIds(prev => new Set([...prev, shiftId]))
-        setMessage('Aplicare trimisă cu succes! ✓')
-      }
-    })
-  }
+  const selectedApplied = selectedShift ? appliedIds.has(selectedShift.id) : false
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight font-heading text-primary dark:text-primary">
-            Joburi Disponibile
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-heading text-foreground">
+            Marketplace
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground font-sans mt-0.5 sm:mt-1">
+          <p className="text-sm text-muted-foreground font-sans mt-1">
             Găsește și aplică la ture deschise în zona ta
           </p>
         </div>
+
+        {/* View toggle — segmented control */}
+        <div
+          className="inline-flex items-center rounded-xl border border-border/60 bg-card p-1 shadow-sm self-start sm:self-auto"
+          role="tablist"
+          aria-label="Mod de vizualizare"
+        >
+          <button
+            role="tab"
+            aria-selected={viewMode === 'map'}
+            onClick={() => setViewMode('map')}
+            className={cn(
+              'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-200 min-h-[36px]',
+              viewMode === 'map'
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <MapIcon className="h-4 w-4" aria-hidden="true" /> Hartă
+          </button>
+          <button
+            role="tab"
+            aria-selected={viewMode === 'list'}
+            onClick={() => setViewMode('list')}
+            className={cn(
+              'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-200 min-h-[36px]',
+              viewMode === 'list'
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <List className="h-4 w-4" aria-hidden="true" /> Listă
+          </button>
+        </div>
       </div>
 
-      {/* Message Toast */}
-      {message && (
-        <div className={`text-sm px-4 py-2.5 rounded-xl border font-sans transition-all duration-300 ${message.includes('succes') ? 'bg-secondary/10 dark:bg-secondary/20 border-secondary/30 dark:border-secondary/40 text-secondary dark:text-secondary' : 'bg-destructive/10 dark:bg-destructive/20 border-destructive/30 dark:border-destructive/40 text-destructive dark:text-destructive'}`}>
-          {message}
+      {/* Filter chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="group" aria-label="Filtre rol">
+        <FilterChip
+          label="Toate"
+          active={activeFilter === null}
+          onClick={() => handleFilterChange(null)}
+        />
+        {availableCategories.map((cat) => (
+          <FilterChip
+            key={cat}
+            label={getLabel(skillLabels, cat)}
+            active={activeFilter === cat}
+            onClick={() => handleFilterChange(cat)}
+          />
+        ))}
+      </div>
+
+      {/* MAP VIEW */}
+      {viewMode === 'map' && (
+        <div className="relative h-[62vh] min-h-[420px] rounded-3xl border border-border/60 overflow-hidden shadow-lg bg-muted">
+          <LeafletMap
+            pins={pins}
+            onPinClick={(id) => setSelectedShift(shifts.find((s) => s.id === id) ?? null)}
+            onMapClick={() => setSelectedShift(null)}
+          />
+
+          {/* Empty-state overlay */}
+          {filteredShifts.length === 0 && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm p-6">
+              <div className="bg-card rounded-2xl border border-border/60 shadow-xl p-8 max-w-sm text-center space-y-3">
+                <MapPin className="h-8 w-8 text-primary mx-auto" strokeWidth={1.5} />
+                <h3 className="text-lg font-bold font-heading text-foreground">
+                  {shifts.length === 0 ? 'Nicio tură disponibilă' : 'Nicio tură pentru acest filtru'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {shifts.length === 0
+                    ? 'Momentan nu există ture deschise. Revino mai târziu — angajatorii postează zilnic.'
+                    : 'Încearcă alt filtru sau revino mai târziu.'}
+                </p>
+                {activeFilter && (
+                  <Button variant="outline" className="rounded-xl" onClick={() => handleFilterChange(null)}>
+                    Resetează filtrul
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* No-coords notice */}
+          {filteredShifts.length > 0 && pins.length === 0 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-card/95 backdrop-blur-md border border-border/60 rounded-xl px-4 py-2.5 shadow-lg text-xs text-muted-foreground">
+              Turele nu au coordonate — vezi{' '}
+              <button className="text-primary font-semibold hover:underline" onClick={() => setViewMode('list')}>
+                lista
+              </button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Mobile Toggle Filters Button */}
-      <Button
-        onClick={() => setShowFilters(!showFilters)}
-        variant="outline"
-        className="w-full md:hidden h-11 rounded-xl text-sm font-medium border-border/80 hover:bg-accent flex items-center justify-center gap-2"
-      >
-        <Search className="h-4 w-4" />
-        {showFilters ? 'Ascunde filtrele' : 'Filtrare și Sortare'}
-      </Button>
-
-      {/* Filter Card */}
-      <div className={`bg-card/75 dark:bg-card/40 border border-border/60 rounded-2xl p-5 sm:p-6 backdrop-blur-md transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label className="block text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 font-sans">
-              Locație
-            </Label>
-            <Select value={searchCity} onValueChange={(val) => setSearchCity(val ?? 'ALL')}>
-              <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
-                <SelectValue>
-                  {searchCity === 'ALL' || !searchCity ? 'Toate locațiile' : searchCity}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
-                <SelectItem value="ALL">Toate locațiile</SelectItem>
-                {postedCities.map((city) => (
-                  <SelectItem key={city} value={city}>{city}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="block text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 font-sans">
-              Categorie (Rol)
-            </Label>
-            <Select value={roleFilter} onValueChange={(val) => setRoleFilter(val ?? 'ALL')}>
-              <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
-                <SelectValue>
-                  {roleFilter === 'ALL' ? 'Toate rolurile' : (skillLabels[roleFilter] || roleFilter)}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
-                <SelectItem value="ALL">Toate rolurile</SelectItem>
-                {Object.entries(skillLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="block text-[10px] font-medium uppercase tracking-widest text-muted-foreground/80 font-sans">
-              Sortează după
-            </Label>
-            <Select value={sortBy} onValueChange={(val) => setSortBy(val ?? 'DATE_ASC')}>
-              <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
-                <SelectValue>
-                  {sortBy === 'DATE_ASC'
-                    ? 'Dată (Cele mai apropiate)'
-                    : sortBy === 'PAY_DESC'
-                      ? 'Plată (Cea mai mare)'
-                      : 'Plată (Cea mai mică)'}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
-                <SelectItem value="DATE_ASC">Dată (Cele mai apropiate)</SelectItem>
-                <SelectItem value="PAY_DESC">Plată (Cea mai mare)</SelectItem>
-                <SelectItem value="PAY_ASC">Plată (Cea mai mică)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Job Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-        {filteredJobs.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-muted-foreground font-sans bg-card/30 rounded-2xl border border-dashed border-border/60">
-            {shifts.length === 0
-              ? 'Nu există ture deschise momentan. Revino mai târziu!'
-              : 'Nu am găsit nicio tură care să corespundă filtrelor.'}
-          </div>
-        ) : (
-          filteredJobs.map((job) => {
-            const hours = (new Date(job.end_time).getTime() - new Date(job.start_time).getTime()) / (1000 * 60 * 60)
-            const totalPay = Math.round(hours * job.hourly_pay_ron)
-            const alreadyApplied = appliedIds.has(job.id)
-
-            return (
-              <div 
-                key={job.id} 
-                className="bg-card dark:bg-card/40 border border-border/60 rounded-2xl p-5 sm:p-6 hover:shadow-[0_8px_24px_rgba(15,23,42,0.06)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
-              >
-                <div>
-                  {/* Card Header: Icon + Title + Pay */}
-                  <div className="flex justify-between items-start mb-4 gap-2">
-                    <div className="flex gap-3 sm:gap-4">
-                      <div className="w-11 h-11 bg-accent/50 dark:bg-muted/80 rounded-xl border border-border/60 flex items-center justify-center shrink-0">
-                        <Briefcase className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <Badge className="bg-primary/5 text-primary dark:bg-primary/20 dark:text-primary border-none rounded-lg px-2.5 py-0.5 text-[10px] font-semibold tracking-wide capitalize inline-block" variant="outline">
-                          {getLabel(skillLabels, job.role_needed)}
-                        </Badge>
-                        <h3 className="text-base sm:text-lg font-semibold font-heading text-foreground leading-snug">
-                          {job.employer_profiles?.company_name || 'Angajator'}
+      {/* LIST VIEW */}
+      {viewMode === 'list' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredShifts.length === 0 ? (
+            <div className="col-span-full py-16 text-center bg-card/40 rounded-3xl border border-dashed border-border/60 space-y-3">
+              <Briefcase className="h-8 w-8 text-primary mx-auto" strokeWidth={1.5} />
+              <h3 className="text-lg font-bold font-heading text-foreground">
+                {shifts.length === 0 ? 'Nicio tură disponibilă' : 'Nicio tură pentru acest filtru'}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                {shifts.length === 0
+                  ? 'Momentan nu există ture deschise. Revino mai târziu!'
+                  : 'Încearcă să schimbi filtrul selectat.'}
+              </p>
+            </div>
+          ) : (
+            filteredShifts.map((shift) => {
+              const applied = appliedIds.has(shift.id)
+              return (
+                <button
+                  key={shift.id}
+                  onClick={() => setSelectedShift(shift)}
+                  className="text-left bg-card dark:bg-card/40 border border-border/60 rounded-2xl p-5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:border-primary/30 transition-all duration-200 space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-lg font-bold font-heading text-foreground">
+                          {getLabel(skillLabels, shift.role_needed)}
                         </h3>
+                        <span
+                          className={cn(
+                            'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                            applied
+                              ? 'bg-secondary/15 text-secondary dark:text-secondary'
+                              : 'bg-primary/10 text-primary-strong dark:text-primary'
+                          )}
+                        >
+                          {applied ? 'Aplicat' : 'Deschis'}
+                        </span>
                       </div>
+                      <p className="text-sm font-semibold text-foreground/90 truncate">
+                        {shift.company_name || 'Angajator'}
+                      </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-lg sm:text-xl font-bold text-primary-strong font-heading">
-                        {job.hourly_pay_ron} <span className="text-xs font-normal text-muted-foreground font-sans">RON/h</span>
+                      <div className="text-lg font-bold font-mono text-foreground">
+                        {Number(shift.hourly_pay_ron)} <span className="text-xs font-sans font-normal text-muted-foreground">RON/oră</span>
                       </div>
-                      <div className="text-[10px] text-muted-foreground font-sans mt-0.5">Total: ~{totalPay} RON</div>
                     </div>
                   </div>
 
-                  {/* Info Chips */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="bg-primary/5 dark:bg-primary/10 text-primary-strong px-2.5 py-0.5 rounded-lg font-medium text-xs flex items-center gap-1.5 border border-primary/5">
-                      <MapPin className="h-3.5 w-3.5" /> {job.employer_profiles?.city || 'Necunoscut'}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                      {formatDate(shift.start_time)} · {formatTime(shift.start_time)}–{formatTime(shift.end_time)}
                     </span>
-                    <span className="bg-primary/5 dark:bg-primary/10 text-primary-strong px-2.5 py-0.5 rounded-lg font-medium text-xs flex items-center gap-1.5 border border-primary/5">
-                      <Clock className="h-3.5 w-3.5" /> {Math.round(hours)} ore
-                    </span>
+                    {(shift.employer_city || shift.employer_county) && (
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                        {[shift.employer_city, shift.employer_county].filter(Boolean).join(', ')}
+                      </span>
+                    )}
                   </div>
+                </button>
+              )
+            })
+          )}
+        </div>
+      )}
 
-                  {/* Time Details */}
-                  <div className="grid grid-cols-2 gap-2 mb-5">
-                    <div className="flex flex-col bg-muted/30 dark:bg-muted/10 border border-border/40 rounded-xl px-3 py-2 text-[10px] font-sans">
-                      <span className="text-muted-foreground font-medium uppercase tracking-wider text-[9px] mb-0.5">Start:</span>
-                      <span className="font-semibold text-foreground">{formatDate(job.start_time)}</span>
-                    </div>
-                    <div className="flex flex-col bg-muted/30 dark:bg-muted/10 border border-border/40 rounded-xl px-3 py-2 text-[10px] font-sans">
-                      <span className="text-muted-foreground font-medium uppercase tracking-wider text-[9px] mb-0.5">Final:</span>
-                      <span className="font-semibold text-foreground">{formatDate(job.end_time)}</span>
-                    </div>
-                  </div>
+      {/* SHIFT DETAIL BOTTOM SHEET */}
+      <Sheet open={!!selectedShift} onOpenChange={(open) => !open && setSelectedShift(null)}>
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl border-t border-border/60 bg-card px-6 pt-3 pb-8 max-h-[85vh] overflow-y-auto sm:max-w-xl sm:mx-auto sm:inset-x-0"
+        >
+          {selectedShift && (
+            <div className="space-y-5">
+              {/* Drag handle */}
+              <div className="mx-auto h-1 w-10 rounded-full bg-border" aria-hidden="true" />
+
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <SheetTitle className="text-2xl font-bold font-heading text-foreground">
+                    {getLabel(skillLabels, selectedShift.role_needed)}
+                  </SheetTitle>
+                  <SheetDescription className="text-sm font-semibold text-foreground/80">
+                    {selectedShift.company_name || 'Angajator'}
+                  </SheetDescription>
                 </div>
+                <button
+                  onClick={() => setSelectedShift(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Închide detaliile turei"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
 
-                {/* Apply Button */}
-                {userRole === 'WORKER' ? (
-                  <div className="flex gap-2 w-full">
+              {/* Employer rating (only if present) */}
+              {selectedShift.employer_rating != null && Number(selectedShift.employer_rating) > 0 && (
+                <div className="flex items-center gap-1.5" aria-label={`Rating angajator: ${Number(selectedShift.employer_rating).toFixed(1)} din 5`}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={cn(
+                        'h-4 w-4',
+                        star <= Math.round(Number(selectedShift.employer_rating))
+                          ? 'fill-accent text-accent'
+                          : 'text-border'
+                      )}
+                      aria-hidden="true"
+                    />
+                  ))}
+                  <span className="text-xs text-muted-foreground font-mono ml-1">
+                    {Number(selectedShift.employer_rating).toFixed(1)}
+                  </span>
+                </div>
+              )}
+
+              {/* Details */}
+              <div className="space-y-3 rounded-2xl border border-border/50 bg-muted/30 dark:bg-muted/10 p-4">
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                  <span className="text-foreground">
+                    {formatDate(selectedShift.start_time)} · {formatTime(selectedShift.start_time)} – {formatTime(selectedShift.end_time)}
+                  </span>
+                </div>
+                {(selectedShift.employer_city || selectedShift.employer_county) && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <MapPin className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                    <span className="text-foreground">
+                      {[selectedShift.employer_city, selectedShift.employer_county].filter(Boolean).join(', ')}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 text-sm">
+                  <CircleDollarSign className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
+                  <span className="font-mono font-bold text-foreground">
+                    {Number(selectedShift.hourly_pay_ron)} RON/oră
+                  </span>
+                </div>
+              </div>
+
+              {/* CTAs */}
+              {userRole === 'WORKER' ? (
+                <div className="flex gap-2.5">
+                  <Button
+                    variant="outline"
+                    className="h-12 w-12 rounded-2xl border-border/80 shrink-0"
+                    onClick={() => handleStartChat(selectedShift.employer_id)}
+                    disabled={isPending}
+                    aria-label="Trimite mesaj angajatorului"
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                  </Button>
+                  {selectedApplied ? (
                     <Button
-                      variant="outline"
-                      className="h-11 px-4 rounded-xl border border-primary text-primary hover:bg-primary/5 text-xs font-semibold font-sans flex items-center justify-center gap-1.5 shrink-0"
-                      onClick={() => handleStartChat(job.employer_id)}
+                      disabled
+                      className="flex-1 h-12 rounded-2xl bg-secondary/15 text-secondary hover:bg-secondary/15 font-semibold"
+                    >
+                      <CheckCircle2 className="h-5 w-5 mr-2" /> Deja aplicat
+                    </Button>
+                  ) : (
+                    <Button
+                      className="flex-1 h-12 rounded-2xl bg-primary-strong text-primary-foreground font-semibold uppercase tracking-wider shadow-lg shadow-primary/20 hover:brightness-108 active:scale-[0.99] transition-all"
+                      onClick={() => handleApply(selectedShift.id)}
                       disabled={isPending}
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      {isPending ? 'Se procesează…' : 'Aplică acum'}
                     </Button>
-                    <Button
-                      className={`flex-1 h-11 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-                        alreadyApplied 
-                          ? 'bg-secondary-strong hover:brightness-108 text-secondary-foreground shadow-md shadow-emerald-500/10'
-                          : 'bg-primary hover:bg-primary/90 hover:brightness-110 text-primary-foreground shadow-md shadow-primary/10 hover:shadow-lg hover:shadow-primary/20'
-                      }`}
-                      disabled={isPending || alreadyApplied}
-                      onClick={() => handleApply(job.id)}
-                    >
-                      {alreadyApplied ? '✓ Tura aplicată' : 'Aplică acum'}
-                    </Button>
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-muted-foreground w-full text-center font-sans uppercase tracking-widest py-2 bg-muted/20 rounded-xl border border-border/40">
-                    Doar lucrătorii pot aplica
-                  </p>
-                )}
-              </div>
-            )
-          })
-        )}
-      </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center font-sans uppercase tracking-widest py-2.5 bg-muted/30 rounded-xl border border-border/40">
+                  Doar lucrătorii pot aplica la ture
+                </p>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
+  )
+}
+
+function FilterChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 min-h-[36px] border',
+        active
+          ? 'bg-primary-strong text-primary-foreground border-transparent shadow-md shadow-primary/20'
+          : 'bg-card text-muted-foreground border-border/60 hover:text-foreground hover:border-primary/40'
+      )}
+    >
+      {label}
+    </button>
   )
 }

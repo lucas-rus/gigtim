@@ -26,9 +26,12 @@ export async function getOpenShifts(county?: string, city?: string, category?: s
     const connection = await dbPool.getConnection();
     try {
       let query = `
-        SELECT s.*, e.company_name, e.city as employer_city, e.county as employer_county, e.avatar_url as employer_avatar
+        SELECT s.*, e.company_name, e.city as employer_city, e.county as employer_county,
+               e.lat as employer_lat, e.lng as employer_lng, e.employer_rating,
+               eu.avatar_url as employer_avatar
         FROM job_shifts s
         JOIN employer_profiles e ON s.employer_id = e.user_id
+        LEFT JOIN users eu ON eu.id = e.user_id
         WHERE s.status = 'OPEN'
       `;
       const params: any[] = [];
@@ -66,8 +69,25 @@ export async function getMyShifts() {
   try {
     const connection = await dbPool.getConnection();
     try {
+      if (profile.role === 'WORKER') {
+        // Shifts the worker applied to, with their application status
+        const [rows] = await connection.query<any[]>(
+          `SELECT s.*, a.id as application_id, a.status as my_application_status,
+                  e.company_name, e.city as employer_city, e.county as employer_county
+           FROM applications a
+           JOIN job_shifts s ON a.shift_id = s.id
+           JOIN employer_profiles e ON s.employer_id = e.user_id
+           WHERE a.worker_id = ?
+           ORDER BY s.start_time DESC`,
+          [profile.id]
+        );
+        return serializeRows(rows);
+      }
+
       const [rows] = await connection.query<any[]>(
-        'SELECT * FROM job_shifts WHERE employer_id = ? ORDER BY created_at DESC',
+        `SELECT s.*,
+                (SELECT COUNT(*) FROM applications a WHERE a.shift_id = s.id) as application_count
+         FROM job_shifts s WHERE s.employer_id = ? ORDER BY s.created_at DESC`,
         [profile.id]
       );
       return serializeRows(rows);
@@ -86,19 +106,26 @@ export async function createShift(formData: FormData) {
     return { error: 'Doar angajatorii pot crea joburi.' };
   }
 
-  const title = (formData.get('title') as string || '').trim();
-  const category = (formData.get('category') as string || 'General').trim();
-  const description = (formData.get('description') as string || '').trim();
-  const location = (formData.get('location') as string || '').trim();
-  const city = (formData.get('city') as string || profile.city || '').trim();
-  const county = (formData.get('county') as string || profile.county || '').trim();
+  const roleNeeded = (formData.get('role_needed') as string || '').trim();
   const hourlyPayRon = Number(formData.get('hourly_pay_ron')) || 0;
   const startTimeStr = formData.get('start_time') as string;
   const endTimeStr = formData.get('end_time') as string;
-  const reqWorkers = Number(formData.get('required_workers')) || 1;
 
-  if (!title || !description || hourlyPayRon <= 0 || !startTimeStr || !endTimeStr) {
+  const VALID_ROLES = ['BARISTA', 'WAITER', 'DISHWASHER', 'STAGEHAND'];
+  if (!VALID_ROLES.includes(roleNeeded)) {
+    return { error: 'Rolul selectat este invalid.' };
+  }
+  if (hourlyPayRon <= 0 || !startTimeStr || !endTimeStr) {
     return { error: 'Toate câmpurile sunt obligatorii, iar plata pe oră trebuie să fie pozitivă.' };
+  }
+
+  const startDate = new Date(startTimeStr);
+  const endDate = new Date(endTimeStr);
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return { error: 'Datele de început și sfârșit trebuie să fie valide.' };
+  }
+  if (endDate <= startDate) {
+    return { error: 'Ora de sfârșit trebuie să fie după ora de început.' };
   }
 
   const shiftId = crypto.randomUUID();
@@ -107,23 +134,10 @@ export async function createShift(formData: FormData) {
     const connection = await dbPool.getConnection();
     try {
       await connection.query(
-        `INSERT INTO job_shifts 
-          (id, employer_id, title, category, description, location_address, city, county, hourly_pay_ron, start_time, end_time, required_workers, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'OPEN')`,
-        [
-          shiftId,
-          profile.id,
-          title,
-          category,
-          description,
-          location,
-          city,
-          county,
-          hourlyPayRon,
-          new Date(startTimeStr),
-          new Date(endTimeStr),
-          reqWorkers,
-        ]
+        `INSERT INTO job_shifts
+          (id, employer_id, role_needed, start_time, end_time, hourly_pay_ron, status)
+         VALUES (?, ?, ?, ?, ?, ?, 'OPEN')`,
+        [shiftId, profile.id, roleNeeded, startDate, endDate, hourlyPayRon]
       );
       return { success: true, shiftId };
     } finally {
@@ -131,7 +145,7 @@ export async function createShift(formData: FormData) {
     }
   } catch (err: any) {
     console.error('createShift error:', err);
-    return { error: 'Eroare la salvarea jobului: ' + err.message };
+    return { error: 'Eroare la salvarea turei: ' + err.message };
   }
 }
 
@@ -146,6 +160,28 @@ export async function applyToShift(shiftId: string) {
   try {
     const connection = await dbPool.getConnection();
     try {
+      // Identity gate (Legea 52/2011): CNP + Serie CI required before applying
+      const [wRows] = await connection.query<any[]>(
+        'SELECT cnp, id_card_series FROM worker_profiles WHERE user_id = ?',
+        [profile.id]
+      );
+      const wp = wRows[0];
+      if (!wp?.cnp || !wp?.id_card_series) {
+        return { error: 'Verifică-ți identitatea în profil (CNP + Serie CI) pentru a aplica la ture.' };
+      }
+
+      // Shift must still be OPEN
+      const [sRows] = await connection.query<any[]>(
+        'SELECT status FROM job_shifts WHERE id = ?',
+        [shiftId]
+      );
+      if (sRows.length === 0) {
+        return { error: 'Această tură nu mai există.' };
+      }
+      if (sRows[0].status !== 'OPEN') {
+        return { error: 'Această tură nu mai este disponibilă.' };
+      }
+
       const [existing] = await connection.query<any[]>(
         'SELECT id FROM applications WHERE shift_id = ? AND worker_id = ?',
         [shiftId, profile.id]
@@ -169,6 +205,28 @@ export async function applyToShift(shiftId: string) {
   }
 }
 
+/** Returns the set of shift IDs the current worker has already applied to. */
+export async function getMyAppliedShiftIds(): Promise<string[]> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== 'WORKER') return [];
+
+  try {
+    const connection = await dbPool.getConnection();
+    try {
+      const [rows] = await connection.query<any[]>(
+        'SELECT shift_id FROM applications WHERE worker_id = ?',
+        [profile.id]
+      );
+      return rows.map((r: any) => r.shift_id);
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    console.error('getMyAppliedShiftIds error:', err);
+    return [];
+  }
+}
+
 export async function getMyApplications() {
   const profile = await getCurrentProfile();
   if (!profile) return [];
@@ -178,7 +236,7 @@ export async function getMyApplications() {
     try {
       if (profile.role === 'WORKER') {
         const [rows] = await connection.query<any[]>(
-          `SELECT a.*, s.title as shift_title, s.hourly_pay_ron, s.start_time, s.end_time, e.company_name
+          `SELECT a.*, s.role_needed as shift_role, s.hourly_pay_ron, s.start_time, s.end_time, e.company_name
            FROM applications a
            JOIN job_shifts s ON a.shift_id = s.id
            JOIN employer_profiles e ON s.employer_id = e.user_id
@@ -189,10 +247,13 @@ export async function getMyApplications() {
         return serializeRows(rows);
       } else {
         const [rows] = await connection.query<any[]>(
-          `SELECT a.*, s.title as shift_title, w.full_name as worker_name, w.phone_number as worker_phone, w.avatar_url as worker_avatar
+          `SELECT a.*, s.role_needed as shift_role, w.full_name as worker_name, w.phone_number as worker_phone,
+                  wu.avatar_url as worker_avatar, w.cnp as worker_cnp, w.id_card_series as worker_id_card_series,
+                  w.city as worker_city, w.county as worker_county, w.reliability_score
            FROM applications a
            JOIN job_shifts s ON a.shift_id = s.id
            JOIN worker_profiles w ON a.worker_id = w.user_id
+           LEFT JOIN users wu ON wu.id = w.user_id
            WHERE s.employer_id = ?
            ORDER BY a.created_at DESC`,
           [profile.id]
@@ -475,7 +536,10 @@ export async function getChatRooms() {
         `SELECT cr.id as room_id, cr.created_at,
                 u.id as other_user_id, u.email as other_email,
                 COALESCE(w.full_name, e.company_name, u.email) as other_name,
-                COALESCE(w.avatar_url, e.avatar_url) as other_avatar
+                u.avatar_url as other_avatar,
+                (SELECT cm.content FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) as last_message,
+                (SELECT cm.created_at FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) as last_message_at,
+                (SELECT cm.sender_id FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) as last_sender_id
          FROM chat_room_members crm
          JOIN chat_rooms cr ON crm.room_id = cr.id
          JOIN chat_room_members crm_other ON cr.id = crm_other.room_id AND crm_other.user_id != crm.user_id
@@ -483,7 +547,7 @@ export async function getChatRooms() {
          LEFT JOIN worker_profiles w ON u.id = w.user_id
          LEFT JOIN employer_profiles e ON u.id = e.user_id
          WHERE crm.user_id = ?
-         ORDER BY cr.created_at DESC`,
+         ORDER BY last_message_at DESC, cr.created_at DESC`,
         [profile.id]
       );
       return serializeRows(rows);
@@ -556,7 +620,8 @@ export async function getPotentialConnections() {
       const [rows] = await connection.query<any[]>(
         `SELECT u.id, u.email, u.role,
                 COALESCE(w.full_name, e.company_name, u.email) as name,
-                COALESCE(w.avatar_url, e.avatar_url) as avatar_url
+                COALESCE(w.city, e.city) as city,
+                u.avatar_url as avatar_url
          FROM users u
          LEFT JOIN worker_profiles w ON u.id = w.user_id
          LEFT JOIN employer_profiles e ON u.id = e.user_id

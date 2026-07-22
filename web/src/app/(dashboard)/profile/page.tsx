@@ -31,7 +31,7 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Profile Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/5 via-primary/5 to-primary/5 border border-border/80 dark:border-border/40 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+      <div className="relative overflow-hidden bg-gradient-to-br from-accent/10 via-primary/5 to-primary/5 border border-border/80 dark:border-border/40 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
         <div className="relative z-10">
           <AvatarUpload 
             userId={profile.id} 
@@ -58,7 +58,7 @@ export default async function ProfilePage() {
           <>
             <div className="bg-card dark:bg-card border border-border/60 rounded-2xl p-4 sm:p-5 text-center transition-all duration-300 hover:scale-[1.02] hover:shadow-sm">
               <p className="text-xs font-medium text-muted-foreground/80 mb-1.5 font-sans">Rating</p>
-              <p className="text-base font-bold font-heading bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
+              <p className="text-base font-bold font-heading text-accent">
                 {reviews.length === 0 ? '0 recenzii' : `${Number(workerRating).toFixed(1)}/5`}
               </p>
             </div>
@@ -70,7 +70,7 @@ export default async function ProfilePage() {
             </div>
             <div className="bg-card dark:bg-card border border-border/60 rounded-2xl p-4 sm:p-5 text-center transition-all duration-300 hover:scale-[1.02] hover:shadow-sm">
               <p className="text-xs font-medium text-muted-foreground/80 mb-1.5 font-sans">Ture finalizate</p>
-              <p className="text-base font-bold font-heading bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">
+              <p className="text-base font-bold font-heading text-secondary">
                 0
               </p>
             </div>
@@ -80,7 +80,7 @@ export default async function ProfilePage() {
           <>
             <div className="bg-card dark:bg-card border border-border/60 rounded-2xl p-4 sm:p-5 text-center transition-all duration-300 hover:scale-[1.02] hover:shadow-sm">
               <p className="text-xs font-medium text-muted-foreground/80 mb-1.5 font-sans">Rating</p>
-              <p className="text-base font-bold font-heading bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
+              <p className="text-base font-bold font-heading text-accent">
                 {reviews.length === 0 ? '0 recenzii' : `${Number(employerRating).toFixed(1)}/5`}
               </p>
             </div>

@@ -18,6 +18,7 @@ import {
 import { logout } from '@/lib/romarg-auth'
 import { DashboardSidebar } from './DashboardSidebar'
 import { TopHeader } from '@/components/layout/TopHeader'
+import { LogoMark } from '@/components/brand/Logo'
 import type { UserRole } from '@/lib/types/database'
 
 interface DashboardLayoutClientProps {
@@ -46,7 +47,7 @@ export function DashboardLayoutClient({
   return (
     <div className="flex min-h-screen bg-background text-foreground font-sans">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-shrink-0 border-r border-border/60 dark:border-sidebar-border md:block z-40 h-screen sticky top-0 bg-card/50 dark:bg-sidebar/50">
+      <aside className="hidden w-64 flex-shrink-0 border-r border-sidebar-border md:block z-40 h-screen sticky top-0 bg-sidebar">
         <DashboardSidebar userRole={userRole} />
       </aside>
 
@@ -59,9 +60,11 @@ export function DashboardLayoutClient({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-lg font-bold text-primary font-heading tracking-tight">GigTim</span>
-              <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider bg-primary/10 px-1.5 py-0.5 rounded">MP</span>
+            <Link href="/" className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/25">
+                <LogoMark size={21} strokeWidth={2.2} />
+              </span>
+              <span className="text-lg font-bold text-foreground font-heading tracking-tight">GigTim</span>
             </Link>
           </div>
 

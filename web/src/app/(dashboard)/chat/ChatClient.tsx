@@ -41,7 +41,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const now = useCurrentTime()
 
-  const selectedRoomData = initialRooms.find(r => r.id === selectedRoom)
+  const selectedRoomData = initialRooms.find(r => r.room_id === selectedRoom)
 
   function selectRoom(roomId: string) {
     setSelectedRoom(roomId)
@@ -67,7 +67,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
   }
 
   useEffect(() => {
-    if (urlRoomId && initialRooms.some(r => r.id === urlRoomId)) {
+    if (urlRoomId && initialRooms.some(r => r.room_id === urlRoomId)) {
       selectRoom(urlRoomId)
     }
   }, [urlRoomId, initialRooms])
@@ -176,11 +176,11 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                 </div>
               ) : (
                 initialRooms.map((room) => {
-                  const isSelected = selectedRoom === room.id
+                  const isSelected = selectedRoom === room.room_id
                   return (
                     <button
-                      key={room.id}
-                      onClick={() => selectRoom(room.id)}
+                      key={room.room_id}
+                      onClick={() => selectRoom(room.room_id)}
                       className={`w-full text-left px-4 py-4 transition-all duration-200 ${
                         isSelected
                           ? 'bg-accent dark:bg-muted/30 border-l-4 border-l-primary'
@@ -188,12 +188,12 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm font-semibold truncate font-sans ${isSelected ? 'text-primary' : 'text-foreground'}`}>{room.name || 'Chat'}</p>
+                        <p className={`text-sm font-semibold truncate font-sans ${isSelected ? 'text-primary' : 'text-foreground'}`}>{room.other_name || 'Chat'}</p>
                         <span className="text-[10px] text-muted-foreground font-sans shrink-0">{timeAgo(room.last_message_at)}</span>
                       </div>
                       {room.last_message && (
                         <p className="text-xs text-muted-foreground mt-1.5 truncate font-sans">
-                          {room.last_sender_is_me ? 'Tu: ' : ''}{room.last_message}
+                          {room.last_sender_id === userId ? 'Tu: ' : ''}{room.last_message}
                         </p>
                       )}
                     </button>
@@ -219,7 +219,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                 ) : (
                   filteredConnections.map((c) => (
                     <div
-                      key={c.user_id}
+                      key={c.id}
                       className="flex items-center justify-between p-3.5 hover:bg-muted/20 dark:hover:bg-muted/10 transition-colors border-b border-border/40"
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -244,7 +244,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                         size="sm"
                         variant="outline"
                         className="h-8 rounded-xl border border-primary text-primary hover:bg-primary/5 text-xs font-sans font-semibold transition-all px-3"
-                        onClick={() => handleStartChatFromConnection(c.user_id)}
+                        onClick={() => handleStartChatFromConnection(c.id)}
                         disabled={isPending}
                       >
                         Mesaj
@@ -280,7 +280,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <div>
-                    <p className="font-semibold font-heading text-sm text-foreground">{selectedRoomData?.name || 'Chat'}</p>
+                    <p className="font-semibold font-heading text-sm text-foreground">{selectedRoomData?.other_name || 'Chat'}</p>
                     <p className="text-[10px] font-sans text-muted-foreground uppercase tracking-widest mt-0.5">conversație activă</p>
                   </div>
                 </div>
@@ -293,14 +293,16 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                     Niciun mesaj încă. Trimite primul mesaj!
                   </div>
                 ) : (
-                  messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.is_mine ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[75%] flex flex-col ${msg.is_mine ? 'items-end' : 'items-start'}`}>
-                        {!msg.is_mine && (
+                  messages.map((msg) => {
+                    const isMine = msg.is_mine ?? msg.sender_id === userId
+                    return (
+                    <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                        {!isMine && (
                           <p className="text-[10px] font-semibold text-muted-foreground mb-1 font-sans uppercase tracking-widest">{msg.sender_name}</p>
                         )}
                         <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed font-sans shadow-sm ${
-                          msg.is_mine
+                          isMine
                             ? 'bg-primary text-primary-foreground rounded-br-none shadow-primary/5'
                             : 'bg-muted/80 dark:bg-muted/30 text-foreground rounded-bl-none border border-border/50'
                         }`}>
@@ -311,7 +313,8 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                         </p>
                       </div>
                     </div>
-                  ))
+                    )
+                  })
                 )}
                 <div ref={messagesEndRef} />
               </div>

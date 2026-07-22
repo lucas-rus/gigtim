@@ -39,7 +39,7 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
           <input
             type="text"
             placeholder="Caută joburi, abilități..."
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-muted border border-border rounded text-sm font-sans text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+            className="w-full pl-10 pr-4 py-2 bg-background dark:bg-muted border border-border/60 rounded-xl text-sm font-sans text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
           />
         </div>
       </div>
@@ -51,7 +51,7 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-8 w-8 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-accent dark:hover:bg-muted transition-colors bg-white dark:bg-card cursor-pointer"
+            className="h-8 w-8 rounded-xl border border-border/60 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-accent dark:hover:bg-muted transition-colors bg-card dark:bg-card cursor-pointer"
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? (
@@ -61,23 +61,23 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
             )}
           </Button>
         ) : (
-          <div className="h-8 w-8 rounded border border-border bg-white dark:bg-card shrink-0" />
+          <div className="h-8 w-8 rounded-xl border border-border/60 bg-card dark:bg-card shrink-0" />
         )}
 
         <div className="h-6 w-px bg-border mx-1" />
 
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <Button variant="ghost" className="relative h-10 w-10 rounded p-0">
-              <Avatar className="h-9 w-9 border border-border hover:border-primary cursor-pointer rounded">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} className="object-cover rounded" />}
-                <AvatarFallback className="bg-accent text-primary font-bold font-heading rounded">
+            <Button variant="ghost" className="relative h-10 w-10 rounded-xl p-0">
+              <Avatar className="h-9 w-9 border border-border/60 hover:border-primary cursor-pointer rounded-xl">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} className="object-cover rounded-xl" />}
+                <AvatarFallback className="bg-accent text-primary font-bold font-heading rounded-xl">
                   {fallbackText}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 border border-border bg-card dark:bg-card rounded shadow-[0_4px_12px_rgba(15,23,42,0.08)]" align="end" sideOffset={8}>
+          <DropdownMenuContent className="w-56 border border-border/60 bg-card dark:bg-card rounded-2xl shadow-[0_4px_16px_rgba(60,35,20,0.10)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)]" align="end" sideOffset={8}>
             <DropdownMenuGroup>
               <div className="px-3 py-2">
                 <p className="text-sm font-semibold font-heading leading-none text-foreground">{userName}</p>
@@ -88,14 +88,14 @@ export function TopHeader({ avatarUrl, fallbackText, userName }: TopHeaderProps)
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuItem>
-              <Link href="/profile" className="cursor-pointer w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent dark:hover:bg-muted transition-colors rounded-sm">
+              <Link href="/profile" className="cursor-pointer w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent dark:hover:bg-muted transition-colors rounded-xl">
                 <User className="h-4 w-4" /> Profil
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuItem className="p-0">
               <form action={logout} className="w-full">
-                <button type="submit" className="w-full flex items-center gap-2 px-3 py-2 text-sm cursor-pointer text-destructive hover:bg-destructive/10 transition-colors rounded-sm font-medium">
+                <button type="submit" className="w-full flex items-center gap-2 px-3 py-2 text-sm cursor-pointer text-destructive hover:bg-destructive/10 transition-colors rounded-xl font-medium">
                   <LogOut className="h-4 w-4" /> Deconectare
                 </button>
               </form>

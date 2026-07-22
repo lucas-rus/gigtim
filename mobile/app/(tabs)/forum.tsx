@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, FlatList, Image } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { MessageSquare, User, Tag, Send, Plus, CornerDownRight } from 'lucide-react-native';
+import { MessageSquare, Tag, Send, Plus, CornerDownRight, MessagesSquare, ArrowLeft, User as UserIcon } from 'lucide-react-native';
+import { useZoriTheme, font, fontSize, fontWeight, spacing, radius } from '@/src/design/useTheme';
+import { Card, Button, Input, Textarea, EmptyState, Badge, toast } from '@/src/ui';
+import { formatRelativeTime } from '@/src/utils/time';
+import { ProfileViewModal } from '@/src/screens/ProfileViewModal';
 
 const CATEGORIES = ['GENERAL', 'INTREBARI', 'SFATURI', 'AJUTOR'];
 const CATEGORY_LABELS: Record<string, string> = {
@@ -11,24 +15,35 @@ const CATEGORY_LABELS: Record<string, string> = {
   AJUTOR: 'Ajutor',
 };
 
+interface AuthorInfo {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+}
+
 export default function ForumScreen() {
+  const t = useZoriTheme();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  
-  // Create Post state
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newCategory, setNewCategory] = useState('GENERAL');
-  
-  // Selected Post details state
+  const [publishing, setPublishing] = useState(false);
+
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [commentsLoading, setCommentsLoading] = useState(false);
+  const [sendingComment, setSendingComment] = useState(false);
 
   const [dbUserId, setDbUserId] = useState<string | null>(null);
+
+  // Profile view modal
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -42,9 +57,43 @@ export default function ForumScreen() {
         .from('users')
         .select('id')
         .eq('auth_id', user.id)
-        .single();
+        .maybeSingle();
       if (userRow) setDbUserId(userRow.id);
     }
+  }
+
+  function openProfile(userId: string) {
+    setViewingProfileId(userId);
+    setProfileModalVisible(true);
+  }
+
+  async function resolveAuthors(authorIds: string[]): Promise<Record<string, AuthorInfo>> {
+    if (authorIds.length === 0) return {};
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, avatar_url')
+      .in('id', authorIds);
+    const { data: workers } = await supabase
+      .from('worker_profiles')
+      .select('user_id, full_name')
+      .in('user_id', authorIds);
+    const { data: employers } = await supabase
+      .from('employer_profiles')
+      .select('user_id, company_name')
+      .in('user_id', authorIds);
+
+    const result: Record<string, AuthorInfo> = {};
+    for (const id of authorIds) {
+      const worker = workers?.find(w => w.user_id === id);
+      const employer = employers?.find(e => e.user_id === id);
+      const user = users?.find(u => u.id === id);
+      result[id] = {
+        id,
+        name: worker?.full_name || employer?.company_name || 'Utilizator',
+        avatar_url: user?.avatar_url || null,
+      };
+    }
+    return result;
   }
 
   async function fetchPosts() {
@@ -63,25 +112,20 @@ export default function ForumScreen() {
         return;
       }
 
-      // Resolve author names
       const authorIds = [...new Set(postsData.map(p => p.author_id))];
-      const { data: workers } = await supabase.from('worker_profiles').select('user_id, full_name').in('user_id', authorIds);
-      const { data: employers } = await supabase.from('employer_profiles').select('user_id, company_name').in('user_id', authorIds);
+      const authors = await resolveAuthors(authorIds);
 
-      const mappedPosts = postsData.map(post => {
-        const worker = workers?.find(w => w.user_id === post.author_id);
-        const employer = employers?.find(e => e.user_id === post.author_id);
-        return {
-          ...post,
-          author_name: worker?.full_name || employer?.company_name || 'Utilizator Anonim',
-          comment_count: post.forum_comments?.[0]?.count || 0,
-        };
-      });
+      const mappedPosts = postsData.map(post => ({
+        ...post,
+        author_name: authors[post.author_id]?.name || 'Utilizator',
+        author_avatar: authors[post.author_id]?.avatar_url || null,
+        comment_count: post.forum_comments?.[0]?.count || 0,
+      }));
 
       setPosts(mappedPosts);
     } catch (e: any) {
       console.error(e);
-      Alert.alert('Eroare', 'Nu am putut încărca postările.');
+      toast.error('Nu am putut încărca postările.');
     } finally {
       setLoading(false);
     }
@@ -89,15 +133,15 @@ export default function ForumScreen() {
 
   async function handleCreatePost() {
     if (!newTitle || !newContent) {
-      Alert.alert('Atenție', 'Te rugăm să completezi titlul și conținutul.');
+      toast.warning('Te rugăm să completezi titlul și conținutul.');
       return;
     }
     if (!dbUserId) {
-      Alert.alert('Eroare', 'Trebuie să fii conectat.');
+      toast.error('Trebuie să fii conectat.');
       return;
     }
 
-    setLoading(true);
+    setPublishing(true);
     try {
       const { error } = await supabase.from('forum_posts').insert({
         author_id: dbUserId,
@@ -110,12 +154,14 @@ export default function ForumScreen() {
 
       setNewTitle('');
       setNewContent('');
+      setNewCategory('GENERAL');
       setShowCreateModal(false);
       fetchPosts();
-      Alert.alert('Succes', 'Subiectul tău de discuție a fost creat!');
+      toast.success('Subiectul tău de discuție a fost creat!');
     } catch (e: any) {
-      Alert.alert('Eroare', e.message || 'Nu am putut crea postarea.');
-      setLoading(false);
+      toast.error(e.message || 'Nu am putut crea postarea.');
+    } finally {
+      setPublishing(false);
     }
   }
 
@@ -129,24 +175,19 @@ export default function ForumScreen() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-
       if (!commentsData || commentsData.length === 0) {
         setComments([]);
         return;
       }
 
       const authorIds = [...new Set(commentsData.map(c => c.author_id))];
-      const { data: workers } = await supabase.from('worker_profiles').select('user_id, full_name').in('user_id', authorIds);
-      const { data: employers } = await supabase.from('employer_profiles').select('user_id, company_name').in('user_id', authorIds);
+      const authors = await resolveAuthors(authorIds);
 
-      const mappedComments = commentsData.map(c => {
-        const worker = workers?.find(w => w.user_id === c.author_id);
-        const employer = employers?.find(e => e.user_id === c.author_id);
-        return {
-          ...c,
-          author_name: worker?.full_name || employer?.company_name || 'Utilizator Anonim',
-        };
-      });
+      const mappedComments = commentsData.map(c => ({
+        ...c,
+        author_name: authors[c.author_id]?.name || 'Utilizator',
+        author_avatar: authors[c.author_id]?.avatar_url || null,
+      }));
 
       setComments(mappedComments);
     } catch (e) {
@@ -157,22 +198,23 @@ export default function ForumScreen() {
   }
 
   async function handleAddComment() {
-    if (!newComment) return;
+    const trimmed = newComment.trim();
+    if (!trimmed) return;
     if (!dbUserId || !selectedPost) return;
 
+    setSendingComment(true);
     try {
       const { error } = await supabase.from('forum_comments').insert({
         post_id: selectedPost.id,
         author_id: dbUserId,
-        content: newComment,
+        content: trimmed,
       });
 
       if (error) throw error;
 
       setNewComment('');
       fetchComments(selectedPost.id);
-      
-      // Update comment count locally in post list
+
       setPosts(prevPosts => prevPosts.map(p => {
         if (p.id === selectedPost.id) {
           return { ...p, comment_count: p.comment_count + 1 };
@@ -180,7 +222,9 @@ export default function ForumScreen() {
         return p;
       }));
     } catch (e: any) {
-      Alert.alert('Eroare', e.message || 'Nu am putut adăuga comentariul.');
+      toast.error(e.message || 'Nu am putut adăuga comentariul.');
+    } finally {
+      setSendingComment(false);
     }
   }
 
@@ -189,569 +233,363 @@ export default function ForumScreen() {
     fetchComments(post.id);
   }
 
-  function formatDate(isoString: string) {
-    const d = new Date(isoString);
-    return d.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-  }
-
-  const filteredPosts = activeCategory 
+  const filteredPosts = activeCategory
     ? posts.filter(p => p.category === activeCategory)
     : posts;
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={{ flex: 1, backgroundColor: t.background }}
       keyboardVerticalOffset={90}
     >
       {selectedPost ? (
-        // Detailed Thread view
         <View style={{ flex: 1 }}>
-          <TouchableOpacity style={styles.backButton} onPress={() => setSelectedPost(null)}>
-            <Text style={styles.backButtonText}>← Înapoi la Forum</Text>
-          </TouchableOpacity>
+          <Pressable
+            style={[styles.backButton, { backgroundColor: t.background, borderBottomColor: t.border }]}
+            onPress={() => setSelectedPost(null)}
+            accessibilityRole="button"
+          >
+            <ArrowLeft color={t.primary} size={18} strokeWidth={2} />
+            <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.sans, marginLeft: spacing.sm }}>
+              Înapoi la Forum
+            </Text>
+          </Pressable>
 
-          <ScrollView contentContainerStyle={styles.postDetailContainer}>
-            <View style={styles.postDetailCard}>
+          <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl }}>
+            <Card padding="lg" style={{ marginBottom: spacing.xl }}>
               <View style={styles.detailMetaRow}>
-                <View style={styles.metaBadge}>
-                  <Text style={styles.metaBadgeText}>{CATEGORY_LABELS[selectedPost.category]}</Text>
-                </View>
-                <Text style={styles.detailTime}>{formatDate(selectedPost.created_at)}</Text>
+                <Badge variant="ghost">{CATEGORY_LABELS[selectedPost.category]}</Badge>
+                <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontFamily: font.sans }}>
+                  {formatRelativeTime(selectedPost.created_at)}
+                </Text>
               </View>
-              
-              <Text style={styles.detailTitle}>{selectedPost.title}</Text>
-              <Text style={styles.detailAuthor}>Publicat de: {selectedPost.author_name}</Text>
-              <Text style={styles.detailContent}>{selectedPost.content}</Text>
-            </View>
 
-            <Text style={styles.commentsHeading}>Răspunsuri ({comments.length})</Text>
+              {/* Author row with avatar — clickable */}
+              <Pressable
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: spacing.sm, marginBottom: spacing.xs }}
+                onPress={() => openProfile(selectedPost.author_id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Vezi profilul lui ${selectedPost.author_name}`}
+              >
+                <AvatarCircle avatarUrl={selectedPost.author_avatar} name={selectedPost.author_name} size={32} t={t} />
+                <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.sans }}>
+                  {selectedPost.author_name}
+                </Text>
+              </Pressable>
+
+              <Text style={{
+                color: t.foreground,
+                fontSize: fontSize.lg,
+                fontWeight: fontWeight.bold,
+                fontFamily: font.heading,
+                lineHeight: 24,
+                marginTop: spacing.xs,
+              }}>
+                {selectedPost.title}
+              </Text>
+              <Text style={{
+                color: t.cardForeground,
+                fontSize: fontSize.base,
+                lineHeight: 22,
+                fontFamily: font.sans,
+                marginTop: spacing.sm,
+              }}>
+                {selectedPost.content}
+              </Text>
+            </Card>
+
+            <Text style={{
+              color: t.foreground,
+              fontSize: fontSize.base,
+              fontWeight: fontWeight.bold,
+              fontFamily: font.heading,
+              marginBottom: spacing.sm,
+              paddingHorizontal: spacing.xs,
+            }}>
+              Răspunsuri ({comments.length})
+            </Text>
 
             {commentsLoading ? (
-              <ActivityIndicator color="#e5c158" style={{ marginVertical: 16 }} />
+              <ActivityIndicator color={t.primary} style={{ marginVertical: spacing.lg }} />
             ) : comments.length === 0 ? (
-              <Text style={styles.noCommentsText}>Nu există comentarii la acest subiect. Începe discuția!</Text>
+              <EmptyState
+                icon={MessageSquare}
+                title="Fără răspunsuri"
+                description="Nu există comentarii la acest subiect. Începe discuția!"
+              />
             ) : (
               comments.map(comment => (
-                <View key={comment.id} style={styles.commentCard}>
-                  <View style={styles.commentHeader}>
-                    <View style={styles.commentAuthorRow}>
-                      <CornerDownRight size={14} color="#64748b" style={{ marginRight: 6 }} />
-                      <User size={12} color="#cbd5e1" style={{ marginRight: 4 }} />
-                      <Text style={styles.commentAuthor}>{comment.author_name}</Text>
-                    </View>
-                    <Text style={styles.commentTime}>{formatDate(comment.created_at)}</Text>
+                <View key={comment.id} style={{
+                  backgroundColor: t.muted,
+                  borderLeftWidth: 3,
+                  borderLeftColor: t.primary,
+                  borderRadius: radius.md,
+                  padding: spacing.md,
+                  marginBottom: spacing.sm,
+                  marginLeft: spacing.sm,
+                }}>
+                  {/* Comment author with avatar — clickable */}
+                  <View style={[styles.commentHeader, { marginBottom: 8 }]}>
+                    <Pressable
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}
+                      onPress={() => openProfile(comment.author_id)}
+                      accessibilityRole="button"
+                    >
+                      <AvatarCircle avatarUrl={comment.author_avatar} name={comment.author_name} size={24} t={t} />
+                      <Text style={{ color: t.foreground, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.sans }}>
+                        {comment.author_name}
+                      </Text>
+                    </Pressable>
+                    <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontFamily: font.sans }}>
+                      {formatRelativeTime(comment.created_at)}
+                    </Text>
                   </View>
-                  <Text style={styles.commentContent}>{comment.content}</Text>
+                  <Text style={{
+                    color: t.cardForeground,
+                    fontSize: fontSize.sm,
+                    lineHeight: 18,
+                    fontFamily: font.sans,
+                    paddingLeft: 32,
+                  }}>
+                    {comment.content}
+                  </Text>
                 </View>
               ))
             )}
           </ScrollView>
 
-          {/* New Comment Input Box */}
-          <View style={styles.commentInputContainer}>
+          <View style={[styles.commentInputContainer, { backgroundColor: t.card, borderTopColor: t.border }]}>
             <TextInput
-              style={styles.commentInput}
+              style={{
+                flex: 1, height: 40, backgroundColor: t.input,
+                borderWidth: 1, borderColor: t.border, borderRadius: radius.full,
+                paddingHorizontal: spacing.md, color: t.foreground,
+                fontSize: fontSize.sm, fontFamily: font.sans,
+              }}
               placeholder="Adaugă un răspuns..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={t.mutedForeground}
               value={newComment}
               onChangeText={setNewComment}
             />
-            <TouchableOpacity style={styles.sendCommentButton} onPress={handleAddComment}>
-              <Send size={16} color="#ffffff" />
-            </TouchableOpacity>
+            <Pressable
+              style={{
+                width: 40, height: 40, borderRadius: radius.full,
+                backgroundColor: t.primaryStrong,
+                justifyContent: 'center', alignItems: 'center',
+                opacity: sendingComment ? 0.6 : 1,
+              }}
+              onPress={handleAddComment}
+              disabled={sendingComment}
+              accessibilityRole="button"
+              accessibilityLabel="Trimite comentariu"
+            >
+              {sendingComment
+                ? <ActivityIndicator color={t.primaryForeground} size="small" />
+                : <Send size={16} color={t.primaryForeground} strokeWidth={2} />}
+            </Pressable>
           </View>
         </View>
       ) : showCreateModal ? (
-        // Create Thread view
-        <ScrollView contentContainerStyle={styles.createFormContainer}>
-          <Text style={styles.formTitle}>Subiect Nou</Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, backgroundColor: t.background }}
+        >
+          <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.md }}>
+            <View style={styles.createHeader}>
+              <Text style={{ fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: t.foreground, fontFamily: font.heading }}>
+                Subiect Nou
+              </Text>
+              <Pressable onPress={() => setShowCreateModal(false)} accessibilityRole="button" hitSlop={8}>
+                <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm, fontFamily: font.sans }}>Închide</Text>
+              </Pressable>
+            </View>
 
-          <Text style={styles.label}>CATEGORIE</Text>
-          <View style={styles.categoryPicker}>
-            {CATEGORIES.map(cat => (
-              <TouchableOpacity
-                key={cat}
-                style={[styles.categoryBtn, newCategory === cat && styles.categoryBtnActive]}
-                onPress={() => setNewCategory(cat)}
-              >
-                <Text style={[styles.categoryBtnText, newCategory === cat && styles.categoryBtnTextActive]}>
-                  {CATEGORY_LABELS[cat]}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+            <View>
+              <Text style={{ color: t.mutedForeground, fontFamily: font.heading, fontSize: fontSize.sm, fontWeight: fontWeight.medium, marginBottom: spacing.sm }}>
+                CATEGORIE
+              </Text>
+              <View style={styles.categoryPicker}>
+                {CATEGORIES.map(cat => (
+                  <Pressable
+                    key={cat}
+                    style={[styles.categoryBtn, {
+                      backgroundColor: newCategory === cat ? t.primaryStrong : t.muted,
+                      borderColor: newCategory === cat ? t.primaryStrong : t.border,
+                    }]}
+                    onPress={() => setNewCategory(cat)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: newCategory === cat }}
+                  >
+                    <Text style={{
+                      color: newCategory === cat ? t.primaryForeground : t.mutedForeground,
+                      fontSize: fontSize.xs, fontWeight: fontWeight.medium, fontFamily: font.sans,
+                    }}>
+                      {CATEGORY_LABELS[cat]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
 
-          <Text style={styles.label}>TITLU DISCUȚIE</Text>
-          <TextInput
-            style={styles.formInput}
-            placeholder="Despre ce dorești să vorbești?"
-            placeholderTextColor="#64748b"
-            value={newTitle}
-            onChangeText={setNewTitle}
-          />
+            <Input label="Titlu discuție" placeholder="Despre ce dorești să vorbești?" value={newTitle} onChangeText={setNewTitle} />
+            <Textarea label="Mesaj / detalii" placeholder="Scrie detaliile aici..." value={newContent} onChangeText={setNewContent} rows={6} />
 
-          <Text style={styles.label}>MESAJ/DETALII</Text>
-          <TextInput
-            style={[styles.formInput, styles.formTextarea]}
-            placeholder="Scrie detaliile aici..."
-            placeholderTextColor="#64748b"
-            multiline
-            numberOfLines={6}
-            value={newContent}
-            onChangeText={setNewContent}
-          />
-
-          <View style={styles.formActions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowCreateModal(false)}>
-              <Text style={styles.cancelBtnText}>Anulare</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleCreatePost}>
-              <Text style={styles.saveBtnText}>Publică</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+            <View style={styles.formActions}>
+              <Button variant="outline" size="md" onPress={() => setShowCreateModal(false)}>Anulare</Button>
+              <Button variant="primary" size="md" loading={publishing} onPress={handleCreatePost}>Publică</Button>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       ) : (
-        // Thread list view
         <View style={{ flex: 1 }}>
-          {/* Categories bar */}
-          <View style={styles.filterBar}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <TouchableOpacity
-                style={[styles.filterChip, !activeCategory && styles.filterChipActive]}
+          <View style={[styles.filterBar, { backgroundColor: t.background, borderBottomColor: t.border }]}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+              <Pressable
+                style={[styles.filterChip, { backgroundColor: !activeCategory ? t.primaryStrong : t.muted, borderColor: !activeCategory ? t.primaryStrong : t.border }]}
                 onPress={() => setActiveCategory(null)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: !activeCategory }}
               >
-                <Text style={[styles.filterChipText, !activeCategory && styles.filterChipTextActive]}>Toate</Text>
-              </TouchableOpacity>
+                <Text style={{ color: !activeCategory ? t.primaryForeground : t.mutedForeground, fontSize: fontSize.xs, fontWeight: fontWeight.medium, fontFamily: font.sans }}>Toate</Text>
+              </Pressable>
               {CATEGORIES.map(cat => (
-                <TouchableOpacity
+                <Pressable
                   key={cat}
-                  style={[styles.filterChip, activeCategory === cat && styles.filterChipActive]}
+                  style={[styles.filterChip, { backgroundColor: activeCategory === cat ? t.primaryStrong : t.muted, borderColor: activeCategory === cat ? t.primaryStrong : t.border }]}
                   onPress={() => setActiveCategory(cat)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: activeCategory === cat }}
                 >
-                  <Text style={[styles.filterChipText, activeCategory === cat && styles.filterChipTextActive]}>
+                  <Text style={{ color: activeCategory === cat ? t.primaryForeground : t.mutedForeground, fontSize: fontSize.xs, fontWeight: fontWeight.medium, fontFamily: font.sans }}>
                     {CATEGORY_LABELS[cat]}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
 
           {loading ? (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#e5c158" />
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={t.primary} />
             </View>
           ) : (
             <FlatList
               data={filteredPosts}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContainer}
+              contentContainerStyle={{ padding: spacing.lg, paddingBottom: 80, gap: spacing.md }}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.threadCard} onPress={() => handleSelectPost(item)}>
+                <Card padding="md" onPress={() => handleSelectPost(item)}>
                   <View style={styles.threadHeader}>
-                    <View style={styles.categoryLabel}>
-                      <Tag size={12} color="#cbd5e1" style={{ marginRight: 4 }} />
-                      <Text style={styles.categoryLabelText}>{CATEGORY_LABELS[item.category]}</Text>
+                    <View style={[styles.categoryLabel, { backgroundColor: t.muted }]}>
+                      <Tag color={t.mutedForeground} size={12} style={{ marginRight: 4 }} />
+                      <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontWeight: fontWeight.semibold, fontFamily: font.sans }}>
+                        {CATEGORY_LABELS[item.category]}
+                      </Text>
                     </View>
-                    <Text style={styles.threadTime}>{formatDate(item.created_at)}</Text>
+                    <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontFamily: font.sans }}>
+                      {formatRelativeTime(item.created_at)}
+                    </Text>
                   </View>
 
-                  <Text style={styles.threadTitle}>{item.title}</Text>
-                  <Text style={styles.threadSnippet} numberOfLines={2}>{item.content}</Text>
+                  <Text style={{
+                    color: t.foreground, fontSize: fontSize.base, fontWeight: fontWeight.bold,
+                    fontFamily: font.heading, marginTop: spacing.sm, marginBottom: spacing.xs,
+                  }}>
+                    {item.title}
+                  </Text>
+                  <Text style={{
+                    color: t.mutedForeground, fontSize: fontSize.sm, lineHeight: 18,
+                    fontFamily: font.sans, marginBottom: spacing.sm,
+                  }} numberOfLines={2}>
+                    {item.content}
+                  </Text>
 
-                  <View style={styles.threadFooter}>
-                    <View style={styles.authorRow}>
-                      <User size={12} color="#64748b" style={{ marginRight: 4 }} />
-                      <Text style={styles.threadAuthor}>{item.author_name}</Text>
-                    </View>
+                  {/* Author row with avatar — clickable */}
+                  <View style={[styles.threadFooter, { borderTopColor: t.border }]}>
+                    <Pressable
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                      onPress={() => openProfile(item.author_id)}
+                      accessibilityRole="button"
+                    >
+                      <AvatarCircle avatarUrl={item.author_avatar} name={item.author_name} size={20} t={t} />
+                      <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.sans }}>
+                        {item.author_name}
+                      </Text>
+                    </Pressable>
 
-                    <View style={styles.commentCountRow}>
-                      <MessageSquare size={13} color="#e5c158" style={{ marginRight: 4 }} />
-                      <Text style={styles.commentCountText}>{item.comment_count} răspunsuri</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <MessageSquare color={t.primary} size={13} style={{ marginRight: 4 }} />
+                      <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm, fontWeight: fontWeight.medium, fontFamily: font.sans }}>
+                        {item.comment_count} răspunsuri
+                      </Text>
                     </View>
                   </View>
-                </TouchableOpacity>
+                </Card>
               )}
               ListEmptyComponent={
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Nu am găsit nicio discuție activă.</Text>
-                </View>
+                <EmptyState
+                  icon={MessagesSquare}
+                  title="Forumul este gol"
+                  description="Nu am găsit nicio discuție activă. Fii primul care pornește o conversație!"
+                  action={{ label: 'Deschide o discuție', onPress: () => setShowCreateModal(true) }}
+                />
               }
             />
           )}
 
-          {/* Floating Action Button for Thread Creation */}
-          <TouchableOpacity style={styles.fab} onPress={() => setShowCreateModal(true)}>
-            <Plus size={24} color="#ffffff" />
-          </TouchableOpacity>
+          <Pressable
+            style={[styles.fab, { backgroundColor: t.primaryStrong }]}
+            onPress={() => setShowCreateModal(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Creează subiect nou"
+          >
+            <Plus color={t.primaryForeground} size={24} strokeWidth={2.5} />
+          </Pressable>
         </View>
       )}
+
+      {/* Profile view modal */}
+      <ProfileViewModal
+        userId={viewingProfileId}
+        visible={profileModalVisible}
+        onClose={() => setProfileModalVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
 
+/** Avatar circle — shows image if available, initials otherwise */
+function AvatarCircle({ avatarUrl, name, size, t }: { avatarUrl: string | null; name: string; size: number; t: any }) {
+  const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+  if (avatarUrl) {
+    return <Image source={{ uri: avatarUrl }} style={{ width: size, height: size, borderRadius: size / 2 }} />;
+  }
+  return (
+    <View style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: t.primary, justifyContent: 'center', alignItems: 'center',
+    }}>
+      <Text style={{ color: t.primaryForeground, fontSize: size * 0.4, fontWeight: '700', fontFamily: font.heading }}>
+        {initials}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0f1d',
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterBar: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    backgroundColor: '#0a0f1d',
-  },
-  filterChip: {
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  filterChipActive: {
-    backgroundColor: '#002b7f',
-    borderColor: '#002b7f',
-  },
-  filterChipText: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  filterChipTextActive: {
-    color: '#ffffff',
-  },
-  listContainer: {
-    padding: 16,
-    paddingBottom: 80,
-    gap: 12,
-  },
-  threadCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 16,
-    padding: 16,
-  },
-  threadHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  categoryLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  categoryLabelText: {
-    color: '#cbd5e1',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  threadTime: {
-    color: '#64748b',
-    fontSize: 11,
-  },
-  threadTitle: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  threadSnippet: {
-    color: '#94a3b8',
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  threadFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.04)',
-    paddingTop: 10,
-  },
-  authorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  threadAuthor: {
-    color: '#cbd5e1',
-    fontSize: 12,
-  },
-  commentCountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  commentCountText: {
-    color: '#cbd5e1',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  emptyState: {
-    paddingVertical: 64,
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    color: '#64748b',
-    fontSize: 14,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#002b7f',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#002b7f',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    backgroundColor: '#0a0f1d',
-  },
-  backButtonText: {
-    color: '#e5c158',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  postDetailContainer: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  postDetailCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-  },
-  detailMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  metaBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  metaBadgeText: {
-    color: '#cbd5e1',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  detailTime: {
-    color: '#64748b',
-    fontSize: 11.5,
-  },
-  detailTitle: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 8,
-    lineHeight: 24,
-  },
-  detailAuthor: {
-    color: '#cbd5e1',
-    fontSize: 12.5,
-    marginBottom: 16,
-    fontWeight: '500',
-  },
-  detailContent: {
-    color: '#cbd5e1',
-    fontSize: 14.5,
-    lineHeight: 22,
-  },
-  commentsHeading: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  noCommentsText: {
-    color: '#64748b',
-    fontSize: 13,
-    textAlign: 'center',
-    marginVertical: 24,
-  },
-  commentCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.15)',
-    borderLeftWidth: 3,
-    borderLeftColor: '#002b7f',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.04)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    marginLeft: 8,
-  },
-  commentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  commentAuthorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  commentAuthor: {
-    color: '#cbd5e1',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  commentTime: {
-    color: '#64748b',
-    fontSize: 10.5,
-  },
-  commentContent: {
-    color: '#cbd5e1',
-    fontSize: 13.5,
-    lineHeight: 18,
-    paddingLeft: 18,
-  },
-  commentInputContainer: {
-    flexDirection: 'row',
-    padding: 12,
-    backgroundColor: '#0a0f1d',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
-    alignItems: 'center',
-    gap: 8,
-  },
-  commentInput: {
-    flex: 1,
-    height: 40,
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    color: '#ffffff',
-    fontSize: 13.5,
-  },
-  sendCommentButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#002b7f',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  createFormContainer: {
-    padding: 24,
-    gap: 16,
-  },
-  formTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-  categoryPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 8,
-  },
-  categoryBtn: {
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  categoryBtnActive: {
-    backgroundColor: '#002b7f',
-    borderColor: '#002b7f',
-  },
-  categoryBtnText: {
-    color: '#cbd5e1',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  categoryBtnTextActive: {
-    color: '#ffffff',
-  },
-  formInput: {
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 12,
-    height: 44,
-    paddingHorizontal: 14,
-    color: '#ffffff',
-    fontSize: 14,
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#94a3b8',
-    marginBottom: 6,
-    letterSpacing: 1,
-    marginTop: 8,
-  },
-  formTextarea: {
-    height: 120,
-    textAlignVertical: 'top',
-    paddingVertical: 12,
-  },
-  formActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    marginTop: 16,
-  },
-  cancelBtn: {
-    height: 40,
-    paddingHorizontal: 18,
-    justifyContent: 'center',
-    borderRadius: 10,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  cancelBtnText: {
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  saveBtn: {
-    height: 40,
-    paddingHorizontal: 22,
-    justifyContent: 'center',
-    borderRadius: 10,
-    backgroundColor: '#002b7f',
-  },
-  saveBtnText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
+  backButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1 },
+  detailMetaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  commentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  commentInputContainer: { flexDirection: 'row', padding: spacing.md, borderTopWidth: 1, alignItems: 'center', gap: spacing.sm },
+  createHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
+  categoryPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  categoryBtn: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 6 },
+  filterBar: { padding: spacing.md, borderBottomWidth: 1 },
+  filterChip: { borderWidth: 1, borderRadius: radius.full, paddingHorizontal: spacing.md, paddingVertical: 5 },
+  threadHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  categoryLabel: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.sm },
+  threadFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, paddingTop: 10 },
+  fab: { position: 'absolute', bottom: spacing.xl, right: spacing.xl, width: 52, height: 52, borderRadius: 26, justifyContent: 'center', alignItems: 'center', elevation: 5 },
+  formActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md },
 });

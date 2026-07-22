@@ -276,6 +276,140 @@ All five tables have RLS **enabled**. Policy summary:
 
 ---
 
+## [Unreleased] — Map marketplace + sidebar + logo + data-layer bug fixes
+
+### 🎨 Design — full Zori sweep on web
+
+- **Logo**: new sunrise-clock mark (Zori = Romanian for "dawn"),
+  combining a rising sun with clock hands. Two-piece system:
+  `web/src/components/brand/Logo.tsx` (`<LogoMark />` monochrome, `<LogoTile />`
+  brand lockup) + `web/src/app/icon.svg` (favicon) with ember-orange gradient tile.
+  Used in sidebar brand, mobile header, and the browser favicon.
+- **Sidebar** (`web/src/app/(dashboard)/DashboardSidebar.tsx`):
+  - Removed the hardcoded cold `bg-[#eff4ff]` periwinkle that made the
+    sidebar look gray in light mode. Now uses the warm `--sidebar` token.
+  - Brand block replaces the "G" with `<LogoTile />`.
+  - Added lucide icons per nav item (Map, CalendarClock, ClipboardList,
+    MessageCircle, MessagesSquare) — mobile-tab parity.
+  - Active pill refined: solid ember fill with AA-compliant `--primary`
+    background and a soft ember shadow.
+  - Removed dead localStorage chat-unread polling (key was never written).
+- **TopHeader** (`web/src/components/layout/TopHeader.tsx`):
+  - Replaced the hardcoded `bg-white` + sharp `rounded` (4px) corners
+    with Zori tokens (`bg-card`, `bg-background`, `rounded-xl`,
+    `border-border/60`). Cold-slate shadow swapped for warm shadow.
+- **Profile page** (`web/src/app/(dashboard)/profile/page.tsx`):
+  - Stat-value text gradients swapped from raw `from-amber-500`,
+    `from-emerald-500 to-teal-600` to the Zori `text-accent` and
+    `text-secondary` tokens. Banner amber→primary ends now use
+    `from-accent/10 via-primary/5 to-primary/5`. Stops the warm/cool palette clash.
+
+### 🗺️ Map marketplace on web (mobile parity)
+
+Brought the mobile tab "Marketplace" (Timișoara map of open shifts) to web
+at `/jobs`. New files:
+- `web/src/components/map/LeafletMap.tsx` — client-only Leaflet map
+  (no react-leaflet dependency, avoids React 19 compat risk):
+  - Carto Positron (light) / Dark Matter (dark) tile base, intentionally
+    desaturated so the ember/sage pins carry the chromatic weight
+    (matches mobile's custom map styles per `docs/ZORI_DESIGN_SYSTEM.md`).
+  - Custom div-icon markers (ember for open shifts, sage for already-applied).
+  - Auto fit-bounds to markers; click pin opens detail sheet;
+    click map closes selection.
+  - Theme-aware: tiles swap on `next-themes` resolvedTheme change.
+- Rewrote `web/src/app/(dashboard)/jobs/JobsClient.tsx`:
+  - Header tabs "Hartă" / "Listă" with easter-egg segmented control.
+  - Filter chips derived from actually-posted shifts' `role_needed`
+    (mobile parity — no preset categories).
+  - Map view = full-height Leaflet with empty-state overlay.
+  - List view = Zori cards with role badge, company, mono pay
+    (JetBrains Mono, paid-amount rule), date/time, city/county.
+  - Bottom Sheet (side="bottom", base-ui) with role title, company,
+    saffron rating stars (only if employer_rating present), details row,
+    accent-coloured pay + apply CTA in applied/disabled variants.
+  - Apply contract mirrors mobile: CNP + Serie CI gate, OPEN check,
+    Romanian toast copy via `sonner`.
+- `web/src/app/(dashboard)/jobs/page.tsx`: passes worker's
+  `initialAppliedShiftIds` so pins paint sage after a successful apply.
+
+### 🐛 Data-layer bug fixes (silent-empty pages)
+
+While wiring the marketplace, every fixed query was **validated against
+the live ROMARG MySQL** with a small SQL harness — the same class of
+"Unknown column" error that caused the login bounce. Four functions in
+`romarg-data.ts` were broken and silently returning `[]`:
+- `getOpenShifts` selected `e.avatar_url as employer_avatar`
+  from `employer_profiles` — that table doesn't have `avatar_url`.
+  Now joins `users eu` and selects `eu.avatar_url`. Also added
+  `e.lat`, `e.lng`, `e.employer_rating` so the map has coords.
+- `getMyApplications` (employer branch) selected `w.avatar_url`
+  from `worker_profiles` — same bug. Fixed with `users wu` join.
+- `getChatRooms` selected `w.avatar_url, e.avatar_url` (double bug).
+  Fixed and added `last_message`, `last_message_at`, `last_sender_id`
+  subqueries so chat rooms can show last-message previews.
+- `getPotentialConnections` selected `w.avatar_url, e.avatar_url`.
+  Fixed; added `COALESCE(w.city, e.city) as city`.
+
+Other schema alignment:
+- `getMyShifts` is now role-aware: workers see shifts they applied to
+  (joins `applications`), employers see their own shifts with
+  `application_count` subquery. Returns `my_application_status`
+  for workers so /shifts can show "În așteptare" / "Acceptat" / etc.
+- `createShift` was inserting columns that **don't exist on the live
+  MySQL** (`title`, `category`, `description`, `address`, `city`,
+  `county`, `required_workers`). Replaced with the real Supabase-derived
+  schema (`role_needed` enum, `start_time`, `end_time`, `hourly_pay_ron`,
+  `status`). Now also validates `end_time > start_time` per AGENTS.md
+  invariant and `hourly_pay_ron > 0`.
+- `applyToShift` now enforces AGENTS.md security invariants:
+  worker must have `cnp` AND `id_card_series` on file, and the
+  shift must still be `status='OPEN'`. Returns Romanian error
+  messages matching the mobile copy.
+
+Validates clean against ROMARG MySQL `REMOVED`.
+
+### 🐛 UI field mismatch + threading fixes
+
+- **Chat** (`web/src/app/(dashboard)/chat/ChatClient.tsx`):
+  - Rooms query returned `room_id / other_name / other_avatar`
+    but the client was reading `id / name / last_sender_is_me`,
+    causing rooms to render nameless + `?room=` deep-linking to never match.
+    All references aligned; `last_sender_is_me` now computed from
+    `last_sender_id === userId`.
+  - Messages no longer require server-set `is_mine`; computed client-side
+    from `sender_id === userId`.
+  - Connections list: `c.user_id` → `c.id`; `c.city` now provided
+    by `getPotentialConnections`.
+- **Shifts** (`web/src/app/(dashboard)/shifts/ShiftsClient.tsx`):
+  - Replace `shift.applications?.[0]?.count` (always `0`, Supabase ghost)
+    with `shift.application_count` from the subquery.
+  - "＋" full-width glyph → lucide `<Plus />` icon.
+  - Cold-slate shadow RGBA → warm shadow.
+  - Pay rendered in `font-mono` per Zori token rule (JetBrains Mono).
+  - Worker view now shows the employer column (only `getMyShifts`
+    returned their own shifts before); company name appears in
+    mobile cards too.
+
+### ✅ Verified end-to-end
+
+Built clean (`npm run build` succeeds, all 20 routes generated including
+`/api/auth/login` and `/icon.svg`). tsc + lint on changed files clean.
+End-to-end live MySQL test seeded two employers + two shifts in Timișoara
+(coords 45.7572, 21.2291), logged in via `/api/auth/login`, hit `/jobs`
+→ HTTP 200, both filter chips (Barista, Ospătar) render, both shifts
+visible. Test data cleaned up after.
+
+### 📱 Mobile
+
+One-line mobile fix: `forum.tsx handleAddComment()` now `.trim()`s the
+comment before the `if (!new)` check, so whitespace-only comments
+are rejected (mobile bug found during research). Mobile is otherwise
+untouched.
+
+---
+
+---
+
 ## [Unreleased] — Web login cookie persistence fix
 
 ### 🐛 Bug fix — login bounce on Vercel
