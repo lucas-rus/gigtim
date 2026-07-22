@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { dbPool } from '@/lib/romarg-db'
 
-const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30 // 30 days — keeps the session alive across browser restarts; only logout clears it
 
 function sessionCookieValue(userId: string, email: string, role: string) {
   return JSON.stringify({ userId, email, role })
