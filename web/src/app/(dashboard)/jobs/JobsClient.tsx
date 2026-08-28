@@ -287,6 +287,7 @@ export function JobsClient({ shifts, userRole, initialAppliedShiftIds = [] }: Jo
       <Sheet open={!!selectedShift} onOpenChange={(open) => !open && setSelectedShift(null)}>
         <SheetContent
           side="bottom"
+          showCloseButton={false}
           className="rounded-t-3xl border-t border-border/60 bg-card px-6 pt-3 pb-8 max-h-[85vh] overflow-y-auto sm:max-w-xl sm:mx-auto sm:inset-x-0"
         >
           {selectedShift && (

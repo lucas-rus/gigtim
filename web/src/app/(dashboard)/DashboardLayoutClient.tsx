@@ -126,7 +126,7 @@ export function DashboardLayoutClient({
             </DropdownMenu>
           </div>
         </div>
-        <SheetContent side="left" className="w-64 p-0 border-r border-border/60 dark:border-sidebar-border bg-card dark:bg-sidebar">
+        <SheetContent showCloseButton={false} side="left" className="w-64 p-0 border-r border-border/60 dark:border-sidebar-border bg-card dark:bg-sidebar">
           <DashboardSidebar userRole={userRole} />
         </SheetContent>
       </Sheet>
