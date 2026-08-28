@@ -175,10 +175,10 @@ export default function LeafletMap({
 
 function tileUrl(theme: string | undefined): string {
   const apiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'cb1_2ftt_1_dbae2466188fb2a6e2a1b2a8'
-  const query = apiKey ? `?api_key=${apiKey}` : ''
+  const query = apiKey ? `?key=${apiKey}` : ''
   return theme === 'dark'
-    ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${query}`
-    : `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${query}`
+    ? `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png${query}`
+    : `https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png${query}`
 }
 
 function makeIcon(L: any, applied: boolean) {
