@@ -154,9 +154,11 @@ export default function LeafletMap({
 }
 
 function tileUrl(theme: string | undefined): string {
+  const apiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || ''
+  const query = apiKey ? `?api_key=${apiKey}` : ''
   return theme === 'dark'
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${query}`
+    : `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${query}`
 }
 
 function makeIcon(L: any, applied: boolean) {
