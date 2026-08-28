@@ -180,6 +180,22 @@
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
+
+  /* Leaflet Map overrides */
+  .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 0 !important;
+    font-family: inherit !important;
+    background: var(--muted) !important;
+  }
+  .leaflet-pane {
+    z-index: 10 !important;
+  }
+  .leaflet-top,
+  .leaflet-bottom {
+    z-index: 20 !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

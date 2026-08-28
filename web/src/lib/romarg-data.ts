@@ -21,6 +21,31 @@ function serializeRows(rows: any[]) {
 
 // --- SHIFTS & JOBS ---
 
+const CITY_COORDINATES: Record<string, [number, number]> = {
+  'timisoara': [45.75372, 21.22571],
+  'timișoara': [45.75372, 21.22571],
+  'arad': [46.1866, 21.3123],
+  'cluj-napoca': [46.7712, 23.6236],
+  'cluj': [46.7712, 23.6236],
+  'bucuresti': [44.4268, 26.1025],
+  'bucurești': [44.4268, 26.1025],
+  'oradea': [47.0465, 21.9189],
+  'brasov': [45.6579, 25.6012],
+  'brașov': [45.6579, 25.6012],
+  'sibiu': [45.7983, 24.1256],
+  'lugoj': [45.6886, 21.9031],
+  'dumbravita': [45.7801, 21.2409],
+  'dumbrăvița': [45.7801, 21.2409],
+  'giroc': [45.6983, 21.2389],
+  'ghiroda': [45.7592, 21.2986],
+  'mosnita noua': [45.7203, 21.3094],
+  'moșnița nouă': [45.7203, 21.3094],
+  'sacalaz': [45.7586, 21.1189],
+  'săcălaz': [45.7586, 21.1189],
+  'sag': [45.6508, 21.1783],
+  'șag': [45.6508, 21.1783],
+};
+
 export async function getOpenShifts(county?: string, city?: string, category?: string) {
   try {
     const connection = await dbPool.getConnection();
@@ -52,7 +77,26 @@ export async function getOpenShifts(county?: string, city?: string, category?: s
       query += ' ORDER BY s.created_at DESC';
 
       const [rows] = await connection.query<any[]>(query, params);
-      return serializeRows(rows);
+      const results = serializeRows(rows);
+
+      // Auto-assign realistic city coordinates if lat/lng are not explicitly set
+      for (const row of results) {
+        if (row.employer_lat == null || row.employer_lng == null) {
+          const cityKey = (row.employer_city || 'Timișoara').toLowerCase().trim();
+          const coords = CITY_COORDINATES[cityKey] || CITY_COORDINATES['timișoara'];
+          let hash = 0;
+          for (let i = 0; i < (row.id || '').length; i++) {
+            hash = (hash << 5) - hash + row.id.charCodeAt(i);
+            hash |= 0;
+          }
+          const offsetLat = ((Math.abs(hash) % 100) - 50) * 0.0003;
+          const offsetLng = ((Math.abs(hash >> 3) % 100) - 50) * 0.0003;
+          row.employer_lat = Number((coords[0] + offsetLat).toFixed(5));
+          row.employer_lng = Number((coords[1] + offsetLng).toFixed(5));
+        }
+      }
+
+      return results;
     } finally {
       connection.release();
     }

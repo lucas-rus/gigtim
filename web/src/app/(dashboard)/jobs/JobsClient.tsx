@@ -60,13 +60,20 @@ export function JobsClient({ shifts, userRole, initialAppliedShiftIds = [] }: Jo
   const pins: MapShiftPin[] = useMemo(
     () =>
       filteredShifts
-        .filter((s) => typeof s.employer_lat === 'number' && typeof s.employer_lng === 'number')
-        .map((s) => ({
-          id: s.id,
-          lat: s.employer_lat,
-          lng: s.employer_lng,
-          applied: appliedIds.has(s.id),
-        })),
+        .map((s) => {
+          const lat = typeof s.employer_lat === 'number' ? s.employer_lat : parseFloat(s.employer_lat)
+          const lng = typeof s.employer_lng === 'number' ? s.employer_lng : parseFloat(s.employer_lng)
+          if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+            return {
+              id: s.id,
+              lat,
+              lng,
+              applied: appliedIds.has(s.id),
+            }
+          }
+          return null
+        })
+        .filter((p): p is MapShiftPin => p !== null),
     [filteredShifts, appliedIds]
   )
 

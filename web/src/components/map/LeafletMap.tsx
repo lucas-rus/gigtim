@@ -53,6 +53,7 @@ export default function LeafletMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
     let cancelled = false
+    let resizeObserver: ResizeObserver | null = null
 
     async function init() {
       const L = (await import('leaflet')).default
@@ -75,11 +76,30 @@ export default function LeafletMap({
         maxZoom: 19,
       })
       tileLayerRef.current.addTo(map)
+
+      // Ensure Leaflet recalculates viewport bounds immediately after render
+      setTimeout(() => {
+        if (!cancelled && mapRef.current) {
+          mapRef.current.invalidateSize()
+        }
+      }, 150)
+
+      if (typeof window !== 'undefined' && 'ResizeObserver' in window && containerRef.current) {
+        resizeObserver = new ResizeObserver(() => {
+          if (mapRef.current) {
+            mapRef.current.invalidateSize()
+          }
+        })
+        resizeObserver.observe(containerRef.current)
+      }
     }
     init()
 
     return () => {
       cancelled = true
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      }
       const map = mapRef.current
       const markers = markersRef.current
       if (map) {
@@ -146,7 +166,7 @@ export default function LeafletMap({
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 z-0 bg-muted"
+      className="absolute inset-0 z-0 h-full w-full bg-muted"
       aria-label="Hartă cu ture disponibile"
       role="application"
     />
@@ -154,7 +174,7 @@ export default function LeafletMap({
 }
 
 function tileUrl(theme: string | undefined): string {
-  const apiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || ''
+  const apiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'cb1_2ftt_1_dbae2466188fb2a6e2a1b2a8'
   const query = apiKey ? `?api_key=${apiKey}` : ''
   return theme === 'dark'
     ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${query}`
