@@ -46,5 +46,8 @@ pnpm-debug.log*
 
 # ── Misc ─────────────────────────────────────────────────────
 *.pem
+*.zip
 coverage/
 .vercel
+web/.vercel
+mobile/.expo

@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="ro" className={`${inter.variable} ${sora.variable} ${jetbrains.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
           <TooltipProvider>
             {children}
           </TooltipProvider>

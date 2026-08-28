@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getCurrentProfile } from '@/lib/supabase/auth-actions'
+import { getCurrentProfile } from '@/lib/romarg-auth'
 import { AdminSidebar } from './AdminSidebar'
 
 export default async function AdminLayout({
@@ -9,7 +9,7 @@ export default async function AdminLayout({
 }) {
   const profile = await getCurrentProfile()
   
-  if (!profile || profile.user.role !== 'ADMIN') {
+  if (!profile || profile.role !== 'ADMIN') {
     redirect('/shifts')
   }
 

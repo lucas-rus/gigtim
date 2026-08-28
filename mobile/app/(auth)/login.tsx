@@ -1,122 +1,106 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { LogIn, Key, Mail, Sparkles } from 'lucide-react-native';
+import { Mail, Key, LogIn, Sparkles, ChevronRight } from 'lucide-react-native';
+import { useZoriTheme, font, fontSize, fontWeight, spacing } from '@/src/design/useTheme';
+import { Input, Button, toast } from '@/src/ui';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const t = useZoriTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleLogin() {
     if (!email || !password) {
-      setError('Te rugăm să completezi toate câmpurile.');
+      toast.error('Te rugăm să completezi toate câmpurile.');
       return;
     }
-    setError(null);
     setLoading(true);
-
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) {
-        setError(authError.message === 'Invalid login credentials' 
-          ? 'Datele de conectare sunt incorecte.' 
-          : authError.message);
+        const msg = authError.message === 'Invalid login credentials'
+          ? 'Datele de conectare sunt incorecte.'
+          : authError.message === 'Email not confirmed'
+          ? 'Confirmă mai întâi emailul. Verifică și folderul Spam.'
+          : authError.message;
+        toast.error(msg);
       } else {
         router.replace('/(tabs)');
       }
     } catch (e: any) {
-      setError(e.message || 'A apărut o eroare.');
+      toast.error(e.message || 'A apărut o eroare.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={{ flex: 1, backgroundColor: t.background }}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-        {/* Ambient top decoration */}
-        <View style={styles.glowCircle} />
-
-        <View style={styles.headerContainer}>
-          <View style={styles.logoContainer}>
-            <Sparkles size={28} color="#e5c158" />
-            <Text style={styles.logoText}>Gigtim</Text>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" bounces={false}>
+        {/* Compact hero header */}
+        <LinearGradient
+          colors={t.scheme === 'dark' ? ['#1C1612', '#120C09'] : ['#FFFBF6', '#F7F1E9']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.logoRow}>
+            <View style={styles.logoBadge}>
+              <Sparkles size={20} color={t.accent} strokeWidth={2} />
+            </View>
+            <Text style={{ color: t.foreground, fontSize: 22, fontWeight: '800', fontFamily: 'Sora_700Bold', letterSpacing: 0.3 }}>
+              GigTim
+            </Text>
           </View>
-          <Text style={styles.title}>Bine ai venit înapoi</Text>
-          <Text style={styles.subtitle}>Conectează-te pentru a găsi ture rapide în Timișoara</Text>
+          <Text accessibilityRole="header" style={{ color: t.foreground, fontSize: 24, fontWeight: '700', fontFamily: 'Sora_700Bold', marginBottom: 4 }}>
+            Bine ai venit înapoi
+          </Text>
+          <Text style={{ color: t.mutedForeground, fontSize: 14, fontFamily: 'Inter_400Regular' }}>
+            Conectează-te pentru a continua
+          </Text>
+        </LinearGradient>
+
+        {/* Form card */}
+        <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
+          <Input
+            label="Email"
+            leftIcon={Mail}
+            placeholder="nume@exemplu.ro"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <Input
+            label="Parolă"
+            leftIcon={Key}
+            placeholder="••••••••"
+            secureTextEntry
+            autoCapitalize="none"
+            value={password}
+            onChangeText={setPassword}
+          />
+          <Button onPress={handleLogin} loading={loading} fullWidth leftIcon={LogIn} style={{ marginTop: 4 }}>
+            Conectare
+          </Button>
         </View>
 
-        <View style={styles.card}>
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>EMAIL</Text>
-            <View style={styles.inputWrapper}>
-              <Mail size={16} color="#64748b" style={styles.inputIcon} />
-              <TextInput 
-                style={styles.input}
-                placeholder="nume@exemplu.ro"
-                placeholderTextColor="#94a3b8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>PAROLĂ</Text>
-            <View style={styles.inputWrapper}>
-              <Key size={16} color="#64748b" style={styles.inputIcon} />
-              <TextInput 
-                style={styles.input}
-                placeholder="parola ta secretă"
-                placeholderTextColor="#94a3b8"
-                secureTextEntry
-                autoCapitalize="none"
-                value={password}
-                onChangeText={setPassword}
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <View style={styles.buttonContent}>
-                <LogIn size={16} color="#ffffff" style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>CONECTARE</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
+        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Nu ai cont?</Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-            <Text style={styles.footerLink}>Creează un cont nou</Text>
-          </TouchableOpacity>
+          <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm }}>Nu ai cont?</Text>
+          <Pressable onPress={() => router.push('/(auth)/register')} hitSlop={8}>
+            <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
+              {' '}Creează un cont nou
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -124,153 +108,28 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0f1d', // Modern dark layout
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  glowCircle: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(0, 43, 127, 0.2)', // Soft blue glow
-  },
-  headerContainer: {
+  scroll: { flexGrow: 1 },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 52,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     alignItems: 'center',
-    marginBottom: 32,
   },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
-  },
-  logoText: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#ffffff',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    letterSpacing: 0.5,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#ffffff',
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#94a3b8',
-    textAlign: 'center',
-    paddingHorizontal: 20,
-    lineHeight: 20,
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
+  logoBadge: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: 'rgba(247, 184, 61, 0.15)',
+    borderWidth: 1, borderColor: 'rgba(247, 184, 61, 0.3)',
+    justifyContent: 'center', alignItems: 'center',
   },
   card: {
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  errorContainer: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
-  },
-  errorText: {
-    color: '#f87171',
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#94a3b8',
-    marginBottom: 8,
-    letterSpacing: 1,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0f172a',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 14,
-    height: 48,
-    paddingHorizontal: 16,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    color: '#ffffff',
-    fontSize: 14,
-  },
-  button: {
-    backgroundColor: '#002b7f', // Deep Romanian Blue
-    borderRadius: 14,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#002b7f',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 1,
+    marginTop: 20, marginHorizontal: 24,
+    borderWidth: 1, borderRadius: 16, padding: 20, gap: 14,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-    gap: 6,
-  },
-  footerText: {
-    color: '#64748b',
-    fontSize: 14,
-  },
-  footerLink: {
-    color: '#e5c158', // Warm Amber/Gold
-    fontSize: 14,
-    fontWeight: '600',
+    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
+    marginTop: 24, marginBottom: 32,
   },
 });

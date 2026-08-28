@@ -1,4 +1,4 @@
-import { getAdminVerifications } from '@/lib/supabase/data-actions'
+import { getAdminVerifications } from '@/lib/romarg-data'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -57,7 +57,7 @@ export default async function VerificationsPage() {
       {/* Table */}
       <Card className="border border-border bg-card shadow-sm rounded overflow-hidden">
         <Table>
-          <TableHeader className="bg-[#f8fafc] border-b border-border">
+          <TableHeader className="bg-muted/30 border-b border-border">
             <TableRow>
               <TableHead className="font-mono text-2xs font-semibold uppercase tracking-wider text-muted-foreground py-3">Lucrător</TableHead>
               <TableHead className="font-mono text-2xs font-semibold uppercase tracking-wider text-muted-foreground py-3">Oraș</TableHead>
@@ -75,12 +75,12 @@ export default async function VerificationsPage() {
               </TableRow>
             ) : (
               verifications.map((v: any) => (
-                <TableRow key={v.id} className="group hover:bg-[#f8f9ff] transition-colors border-b border-border/50 last:border-b-0">
+                <TableRow key={v.id} className="group hover:bg-muted/20 transition-colors border-b border-border/50 last:border-b-0">
                   <TableCell className="font-semibold text-foreground font-sans">
-                    {v.worker_profiles?.full_name || 'Necunoscut'}
+                    {v.worker_name || 'Necunoscut'}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground font-sans">
-                    {v.worker_profiles?.city || '—'}
+                    {v.worker_city || '—'}
                   </TableCell>
                   <TableCell>
                     <Badge className={statusColors[v.status as VerificationStatus] || ''} variant="outline">

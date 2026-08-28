@@ -2,15 +2,18 @@
 
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { dbPool } from '@/lib/romarg-db';
 import { sendVerificationEmail } from '@/lib/email';
+import { createSessionToken, parseSessionToken } from '@/lib/session';
 
 export interface UserProfile {
   id: string;
   email: string;
   role: 'WORKER' | 'EMPLOYER' | 'ADMIN';
   email_verified: boolean;
+  avatar_url?: string | null;
   full_name?: string;
   phone_number?: string;
   company_name?: string;
@@ -20,50 +23,29 @@ export interface UserProfile {
   county?: string;
   cnp?: string;
   id_card_series?: string;
-  avatar_url?: string;
   bio?: string;
+  reliability_score?: string | number;
+  total_shifts_completed?: number;
+  skills?: string;
+  lat?: number | null;
+  lng?: number | null;
+  employer_rating?: string | number | null;
   created_at?: string;
 }
 
-export async function getCurrentProfile(): Promise<UserProfile | null> {
+export const getCurrentProfile = cache(async (): Promise<UserProfile | null> => {
   let cookieStore: any = null;
   try {
     cookieStore = await cookies();
   } catch {
-    // Outside request context
+    return null;
   }
 
   try {
     if (!cookieStore) return null;
-    let sessionVal = cookieStore.get('gigtim_session')?.value;
-    if (!sessionVal) return null;
-
-    // Decode if URL-encoded
-    if (sessionVal.includes('%')) {
-      try {
-        sessionVal = decodeURIComponent(sessionVal);
-      } catch {
-        // ignore
-      }
-    }
-
-    let parsed: { userId: string; email: string; role: string };
-    try {
-      parsed = JSON.parse(sessionVal);
-    } catch (err) {
-      console.error('getCurrentProfile JSON parse error:', err, 'Raw cookie:', sessionVal);
-      try {
-        cookieStore.delete('gigtim_session');
-      } catch {}
-      return null;
-    }
-
-    if (!parsed?.userId) {
-      try {
-        cookieStore.delete('gigtim_session');
-      } catch {}
-      return null;
-    }
+    const sessionVal = cookieStore.get('gigtim_session')?.value;
+    const parsed = parseSessionToken(sessionVal);
+    if (!parsed?.userId) return null;
 
     const connection = await dbPool.getConnection();
     try {
@@ -72,26 +54,20 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
         [parsed.userId]
       );
 
-      if (userRows.length === 0) {
-        console.warn('User ID not found in database, clearing session cookie:', parsed.userId);
-        try {
-          cookieStore.delete('gigtim_session');
-        } catch {}
-        return null;
-      }
+      if (userRows.length === 0) return null;
 
       const user = userRows[0];
       let profileData: any = {};
 
       if (user.role === 'WORKER') {
         const [wRows] = await connection.query<any[]>(
-          'SELECT full_name, phone_number, city, county, cnp, id_card_series, bio FROM worker_profiles WHERE user_id = ?',
+          'SELECT full_name, phone_number, city, county, cnp, id_card_series, bio, reliability_score, total_shifts_completed, skills FROM worker_profiles WHERE user_id = ?',
           [user.id]
         );
         if (wRows.length > 0) profileData = wRows[0];
       } else {
         const [eRows] = await connection.query<any[]>(
-          'SELECT company_name, cui, address, city, county FROM employer_profiles WHERE user_id = ?',
+          'SELECT company_name, cui, address, city, county, lat, lng, employer_rating FROM employer_profiles WHERE user_id = ?',
           [user.id]
         );
         if (eRows.length > 0) profileData = eRows[0];
@@ -101,6 +77,7 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
         id: user.id,
         email: user.email,
         role: user.role,
+        avatar_url: user.avatar_url,
         email_verified: Boolean(user.email_verified),
         created_at: user.created_at ? new Date(user.created_at).toISOString() : undefined,
         ...profileData,
@@ -112,15 +89,13 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
     console.error('getCurrentProfile database error:', err);
     return null;
   }
-}
+});
 
 export async function logout(): Promise<void> {
   try {
     const cookieStore = await cookies();
     cookieStore.delete('gigtim_session');
-  } catch {
-    // Outside request context
-  }
+  } catch {}
 }
 
 export async function romargRegister(formData: FormData) {
@@ -218,16 +193,15 @@ export async function verifyEmailToken(token: string) {
 
       try {
         const cookieStore = await cookies();
-        cookieStore.set('gigtim_session', JSON.stringify({ userId: user.id, email: user.email, role: user.role }), {
+        const sessionToken = createSessionToken(user);
+        cookieStore.set('gigtim_session', sessionToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
           maxAge: 60 * 60 * 24 * 30,
           path: '/',
         });
-      } catch {
-        // Outside HTTP request scope
-      }
+      } catch {}
 
       return { success: true, email: user.email };
     } finally {
@@ -262,9 +236,10 @@ export async function romargLogin(formData: FormData) {
         return { error: 'Adresa ta de email nu a fost încă verificată. Te rugăm să apeși pe link-ul primit în inbox.' };
       }
 
+      const sessionToken = createSessionToken(user);
       try {
         const cookieStore = await cookies();
-        cookieStore.set('gigtim_session', JSON.stringify({ userId: user.id, email: user.email, role: user.role }), {
+        cookieStore.set('gigtim_session', sessionToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
@@ -275,11 +250,114 @@ export async function romargLogin(formData: FormData) {
         console.warn('Cookie set notice:', err.message);
       }
 
-      return { success: true, user: { id: user.id, role: user.role } };
+      return { success: true, sessionToken, user: { id: user.id, role: user.role } };
     } finally {
       connection.release();
     }
   } catch (error: any) {
     return { error: 'Eroare la autentificare pe server: ' + error.message };
+  }
+}
+
+export async function resetPassword(email: string) {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) return { error: 'Adresa de email este obligatorie.' };
+
+  try {
+    const connection = await dbPool.getConnection();
+    try {
+      const [rows] = await connection.query<any[]>(
+        'SELECT id, email FROM users WHERE email = ?',
+        [cleanEmail]
+      );
+      if (rows.length === 0) {
+        // Return success for security (avoid enumeration)
+        return { success: true };
+      }
+
+      const user = rows[0];
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      await connection.query(
+        'UPDATE users SET verification_token = ? WHERE id = ?',
+        [resetToken, user.id]
+      );
+
+      // Send email
+      await sendVerificationEmail(cleanEmail, resetToken);
+      return { success: true };
+    } finally {
+      connection.release();
+    }
+  } catch (err: any) {
+    console.error('resetPassword error:', err);
+    return { error: 'Eroare la trimiterea linkului de resetare: ' + err.message };
+  }
+}
+
+export async function updatePassword(newPassword: string, token?: string) {
+  if (!newPassword || newPassword.length < 6) {
+    return { error: 'Parola trebuie să aibă minim 6 caractere.' };
+  }
+
+  const profile = await getCurrentProfile();
+  const connection = await dbPool.getConnection();
+  try {
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    if (profile?.id) {
+      await connection.query(
+        'UPDATE users SET password_hash = ? WHERE id = ?',
+        [passwordHash, profile.id]
+      );
+      return { success: true };
+    }
+
+    if (token) {
+      const [rows] = await connection.query<any[]>(
+        'SELECT id FROM users WHERE verification_token = ?',
+        [token]
+      );
+      if (rows.length === 0) {
+        return { error: 'Tokenul de resetare este invalid sau a expirat.' };
+      }
+      await connection.query(
+        'UPDATE users SET password_hash = ?, verification_token = NULL WHERE id = ?',
+        [passwordHash, rows[0].id]
+      );
+      return { success: true };
+    }
+
+    return { error: 'Neautorizat.' };
+  } catch (err: any) {
+    console.error('updatePassword error:', err);
+    return { error: 'Eroare la actualizarea parolei: ' + err.message };
+  } finally {
+    connection.release();
+  }
+}
+
+export async function getAdminUsers() {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== 'ADMIN') return [];
+
+  try {
+    const connection = await dbPool.getConnection();
+    try {
+      const [rows] = await connection.query<any[]>(
+        `SELECT u.id, u.email, u.role, u.email_verified, u.avatar_url, u.created_at,
+                w.full_name as worker_name, w.phone_number as worker_phone, w.city as worker_city, w.county as worker_county,
+                e.company_name as employer_company, e.cui as employer_cui, e.city as employer_city, e.county as employer_county
+         FROM users u
+         LEFT JOIN worker_profiles w ON u.id = w.user_id
+         LEFT JOIN employer_profiles e ON u.id = e.user_id
+         ORDER BY u.created_at DESC`
+      );
+      return rows;
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    console.error('getAdminUsers error:', err);
+    return [];
   }
 }

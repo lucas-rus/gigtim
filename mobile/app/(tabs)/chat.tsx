@@ -1,9 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
+} from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { MessageCircle, Send, User, Building, ArrowLeft } from 'lucide-react-native';
+import { MessageCircle, Send, ArrowLeft, Building } from 'lucide-react-native';
+import {
+  useZoriTheme,
+  font,
+  fontSize,
+  fontWeight,
+  spacing,
+  radius,
+} from '@/src/design/useTheme';
+import { Card, Button, EmptyState, Badge, Avatar, toast } from '@/src/ui';
 
 export default function ChatScreen() {
+  const t = useZoriTheme();
+
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<any | null>(null);
@@ -112,7 +132,7 @@ export default function ChatScreen() {
       setRooms(resolvedRooms);
     } catch (e) {
       console.error(e);
-      Alert.alert('Eroare', 'Nu am putut încărca camerele de chat.');
+      toast.error('Nu am putut încărca camerele de chat.');
     } finally {
       setLoading(false);
     }
@@ -171,7 +191,7 @@ export default function ChatScreen() {
       }
       fetchMessages(selectedRoom.id, false);
     } catch (e: any) {
-      Alert.alert('Eroare', 'Nu s-a putut trimite mesajul: ' + e.message);
+      toast.error('Nu s-a putut trimite mesajul: ' + e.message);
     }
   }
 
@@ -193,24 +213,33 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: t.background }]}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
     >
       {selectedRoom ? (
         // Detailed conversation window
         <View style={{ flex: 1 }}>
-          <View style={styles.chatHeader}>
-            <TouchableOpacity onPress={() => setSelectedRoom(null)} style={styles.backButton}>
-              <ArrowLeft size={20} color="#e5c158" />
-            </TouchableOpacity>
-            <Text style={styles.chatHeaderTitle} numberOfLines={1}>
+          <View style={[styles.chatHeader, { backgroundColor: t.background, borderBottomColor: t.border }]}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onPress={() => setSelectedRoom(null)}
+              leftIcon={ArrowLeft}
+              accessibilityLabel="Înapoi la conversații"
+            >
+              {' '}
+            </Button>
+            <Text
+              style={[styles.chatHeaderTitle, { color: t.foreground }]}
+              numberOfLines={1}
+            >
               {selectedRoom.name || 'Chat Angajator'}
             </Text>
           </View>
 
           {messagesLoading ? (
             <View style={styles.messagesLoaderContainer}>
-              <ActivityIndicator color="#e5c158" />
+              <ActivityIndicator color={t.primary} />
             </View>
           ) : (
             <FlatList
@@ -221,36 +250,74 @@ export default function ChatScreen() {
                 const isMe = item.sender_id === dbUserId;
                 return (
                   <View style={[styles.messageBubbleContainer, isMe ? styles.myMessageContainer : styles.otherMessageContainer]}>
-                    {!isMe && <Text style={styles.senderName}>{item.sender_name}</Text>}
-                    <View style={[styles.messageBubble, isMe ? styles.myMessageBubble : styles.otherMessageBubble]}>
-                      <Text style={[styles.messageText, isMe ? styles.myMessageText : styles.otherMessageText]}>
+                    {!isMe && (
+                      <Text style={[styles.senderName, { color: t.mutedForeground }]}>
+                        {item.sender_name}
+                      </Text>
+                    )}
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        isMe
+                          ? { backgroundColor: t.primary, borderTopRightRadius: radius.sm }
+                          : { backgroundColor: t.muted, borderColor: t.border, borderWidth: 1, borderTopLeftRadius: radius.sm },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.messageText,
+                          {
+                            color: isMe ? t.primaryForeground : t.foreground,
+                          },
+                        ]}
+                      >
                         {item.content}
                       </Text>
                     </View>
-                    <Text style={styles.messageTime}>{new Date(item.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</Text>
+                    <Text style={[styles.messageTime, { color: t.mutedForeground }]}>
+                      {new Date(item.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
                   </View>
                 );
               }}
               ListEmptyComponent={
-                <View style={styles.emptyMessagesContainer}>
-                  <Text style={styles.emptyMessagesText}>Nu există mesaje în această cameră.</Text>
-                </View>
+                <EmptyState
+                  icon={MessageCircle}
+                  title="Niciun mesaj încă"
+                  description="Trimite primul mesaj pentru a începe conversația."
+                />
               }
             />
           )}
 
           {/* Chat Message Input Box */}
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, { backgroundColor: t.background, borderTopColor: t.border }]}>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.composerInput,
+                {
+                  backgroundColor: t.input,
+                  borderColor: t.border,
+                  color: t.foreground,
+                  fontFamily: font.sans,
+                  fontSize: fontSize.sm,
+                },
+              ]}
               placeholder="Scrie un mesaj..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={t.mutedForeground}
               value={newMessage}
               onChangeText={setNewMessage}
+              accessibilityLabel="Mesaj nou"
             />
-            <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-              <Send size={16} color="#ffffff" />
-            </TouchableOpacity>
+            <Button
+              variant="primary"
+              size="icon"
+              onPress={handleSendMessage}
+              leftIcon={Send}
+              accessibilityLabel="Trimite mesaj"
+            >
+              {' '}
+            </Button>
           </View>
         </View>
       ) : (
@@ -258,13 +325,15 @@ export default function ChatScreen() {
         <View style={{ flex: 1 }}>
           {loading ? (
             <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#e5c158" />
+              <ActivityIndicator size="large" color={t.primary} />
             </View>
           ) : rooms.length === 0 ? (
             <View style={styles.emptyInboxContainer}>
-              <MessageCircle size={48} color="#475569" style={{ marginBottom: 12 }} />
-              <Text style={styles.emptyInboxText}>Nicio conversație activă încă.</Text>
-              <Text style={styles.emptyInboxSubtext}>Camerele de chat se deschid automat când aplicația ta la o tură este acceptată.</Text>
+              <EmptyState
+                icon={MessageCircle}
+                title="Nicio conversație"
+                description="Conversațiile se deschid automat când aplicația ta la o tură este acceptată."
+              />
             </View>
           ) : (
             <FlatList
@@ -272,21 +341,39 @@ export default function ChatScreen() {
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.roomsList}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.roomItem} onPress={() => handleSelectRoom(item)}>
+                <Card onPress={() => handleSelectRoom(item)} padding="md" style={styles.roomItem}>
                   <View style={styles.roomHeader}>
                     <View style={styles.roomTitleRow}>
-                      <Building size={16} color="#e5c158" style={{ marginRight: 6 }} />
-                      <Text style={styles.roomName} numberOfLines={1}>{item.name || 'Chat'}</Text>
+                      <Avatar name={item.name || 'Chat'} size="sm" />
+                      <Text
+                        style={[styles.roomName, { color: t.foreground }]}
+                        numberOfLines={1}
+                      >
+                        {item.name || 'Chat'}
+                      </Text>
                     </View>
-                    <Text style={styles.roomTime}>{timeAgo(item.last_message_at)}</Text>
-                  </View>
-                  
-                  {item.last_message && (
-                    <Text style={styles.lastMessage} numberOfLines={1}>
-                      {item.last_sender_is_me ? 'Tu: ' : ''}{item.last_message}
+                    <Text style={[styles.roomTime, { color: t.mutedForeground }]}>
+                      {timeAgo(item.last_message_at)}
                     </Text>
-                  )}
-                </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.roomMetaRow}>
+                    <Building size={14} color={t.primary} />
+                    <Badge variant="outline" size="sm">
+                      Chat
+                    </Badge>
+                  </View>
+
+                  {item.last_message ? (
+                    <Text
+                      style={[styles.lastMessage, { color: t.mutedForeground }]}
+                      numberOfLines={1}
+                    >
+                      {item.last_sender_is_me ? 'Tu: ' : ''}
+                      {item.last_message}
+                    </Text>
+                  ) : null}
+                </Card>
               )}
             />
           )}
@@ -299,7 +386,6 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0f1d',
   },
   loaderContainer: {
     flex: 1,
@@ -307,80 +393,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   roomsList: {
-    padding: 16,
-    gap: 12,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   roomItem: {
-    backgroundColor: 'rgba(30, 41, 59, 0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 16,
-    padding: 16,
+    gap: spacing.xs,
   },
   roomHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    gap: spacing.sm,
   },
   roomTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: spacing.sm,
   },
   roomName: {
-    color: '#ffffff',
-    fontSize: 14.5,
-    fontWeight: '700',
+    fontFamily: font.heading,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
+    flex: 1,
   },
   roomTime: {
-    color: '#64748b',
-    fontSize: 11,
+    fontFamily: font.sans,
+    fontSize: fontSize.xs,
+  },
+  roomMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   lastMessage: {
-    color: '#cbd5e1',
-    fontSize: 12.5,
-    lineHeight: 16,
-    paddingLeft: 22,
+    fontFamily: font.sans,
+    fontSize: fontSize.sm,
+    lineHeight: 18,
+    marginTop: spacing.xs,
   },
   emptyInboxContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
-  },
-  emptyInboxText: {
-    color: '#cbd5e1',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  emptyInboxSubtext: {
-    color: '#64748b',
-    fontSize: 12.5,
-    textAlign: 'center',
-    lineHeight: 18,
+    padding: spacing.xl,
   },
   chatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    backgroundColor: '#0a0f1d',
-    gap: 12,
-  },
-  backButton: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+    gap: spacing.md,
   },
   chatHeaderTitle: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
+    fontFamily: font.heading,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     flex: 1,
   },
   messagesLoaderContainer: {
@@ -389,12 +459,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   messagesList: {
-    padding: 16,
-    gap: 16,
+    padding: spacing.lg,
+    gap: spacing.lg,
   },
   messageBubbleContainer: {
     maxWidth: '80%',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   myMessageContainer: {
     alignSelf: 'flex-end',
@@ -405,75 +475,39 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   senderName: {
-    color: '#64748b',
-    fontSize: 10,
-    marginBottom: 4,
-    fontWeight: '500',
+    fontFamily: font.sans,
+    fontSize: fontSize.xs,
+    marginBottom: spacing.xs,
+    fontWeight: fontWeight.medium,
   },
   messageBubble: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  myMessageBubble: {
-    backgroundColor: '#002b7f',
-    borderTopRightRadius: 4,
-  },
-  otherMessageBubble: {
-    backgroundColor: 'rgba(30, 41, 59, 0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    borderTopLeftRadius: 4,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   messageText: {
-    fontSize: 13.5,
-    lineHeight: 18,
-  },
-  myMessageText: {
-    color: '#ffffff',
-  },
-  otherMessageText: {
-    color: '#cbd5e1',
+    fontFamily: font.sans,
+    fontSize: fontSize.sm,
+    lineHeight: 20,
   },
   messageTime: {
-    color: '#475569',
+    fontFamily: font.sans,
     fontSize: 9,
-    marginTop: 4,
-  },
-  emptyMessagesContainer: {
-    paddingVertical: 48,
-    alignItems: 'center',
-  },
-  emptyMessagesText: {
-    color: '#64748b',
-    fontSize: 13.5,
+    marginTop: spacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',
-    padding: 12,
-    backgroundColor: '#0a0f1d',
+    padding: spacing.sm,
+    alignItems: 'flex-end',
+    gap: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
-    alignItems: 'center',
-    gap: 8,
   },
-  input: {
+  composerInput: {
     flex: 1,
-    height: 40,
-    backgroundColor: '#0f172a',
+    minHeight: 44,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    color: '#ffffff',
-    fontSize: 13.5,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#002b7f',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: radius['2xl'],
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
 });

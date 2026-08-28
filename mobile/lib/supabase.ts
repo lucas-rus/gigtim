@@ -1,5 +1,27 @@
-import * as SecureStore from 'expo-secure-store';
-import { createClient } from '@supabase/supabase-js';
+import * as SecureStore from "expo-secure-store";
+import * as Constants from "expo-constants";
+import { createClient } from "@supabase/supabase-js";
+
+interface ExpoConfigExtra {
+  extra?: Record<string, string | undefined>;
+}
+
+const expoConfig = (Constants as unknown as { expoConfig?: ExpoConfigExtra }).expoConfig;
+
+const extra = expoConfig?.extra ?? {
+  supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+  supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+};
+
+const supabaseUrl = extra.supabaseUrl as string | undefined;
+const supabaseAnonKey = extra.supabaseAnonKey as string | undefined;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Missing Supabase credentials. Set EXPO_PUBLIC_SUPABASE_URL and " +
+      "EXPO_PUBLIC_SUPABASE_ANON_KEY in mobile/.env (see .env.example)."
+  );
+}
 
 const ExpoSecureStoreAdapter = {
   getItem: async (key: string): Promise<string | null> => {
@@ -12,9 +34,6 @@ const ExpoSecureStoreAdapter = {
     await SecureStore.deleteItemAsync(key);
   },
 };
-
-const supabaseUrl = 'https://mltxjimzcbhmhvionfvu.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sdHhqaW16Y2JobWh2aW9uZnZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNzQzODQsImV4cCI6MjA5Mjg1MDM4NH0.sA_ZSkoCtuBbhAFF-llbe4TBWAwotB1W79PNHNueA_k';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

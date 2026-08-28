@@ -1,19 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { dbPool } from '@/lib/romarg-db'
+import { createSessionToken } from '@/lib/session'
 
-const SESSION_MAX_AGE = 60 * 60 * 24 * 30 // 30 days — keeps the session alive across browser restarts; only logout clears it
-
-function sessionCookieValue(userId: string, email: string, role: string) {
-  return JSON.stringify({ userId, email, role })
-}
-
-function buildSetCookieHeader(value: string): string {
-  const encoded = encodeURIComponent(value)
-  const isProd = process.env.NODE_ENV === 'production'
-  const secure = isProd ? '; Secure' : ''
-  return `gigtim_session=${encoded}; Path=/; Max-Age=${SESSION_MAX_AGE}; SameSite=Lax${secure}; HttpOnly`
-}
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
 export async function POST(request: NextRequest) {
   let email = ''
@@ -72,16 +62,33 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const value = sessionCookieValue(user.id, user.email, user.role)
+      const sessionToken = createSessionToken(user)
 
       if (wantsRedirect) {
         const url = new URL('/shifts', request.url)
-        const response = NextResponse.redirect(url, { status: 303, headers: { 'Set-Cookie': buildSetCookieHeader(value) } })
+        const response = NextResponse.redirect(url, 303)
+        response.cookies.set({
+          name: 'gigtim_session',
+          value: sessionToken,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: SESSION_MAX_AGE,
+          path: '/',
+        })
         return response
       }
 
       const response = NextResponse.json({ success: true, user: { id: user.id, role: user.role } })
-      response.headers.append('Set-Cookie', buildSetCookieHeader(value))
+      response.cookies.set({
+        name: 'gigtim_session',
+        value: sessionToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: SESSION_MAX_AGE,
+        path: '/',
+      })
       return response
     } finally {
       connection.release()

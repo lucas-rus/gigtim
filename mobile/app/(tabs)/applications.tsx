@@ -1,326 +1,212 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, View, ScrollView, RefreshControl, Text } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Clock, CircleDollarSign, Building, AlertCircle, MapPin } from 'lucide-react-native';
+import { Calendar, Clock, CircleDollarSign, Building, MapPin, Inbox } from 'lucide-react-native';
+import { useZoriTheme, font, fontSize, fontWeight, spacing, radius } from '@/src/design/useTheme';
+import { Card, Badge, Button, EmptyState, Skeleton, toast } from '@/src/ui';
+import { EmployerApplications } from '@/src/screens/EmployerApplications';
 
 const skillLabels: Record<string, string> = {
-  BARISTA: 'Barista',
-  WAITER: 'Ospătar',
-  DISHWASHER: 'Spălător vase',
-  STAGEHAND: 'Stagehand',
+  BARISTA: 'Barista', WAITER: 'Ospătar', DISHWASHER: 'Spălător vase', STAGEHAND: 'Stagehand',
 };
 
 const statusLabels: Record<string, string> = {
-  PENDING: 'În așteptare',
-  ACCEPTED: 'Acceptat',
-  REJECTED: 'Respins',
-  NO_SHOW: 'Absent',
+  PENDING: 'În așteptare', ACCEPTED: 'Acceptat', REJECTED: 'Respins', NO_SHOW: 'Absent',
+};
+
+const statusVariant: Record<string, 'accent' | 'secondary' | 'destructive' | 'outline'> = {
+  PENDING: 'accent', ACCEPTED: 'secondary', REJECTED: 'destructive', NO_SHOW: 'outline',
 };
 
 export default function ApplicationsScreen() {
+  const t = useZoriTheme();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userDbId, setUserDbId] = useState<string | null>(null);
+  const [roleLoaded, setRoleLoaded] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setRoleLoaded(true); return; }
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('id, role')
+        .eq('auth_id', user.id)
+        .maybeSingle();
+      if (userRow) { setUserRole(userRow.role); setUserDbId(userRow.id); }
+      setRoleLoaded(true);
+    })();
+  }, []);
+
+  if (!roleLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: t.background, padding: 16, gap: 12 }}>
+        <Skeleton height={140} />
+        <Skeleton height={140} />
+      </View>
+    );
+  }
+
+  // Employers see the applicant review screen
+  if (userRole === 'EMPLOYER' && userDbId) {
+    return <EmployerApplications userDbId={userDbId} />;
+  }
+
+  // Workers see their own applications
+  return <WorkerApplications userDbId={userDbId} />;
+}
+
+function WorkerApplications({ userDbId }: { userDbId: string | null }) {
+  const t = useZoriTheme();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+  const [tab, setTab] = useState<'active' | 'history'>('active');
 
-  useEffect(() => {
-    fetchApplications();
-  }, []);
-
-  async function fetchApplications() {
+  const fetchApplications = useCallback(async () => {
+    if (!userDbId) { setLoading(false); return; }
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Get user row ID
-      const { data: userRow } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_id', user.id)
-        .single();
-
-      if (!userRow) return;
-
-      // Fetch applications with shift and employer profiles
       const { data, error } = await supabase
         .from('applications')
         .select(`
           *,
           shift:job_shifts(
             *,
-            employer:employer_profiles(company_name, address)
+            employer:employer_profiles(company_name, address, city)
           )
         `)
-        .eq('worker_id', userRow.id)
+        .eq('worker_id', userDbId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error(error);
-      } else {
-        setApplications(data || []);
-      }
-    } catch (e) {
-      console.error(e);
+      if (error) { toast.error(error.message); return; }
+      setApplications(data || []);
+    } catch (e: any) {
+      toast.error(e.message || 'Eroare');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  }, [userDbId]);
 
-  function onRefresh() {
-    setRefreshing(true);
-    fetchApplications();
-  }
+  useEffect(() => { fetchApplications(); }, [fetchApplications]);
 
-  function formatTime(isoString: string) {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  function formatDate(isoString: string) {
-    const d = new Date(isoString);
-    return d.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
-  }
-
-  // Filter application list based on active/history tabs
-  const activeApplications = applications.filter(app => app.status === 'ACCEPTED');
-  const historyApplications = applications.filter(app => app.status !== 'ACCEPTED');
-
-  function getStatusColor(status: string) {
-    switch (status) {
-      case 'ACCEPTED': return '#10b981'; // Emerald
-      case 'PENDING': return '#e5c158'; // Amber
-      case 'REJECTED': return '#ef4444'; // Red
-      case 'NO_SHOW': return '#64748b'; // Gray
-      default: return '#94a3b8';
-    }
-  }
+  const active = applications.filter(a => a.status === 'ACCEPTED' || a.status === 'PENDING');
+  const history = applications.filter(a => a.status === 'REJECTED' || a.status === 'NO_SHOW');
+  const list = tab === 'active' ? active : history;
 
   return (
-    <View style={styles.container}>
-      {/* Tab Selectors */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'active' && styles.tabActive]}
-          onPress={() => setActiveTab('active')}
-        >
-          <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>
-            Programate ({activeApplications.length})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'history' && styles.tabActive]}
-          onPress={() => setActiveTab('history')}
-        >
-          <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>
-            Istoric ({historyApplications.length})
-          </Text>
-        </TouchableOpacity>
+    <View style={{ flex: 1, backgroundColor: t.background }}>
+      {/* Tabs */}
+      <View style={[styles.tabBar, { backgroundColor: t.muted, borderColor: t.border }]}>
+        {[['active', `Active (${active.length})`], ['history', `Istoric (${history.length})`]].map(([key, label]) => (
+          <React.Fragment key={key}>
+            <PressableTab
+              active={tab === key}
+              label={label}
+              t={t}
+              onPress={() => setTab(key as 'active' | 'history')}
+            />
+          </React.Fragment>
+        ))}
       </View>
 
       {loading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#e5c158" />
-        </View>
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+          <Skeleton height={140} />
+          <Skeleton height={140} />
+        </ScrollView>
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon={Inbox}
+          title={tab === 'active' ? 'Nicio aplicare activă' : 'Niciun istoric'}
+          description={tab === 'active' ? 'Aplică la ture din tab-ul Hartă pentru a le urmări aici.' : 'Aplicările respinse sau absențele vor apărea aici.'}
+        />
       ) : (
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#e5c158" />
-          }
+        <ScrollView
+          contentContainerStyle={{ padding: 16, paddingBottom: 100, gap: 12 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchApplications(); }} tintColor={t.primary} />}
         >
-          {(activeTab === 'active' ? activeApplications : historyApplications).length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <AlertCircle size={48} color="#475569" style={{ marginBottom: 12 }} />
-              <Text style={styles.emptyText}>
-                {activeTab === 'active' 
-                  ? 'Nu ai nicio tură programată în acest moment.' 
-                  : 'Nu există nicio aplicație în istoric.'}
-              </Text>
-            </View>
-          ) : (
-            (activeTab === 'active' ? activeApplications : historyApplications).map((app) => (
-              <View key={app.id} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>
-                    {selectedRole(app.shift?.role_needed)}
-                  </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(app.status) + '20', borderColor: getStatusColor(app.status) }]}>
-                    <Text style={[styles.statusText, { color: getStatusColor(app.status) }]}>
-                      {statusLabels[app.status] || app.status}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.employerRow}>
-                  <Building size={14} color="#e5c158" style={{ marginRight: 6 }} />
-                  <Text style={styles.employerText}>{app.shift?.employer?.company_name}</Text>
-                </View>
-
-                <View style={styles.metaGrid}>
-                  <View style={styles.metaRow}>
-                    <Calendar size={14} color="#64748b" style={{ marginRight: 6 }} />
-                    <Text style={styles.metaText}>{formatDate(app.shift?.start_time)}</Text>
-                  </View>
-                  <View style={styles.metaRow}>
-                    <Clock size={14} color="#64748b" style={{ marginRight: 6 }} />
-                    <Text style={styles.metaText}>
-                      {formatTime(app.shift?.start_time)} - {formatTime(app.shift?.end_time)}
-                    </Text>
-                  </View>
-                  <View style={styles.metaRow}>
-                    <CircleDollarSign size={14} color="#64748b" style={{ marginRight: 6 }} />
-                    <Text style={styles.payText}>{app.shift?.hourly_pay_ron} RON / oră</Text>
-                  </View>
-                </View>
-
-                {app.status === 'ACCEPTED' && (
-                  <View style={styles.alertBox}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <MapPin size={14} color="#6366f1" style={{ marginRight: 6 }} />
-                      <Text style={styles.alertText}>
-                        Adresă: {app.shift?.employer?.address || 'Nespecificată'}
-                      </Text>
-                    </View>
-                  </View>
-                )}
+          {list.map(app => (
+            <Card key={app.id} padding="md">
+              <View style={styles.cardHeader}>
+                <Text style={{ color: t.foreground, fontSize: fontSize.base, fontWeight: fontWeight.bold, fontFamily: font.heading, flexShrink: 1 }}>
+                  {skillLabels[app.shift?.role_needed] || app.shift?.role_needed}
+                </Text>
+                <Badge variant={statusVariant[app.status] || 'outline'}>
+                  {statusLabels[app.status] || app.status}
+                </Badge>
               </View>
-            ))
-          )}
+
+              <View style={[styles.metaRow, { marginTop: 8 }]}>
+                <Building color={t.mutedForeground} size={14} strokeWidth={2} />
+                <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm, fontFamily: font.sans }}>
+                  {app.shift?.employer?.company_name}
+                </Text>
+              </View>
+
+              <View style={[styles.metaCol, { marginTop: 10, paddingTop: 10, borderTopColor: t.border, borderTopWidth: 1 }]}>
+                <View style={styles.metaRow}>
+                  <Calendar color={t.mutedForeground} size={14} strokeWidth={2} />
+                  <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm, fontFamily: font.sans }}>
+                    {app.shift ? new Date(app.shift.start_time).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' }) : ''}
+                  </Text>
+                  <Clock color={t.mutedForeground} size={14} strokeWidth={2} style={{ marginLeft: 12 }} />
+                  <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm, fontFamily: font.sans }}>
+                    {app.shift ? new Date(app.shift.start_time).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }) : ''}–{app.shift ? new Date(app.shift.end_time).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }) : ''}
+                  </Text>
+                </View>
+                <View style={[styles.metaRow, { marginTop: 6 }]}>
+                  <CircleDollarSign color={t.primary} size={14} strokeWidth={2} />
+                  <Text style={{ color: t.foreground, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.mono }}>
+                    {app.shift?.hourly_pay_ron} RON/oră
+                  </Text>
+                </View>
+              </View>
+
+              {app.status === 'ACCEPTED' && app.shift?.employer?.address && (
+                <View style={[styles.alertBox, { backgroundColor: t.secondary + '15', borderColor: t.secondary + '30', borderRadius: radius.md }]}>
+                  <View style={styles.metaRow}>
+                    <MapPin color={t.secondary} size={14} strokeWidth={2} />
+                    <Text style={{ color: t.secondary, fontSize: fontSize.sm, fontFamily: font.sans }}>
+                      Adresă: {app.shift.employer.address}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </Card>
+          ))}
         </ScrollView>
       )}
     </View>
   );
 }
 
-function selectedRole(role: string) {
-  return skillLabels[role] || role;
+function PressableTab({ active, label, t, onPress }: { active: boolean; label: string; t: any; onPress: () => void }) {
+  return (
+    <PressableTabInner active={active} label={label} t={t} onPress={onPress} />
+  );
+}
+
+function PressableTabInner({ active, label, t, onPress }: { active: boolean; label: string; t: any; onPress: () => void }) {
+  const { Pressable } = require('react-native');
+  return (
+    <Pressable
+      style={{ flex: 1, minHeight: 38, justifyContent: 'center', alignItems: 'center', borderRadius: 10, backgroundColor: active ? t.primaryStrong : 'transparent' }}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+    >
+      <Text style={{ color: active ? t.primaryForeground : t.mutedForeground, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.sans }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0f1d',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    padding: 6,
-    margin: 16,
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 14,
-  },
-  tab: {
-    flex: 1,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  tabActive: {
-    backgroundColor: '#002b7f',
-  },
-  tabText: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: '#ffffff',
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    gap: 12,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 64,
-  },
-  emptyText: {
-    color: '#64748b',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 32,
-  },
-  card: {
-    backgroundColor: 'rgba(30, 41, 59, 0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 16,
-    padding: 16,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardTitle: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-    flex: 1,
-  },
-  statusBadge: {
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  employerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  employerText: {
-    color: '#e5c158',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  metaGrid: {
-    flexDirection: 'column',
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.04)',
-    paddingTop: 12,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  metaText: {
-    color: '#94a3b8',
-    fontSize: 12.5,
-  },
-  payText: {
-    color: '#cbd5e1',
-    fontSize: 12.5,
-    fontWeight: '600',
-  },
-  alertBox: {
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.15)',
-    borderRadius: 10,
-    padding: 10,
-    marginTop: 14,
-  },
-  alertText: {
-    color: '#34d399',
-    fontSize: 12,
-    lineHeight: 16,
-  },
+  tabBar: { flexDirection: 'row', padding: 6, margin: 16, borderWidth: 1, borderRadius: 12 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaCol: { flexDirection: 'column', gap: 6 },
+  alertBox: { borderWidth: 1, padding: 10, marginTop: 12 },
 });

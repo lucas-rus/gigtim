@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { resetPassword } from '@/lib/supabase/auth-actions'
+import { resetPassword } from '@/lib/romarg-auth'
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null)

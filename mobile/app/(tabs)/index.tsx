@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator, Platform, Alert } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator, Platform, Pressable } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { MapPin, Calendar, CircleDollarSign, CheckCircle2, SlidersHorizontal, List, Map, Star } from 'lucide-react-native';
+import { MapPin, Calendar, CircleDollarSign, CheckCircle2, List, Map, X } from 'lucide-react-native';
+import { EmployerHome } from '@/src/screens/EmployerHome';
+import { useZoriTheme, font, fontSize, fontWeight, spacing, radius } from '@/src/design/useTheme';
+import { Card, Button, Badge, EmptyState, RatingStars, toast } from '@/src/ui';
 
 const skillLabels: Record<string, string> = {
   BARISTA: 'Barista',
@@ -10,7 +13,6 @@ const skillLabels: Record<string, string> = {
   STAGEHAND: 'Stagehand',
 };
 
-// Timisoara Coordinates
 const INITIAL_REGION = {
   latitude: 45.75372,
   longitude: 21.22571,
@@ -27,544 +29,400 @@ if (Platform.OS !== 'web') {
     MapView = MapModule.default;
     Marker = MapModule.Marker;
   } catch (e) {
-    console.log('react-native-maps not available, using fallback');
+    console.log('react-native-maps not available');
   }
 }
 
 export default function ExploreScreen() {
+  const t = useZoriTheme();
   const [shifts, setShifts] = useState<any[]>([]);
   const [filteredShifts, setFilteredShifts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedShift, setSelectedShift] = useState<any | null>(null);
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [userProfile, setUserProfile] = useState<any | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [applying, setApplying] = useState(false);
   const [appliedShiftIds, setAppliedShiftIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    fetchUserAndShifts();
-  }, []);
+  useEffect(() => { fetchUserAndShifts(); }, []);
 
   async function fetchUserAndShifts() {
     setLoading(true);
     try {
-      // 1. Get authenticated user
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (authUser) {
-        setCurrentUser(authUser);
-        // Get user table ID and profile
         const { data: userRow } = await supabase
           .from('users')
           .select('id, role')
           .eq('auth_id', authUser.id)
-          .single();
+          .maybeSingle();
 
         if (userRow) {
-          setUserProfile(userRow);
-          // If worker, fetch already applied shifts to disable double applications
           if (userRow.role === 'WORKER') {
+            const { data: workerProfile } = await supabase
+              .from('worker_profiles')
+              .select('cnp, id_card_series')
+              .eq('user_id', userRow.id)
+              .maybeSingle();
+            setUserProfile({ ...userRow, workerProfile });
             const { data: apps } = await supabase
               .from('applications')
               .select('shift_id')
               .eq('worker_id', userRow.id);
-            if (apps) {
-              setAppliedShiftIds(new Set(apps.map(a => a.shift_id)));
-            }
+            if (apps) setAppliedShiftIds(new Set(apps.map(a => a.shift_id)));
+          } else {
+            setUserProfile(userRow);
           }
         }
       }
 
-      // 2. Fetch open shifts with employer profiles
       const { data: shiftsData, error } = await supabase
         .from('job_shifts')
-        .select(`
-          *,
-          employer:employer_profiles!inner(company_name, address, lat, lng, employer_rating)
-        `)
+        .select(`*, employer:employer_profiles!inner(company_name, address, lat, lng, employer_rating)`)
         .eq('status', 'OPEN');
 
       if (error) {
         console.error(error);
       } else {
-        // Filter out shifts that don't have valid coordinates
-        const validShifts = (shiftsData || []).map(s => ({
-          ...s,
-          latitude: s.employer?.lat || INITIAL_REGION.latitude + (Math.random() - 0.5) * 0.02,
-          longitude: s.employer?.lng || INITIAL_REGION.longitude + (Math.random() - 0.5) * 0.02,
-        }));
+        // Use shift-specific lat/lng if available, otherwise fall back to employer HQ
+        const validShifts = (shiftsData || [])
+          .filter(s => {
+            const lat = s.lat ?? s.employer?.lat;
+            const lng = s.lng ?? s.employer?.lng;
+            return lat != null && lng != null;
+          })
+          .map(s => ({
+            ...s,
+            latitude: s.lat ?? s.employer!.lat,
+            longitude: s.lng ?? s.employer!.lng,
+          }));
         setShifts(validShifts);
         setFilteredShifts(validShifts);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   }
 
-  // Apply filters
+  // Derive available categories from actual posted shifts — no presets
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>();
+    shifts.forEach(s => cats.add(s.role_needed));
+    return Array.from(cats).sort();
+  }, [shifts]);
+
   useEffect(() => {
-    if (activeFilter) {
-      setFilteredShifts(shifts.filter(s => s.role_needed === activeFilter));
-    } else {
-      setFilteredShifts(shifts);
-    }
+    if (activeFilter) setFilteredShifts(shifts.filter(s => s.role_needed === activeFilter));
+    else setFilteredShifts(shifts);
     setSelectedShift(null);
   }, [activeFilter, shifts]);
 
+  // Reset filter if the category no longer has shifts
+  useEffect(() => {
+    if (activeFilter && !availableCategories.includes(activeFilter)) {
+      setActiveFilter(null);
+    }
+  }, [availableCategories, activeFilter]);
+
   async function handleApply(shift: any) {
-    if (!userProfile) {
-      Alert.alert('Eroare', 'Trebuie să fii conectat.');
+    if (!userProfile) { toast.error('Trebuie să fii conectat.'); return; }
+    if (userProfile.role !== 'WORKER') { toast.error('Doar lucrătorii pot aplica la ture.'); return; }
+    if (!userProfile.workerProfile?.cnp || !userProfile.workerProfile?.id_card_series) {
+      toast.error('Verifică-ți identitatea în profil (CNP + Serie CI) pentru a aplica la ture.');
       return;
     }
-    if (userProfile.role !== 'WORKER') {
-      Alert.alert('Atenție', 'Doar utilizatorii cu cont de Lucrător pot aplica la ture.');
-      return;
-    }
-    if (appliedShiftIds.has(shift.id)) {
-      Alert.alert('Aplicație existentă', 'Ai aplicat deja la această tură.');
-      return;
-    }
+    if (appliedShiftIds.has(shift.id)) { toast.error('Ai aplicat deja la această tură.'); return; }
 
     setApplying(true);
     try {
       const { error } = await supabase.from('applications').insert({
-        shift_id: shift.id,
-        worker_id: userProfile.id,
-        status: 'PENDING',
+        shift_id: shift.id, worker_id: userProfile.id, status: 'PENDING',
       });
-
-      if (error) {
-        Alert.alert('Eroare la aplicare', error.message);
-      } else {
-        setAppliedShiftIds(prev => {
-          const next = new Set(prev);
-          next.add(shift.id);
-          return next;
-        });
-        Alert.alert('Succes', 'Aplicația ta a fost înregistrată! Angajatorul va fi notificat.');
+      if (error) { toast.error(error.message); }
+      else {
+        setAppliedShiftIds(prev => { const n = new Set(prev); n.add(shift.id); return n; });
+        toast.success('Aplicația a fost înregistrată! Angajatorul va fi notificat.');
         setSelectedShift(null);
       }
-    } catch (e: any) {
-      Alert.alert('Eroare', e.message || 'A apărut o eroare.');
-    } finally {
-      setApplying(false);
-    }
+    } catch (e: any) { toast.error(e.message || 'A apărut o eroare.'); }
+    finally { setApplying(false); }
   }
 
-  function formatTime(isoString: string) {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-  }
+  function formatTime(iso: string) { return new Date(iso).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }); }
+  function formatDate(iso: string) { return new Date(iso).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' }); }
 
-  function formatDate(isoString: string) {
-    const d = new Date(isoString);
-    return d.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
+  if (userProfile?.role === 'EMPLOYER' && userProfile?.id) {
+    return <EmployerHome userDbId={userProfile.id} />;
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header Filters */}
-      <View style={styles.filterContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          <TouchableOpacity 
-            style={[styles.filterChip, !activeFilter && styles.filterChipActive]}
-            onPress={() => setActiveFilter(null)}
-          >
-            <Text style={[styles.filterChipText, !activeFilter && styles.filterChipTextActive]}>Toate</Text>
-          </TouchableOpacity>
-          {Object.keys(skillLabels).map(roleKey => (
-            <TouchableOpacity 
-              key={roleKey}
-              style={[styles.filterChip, activeFilter === roleKey && styles.filterChipActive]}
-              onPress={() => setActiveFilter(roleKey)}
-            >
-              <Text style={[styles.filterChipText, activeFilter === roleKey && styles.filterChipTextActive]}>
-                {skillLabels[roleKey]}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <TouchableOpacity 
-          style={styles.viewToggle}
-          onPress={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
-        >
-          {viewMode === 'map' ? (
-            <List size={18} color="#e5c158" />
-          ) : (
-            <Map size={18} color="#e5c158" />
-          )}
-        </TouchableOpacity>
-      </View>
-
+    <View style={{ flex: 1, backgroundColor: t.background }}>
       {loading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#e5c158" />
-          <Text style={styles.loaderText}>Se încarcă turele deschise...</Text>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={t.primary} />
+          <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm, marginTop: 12, fontFamily: font.sans }}>Se încarcă turele...</Text>
         </View>
       ) : viewMode === 'map' && Platform.OS !== 'web' && MapView ? (
-        <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            initialRegion={INITIAL_REGION}
-            userInterfaceStyle="dark"
+        <>
+          {/* Full-screen map */}
+          <View style={{ flex: 1 }}>
+            <MapView
+              style={{ ...StyleSheet.absoluteFillObject }}
+              initialRegion={INITIAL_REGION}
+              customMapStyle={t.scheme === 'dark' ? darkMapStyle : lightMapStyle}
+              onPress={() => setSelectedShift(null)}
+            >
+              {filteredShifts.map((shift) => (
+                <Marker
+                  key={shift.id}
+                  coordinate={{ latitude: shift.latitude, longitude: shift.longitude }}
+                  title={skillLabels[shift.role_needed] || shift.role_needed}
+                  description={shift.employer?.company_name}
+                  pinColor={appliedShiftIds.has(shift.id) ? t.secondary : t.primary}
+                  onPress={() => setSelectedShift(shift)}
+                />
+              ))}
+            </MapView>
+
+            {/* Empty state overlay */}
+            {filteredShifts.length === 0 && (
+              <View style={styles.overlay}>
+                <View style={[styles.overlayCard, { backgroundColor: t.card }]}>
+                  <MapPin size={32} color={t.mutedForeground} strokeWidth={1.5} />
+                  <Text style={{ color: t.foreground, fontSize: fontSize.base, fontWeight: fontWeight.bold, fontFamily: font.heading, marginTop: 8 }}>Nicio tură disponibilă</Text>
+                  <Text style={{ color: t.mutedForeground, fontSize: fontSize.sm, textAlign: 'center', fontFamily: font.sans, marginTop: 4 }}>Nu există ture postate momentan. Revino mai târziu.</Text>
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Floating toggle button — top right, over the map */}
+          <Pressable
+            style={[styles.floatingToggle, { backgroundColor: t.card }]}
+            onPress={() => setViewMode('list')}
+            accessibilityRole="button"
+            accessibilityLabel="Comută la listă"
           >
-            {filteredShifts.map((shift) => (
-              <Marker
-                key={shift.id}
-                coordinate={{ latitude: shift.latitude, longitude: shift.longitude }}
-                title={skillLabels[shift.role_needed]}
-                description={shift.employer?.company_name}
-                pinColor={appliedShiftIds.has(shift.id) ? '#10b981' : '#002b7f'}
-                onPress={() => setSelectedShift(shift)}
-              />
-            ))}
-          </MapView>
-        </View>
+            <List size={20} color={t.foreground} strokeWidth={2} />
+          </Pressable>
+        </>
       ) : (
-        // List View / Web Fallback
-        <ScrollView contentContainerStyle={styles.listContainer}>
+        /* List view — with dynamic filters derived from real data */
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          {/* Dynamic filter chips — only show categories that have open shifts */}
+          {availableCategories.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 16 }}>
+              <FilterChip label="Toate" active={!activeFilter} onPress={() => setActiveFilter(null)} t={t} />
+              {availableCategories.map(key => (
+                <FilterChip key={key} label={skillLabels[key] || key} active={activeFilter === key} onPress={() => setActiveFilter(key)} t={t} />
+              ))}
+            </ScrollView>
+          )}
+
           {filteredShifts.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Nu am găsit nicio tură activă pentru filtrele selectate.</Text>
-            </View>
+            <EmptyState
+              icon={MapPin}
+              title="Nicio tură disponibilă"
+              description={shifts.length === 0
+                ? "Nu există ture postate momentan. Revino mai târziu."
+                : "Nu am găsit ture pentru filtrul selectat."}
+            />
           ) : (
-            filteredShifts.map((shift) => (
-              <TouchableOpacity 
-                key={shift.id} 
-                style={styles.shiftCard}
-                onPress={() => setSelectedShift(shift)}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>{skillLabels[shift.role_needed] || shift.role_needed}</Text>
-                  <View style={[styles.statusBadge, appliedShiftIds.has(shift.id) && styles.statusBadgeApplied]}>
-                    <Text style={styles.statusBadgeText}>
-                      {appliedShiftIds.has(shift.id) ? 'Aplicat' : 'Deschis'}
+            filteredShifts.map(shift => (
+              <Pressable key={shift.id} onPress={() => setSelectedShift(shift)} style={{ marginBottom: 12 }}>
+                <Card style={{ padding: 16 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text style={{ color: t.foreground, fontSize: fontSize.base, fontWeight: fontWeight.bold, fontFamily: font.heading, flex: 1 }}>
+                      {skillLabels[shift.role_needed] || shift.role_needed}
                     </Text>
+                    {appliedShiftIds.has(shift.id) ? (
+                      <Badge variant="secondary">Aplicat</Badge>
+                    ) : (
+                      <Badge variant="primary">Deschis</Badge>
+                    )}
                   </View>
-                </View>
-                
-                <Text style={styles.cardEmployer}>{shift.employer?.company_name}</Text>
-                
-                <View style={styles.cardMeta}>
-                  <View style={styles.metaItem}>
-                    <Calendar size={14} color="#64748b" />
-                    <Text style={styles.metaText}>
-                      {formatDate(shift.start_time)}, {formatTime(shift.start_time)} - {formatTime(shift.end_time)}
-                    </Text>
+                  <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, marginBottom: 12, fontFamily: font.sans }}>
+                    {shift.employer?.company_name}
+                  </Text>
+                  <View style={{ gap: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Calendar size={14} color={t.mutedForeground} />
+                      <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontFamily: font.sans }}>
+                        {formatDate(shift.start_time)}, {formatTime(shift.start_time)} - {formatTime(shift.end_time)}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <CircleDollarSign size={14} color={t.mutedForeground} />
+                      <Text style={{ color: t.foreground, fontSize: fontSize.xs, fontWeight: fontWeight.semibold, fontFamily: font.mono }}>
+                        {shift.hourly_pay_ron} RON/oră
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.metaItem}>
-                    <CircleDollarSign size={14} color="#64748b" />
-                    <Text style={styles.metaPay}>{shift.hourly_pay_ron} RON / oră</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+                </Card>
+              </Pressable>
             ))
           )}
+
+          {/* Switch to map button at the bottom of the list */}
+          <Pressable
+            style={[styles.switchToMapBtn, { backgroundColor: t.card, borderColor: t.border }]}
+            onPress={() => setViewMode('map')}
+            accessibilityRole="button"
+            accessibilityLabel="Comută la hartă"
+          >
+            <Map size={18} color={t.primary} strokeWidth={2} />
+            <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.sans }}>
+              Vezi pe hartă
+            </Text>
+          </Pressable>
         </ScrollView>
       )}
 
-      {/* Selected Shift Detail / Bottom Sheet */}
+      {/* Shift detail bottom sheet */}
       {selectedShift && (
-        <View style={styles.bottomSheetBackdrop}>
-          <View style={styles.bottomSheet}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>{skillLabels[selectedShift.role_needed]}</Text>
-              <TouchableOpacity onPress={() => setSelectedShift(null)} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setSelectedShift(null)}>
+          <Pressable style={[styles.bottomSheet, { backgroundColor: t.card, borderColor: t.border }]} onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.sheetHandle, { backgroundColor: t.border }]} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={{ color: t.foreground, fontSize: fontSize.lg, fontWeight: fontWeight.bold, fontFamily: font.heading, flex: 1 }}>
+                {skillLabels[selectedShift.role_needed] || selectedShift.role_needed}
+              </Text>
+              <Pressable onPress={() => setSelectedShift(null)} style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: t.muted, justifyContent: 'center', alignItems: 'center' }}>
+                <X size={16} color={t.mutedForeground} />
+              </Pressable>
             </View>
 
-            <View style={styles.sheetContent}>
-              <Text style={styles.sheetEmployer}>{selectedShift.employer?.company_name}</Text>
-              {selectedShift.employer?.employer_rating && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                  <Star size={14} color="#eab308" fill="#eab308" style={{ marginRight: 4 }} />
-                  <Text style={[styles.sheetRating, { marginBottom: 0 }]}>
-                    {Number(selectedShift.employer.employer_rating).toFixed(1)}/5 rating angajator
-                  </Text>
-                </View>
-              )}
+            <Text style={{ color: t.primary, fontSize: fontSize.base, fontWeight: fontWeight.semibold, marginBottom: 8, fontFamily: font.sans }}>
+              {selectedShift.employer?.company_name}
+            </Text>
 
-              <View style={styles.detailRow}>
-                <Calendar size={16} color="#94a3b8" />
-                <Text style={styles.detailText}>
-                  {formatDate(selectedShift.start_time)}, {formatTime(selectedShift.start_time)} - {formatTime(selectedShift.end_time)}
-                </Text>
+            {selectedShift.employer?.employer_rating && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+                <RatingStars value={selectedShift.employer.employer_rating} size={14} showValue />
               </View>
+            )}
 
-              <View style={styles.detailRow}>
-                <MapPin size={16} color="#94a3b8" />
-                <Text style={styles.detailText}>{selectedShift.employer?.address}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <CircleDollarSign size={16} color="#e5c158" />
-                <Text style={styles.detailPay}>{selectedShift.hourly_pay_ron} RON / oră</Text>
-              </View>
-
-              <TouchableOpacity 
-                style={[
-                  styles.applyButton, 
-                  appliedShiftIds.has(selectedShift.id) && styles.applyButtonApplied,
-                  applying && styles.applyButtonDisabled
-                ]}
-                onPress={() => handleApply(selectedShift)}
-                disabled={applying || appliedShiftIds.has(selectedShift.id)}
-              >
-                {applying ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : appliedShiftIds.has(selectedShift.id) ? (
-                  <View style={styles.applyButtonContent}>
-                    <CheckCircle2 size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                    <Text style={styles.applyButtonText}>DEJA APLICAT</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.applyButtonText}>APLICĂ RAPID</Text>
-                )}
-              </TouchableOpacity>
+            <DetailRow icon={Calendar} text={`${formatDate(selectedShift.start_time)}, ${formatTime(selectedShift.start_time)} - ${formatTime(selectedShift.end_time)}`} t={t} />
+            <DetailRow icon={MapPin} text={selectedShift.employer?.address} t={t} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <CircleDollarSign size={16} color={t.accent} />
+              <Text style={{ color: t.foreground, fontSize: fontSize.base, fontWeight: fontWeight.bold, fontFamily: font.mono }}>
+                {selectedShift.hourly_pay_ron} RON/oră
+              </Text>
             </View>
-          </View>
-        </View>
+
+            {appliedShiftIds.has(selectedShift.id) ? (
+              <Button variant="secondary" fullWidth disabled leftIcon={CheckCircle2} style={{ marginTop: 12 }}>
+                Deja aplicat
+              </Button>
+            ) : (
+              <Button fullWidth loading={applying} onPress={() => handleApply(selectedShift)} style={{ marginTop: 12 }}>
+                Aplică acum
+              </Button>
+            )}
+          </Pressable>
+        </Pressable>
       )}
     </View>
   );
 }
 
+function FilterChip({ label, active, onPress, t }: { label: string; active: boolean; onPress: () => void; t: any }) {
+  return (
+    <Pressable
+      style={{
+        backgroundColor: active ? t.primaryStrong : t.muted,
+        borderWidth: 1, borderColor: active ? t.primaryStrong : t.border,
+        borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
+      }}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+    >
+      <Text style={{
+        color: active ? t.primaryForeground : t.mutedForeground,
+        fontSize: fontSize.xs, fontWeight: fontWeight.semibold, fontFamily: font.sans,
+      }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function DetailRow({ icon: Icon, text, t }: { icon: any; text: string; t: any }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+      <Icon size={16} color={t.mutedForeground} />
+      <Text style={{ color: t.foreground, fontSize: fontSize.sm, flex: 1, fontFamily: font.sans }}>{text}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0f1d',
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    backgroundColor: '#0a0f1d',
-  },
-  filterScroll: {
-    paddingRight: 12,
-    gap: 8,
-  },
-  filterChip: {
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  filterChipActive: {
-    backgroundColor: '#002b7f',
-    borderColor: '#002b7f',
-  },
-  filterChipText: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  filterChipTextActive: {
-    color: '#ffffff',
-  },
-  viewToggle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(30, 41, 59, 0.4)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  loaderText: {
-    color: '#94a3b8',
-    fontSize: 13,
-    marginTop: 12,
-  },
-  mapContainer: {
-    flex: 1,
-  },
-  map: {
-    ...StyleSheet.absoluteFill,
-  },
-  listContainer: {
-    padding: 16,
-    gap: 12,
-  },
-  emptyState: {
-    paddingVertical: 48,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: '#64748b',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  shiftCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 16,
-    padding: 16,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  cardTitle: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-    flex: 1,
-  },
-  statusBadge: {
-    backgroundColor: '#002b7f',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  statusBadgeApplied: {
-    backgroundColor: '#10b981',
-  },
-  statusBadgeText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  cardEmployer: {
-    color: '#e5c158',
-    fontSize: 13,
-    fontWeight: '500',
-    marginBottom: 12,
-  },
-  cardMeta: {
-    flexDirection: 'column',
-    gap: 8,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  metaText: {
-    color: '#94a3b8',
-    fontSize: 12,
-  },
-  metaPay: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  bottomSheetBackdrop: {
+  floatingToggle: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    top: 16,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  overlayCard: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginHorizontal: 32,
+  },
+  switchToMapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 14,
+    height: 48,
+    marginTop: 16,
+  },
+  sheetBackdrop: {
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end',
   },
   bottomSheet: {
-    backgroundColor: '#0f172a',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 24,
-    maxHeight: '80%',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderWidth: 1, padding: 24, maxHeight: '80%',
   },
-  sheetContent: {
-    marginTop: 8,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sheetTitle: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '800',
-    flex: 1,
-  },
-  closeButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  sheetEmployer: {
-    color: '#e5c158',
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  sheetRating: {
-    color: '#94a3b8',
-    fontSize: 12,
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  detailText: {
-    color: '#cbd5e1',
-    fontSize: 13,
-    flex: 1,
-  },
-  detailPay: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  applyButton: {
-    backgroundColor: '#002b7f',
-    borderRadius: 12,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  applyButtonApplied: {
-    backgroundColor: '#10b981',
-  },
-  applyButtonDisabled: {
-    opacity: 0.6,
-  },
-  applyButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+  sheetHandle: {
+    width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 16,
   },
 });
+
+const darkMapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#1C1612' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#A69C95' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#120C09' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#28211E' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#A69C95' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#120C09' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+];
+
+const lightMapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#FFFBF6' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#221812' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#F7F1E9' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#DBD7D0' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'simplified' }] },
+];

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { updatePassword } from '@/lib/supabase/auth-actions'
+import { updatePassword } from '@/lib/romarg-auth'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()

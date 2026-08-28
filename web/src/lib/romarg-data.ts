@@ -300,7 +300,7 @@ export async function getForumPosts() {
       const [rows] = await connection.query<any[]>(
         `SELECT fp.*, u.email as author_email, 
                 COALESCE(w.full_name, e.company_name, u.email) as author_name,
-                COALESCE(w.avatar_url, e.avatar_url) as author_avatar
+                u.avatar_url as author_avatar
          FROM forum_posts fp
          JOIN users u ON fp.author_id = u.id
          LEFT JOIN worker_profiles w ON u.id = w.user_id
@@ -354,7 +354,7 @@ export async function getForumComments(postId: string) {
       const [rows] = await connection.query<any[]>(
         `SELECT fc.*, u.email as author_email,
                 COALESCE(w.full_name, e.company_name, u.email) as author_name,
-                COALESCE(w.avatar_url, e.avatar_url) as author_avatar
+                u.avatar_url as author_avatar
          FROM forum_comments fc
          JOIN users u ON fc.author_id = u.id
          LEFT JOIN worker_profiles w ON u.id = w.user_id
@@ -638,3 +638,49 @@ export async function getPotentialConnections() {
     return [];
   }
 }
+
+export async function updateUserAvatar(avatarUrl: string) {
+  const profile = await getCurrentProfile();
+  if (!profile) return { error: 'Neautorizat' };
+
+  try {
+    const connection = await dbPool.getConnection();
+    try {
+      await connection.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, profile.id]);
+      return { success: true };
+    } finally {
+      connection.release();
+    }
+  } catch (err: any) {
+    console.error('updateUserAvatar error:', err);
+    return { error: 'Eroare la actualizarea pozei de profil: ' + err.message };
+  }
+}
+
+export async function getAdminVerifications() {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== 'ADMIN') return [];
+
+  try {
+    const connection = await dbPool.getConnection();
+    try {
+      const [rows] = await connection.query<any[]>(
+        `SELECT v.*, w.full_name as worker_name, w.city as worker_city
+         FROM id_verifications v
+         LEFT JOIN worker_profiles w ON v.worker_id = w.user_id
+         ORDER BY v.created_at DESC`
+      );
+      return serializeRows(rows);
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    console.error('getAdminVerifications error:', err);
+    return [];
+  }
+}
+
+export async function getAdminAuditLog() {
+  return [];
+}
+

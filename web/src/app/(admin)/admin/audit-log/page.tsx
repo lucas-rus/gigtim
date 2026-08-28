@@ -1,4 +1,4 @@
-import { getAdminAuditLog } from '@/lib/supabase/data-actions'
+import { getAdminAuditLog } from '@/lib/romarg-data'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
