@@ -5,6 +5,29 @@
 
 ---
 
+## [0.5.0] — 2026-09-01 — Landing redesign: "Orașul lucrează" (Living Map)
+
+### 🎬 Landing page (branch `redesign/identity`)
+- **New hero:** pinned GSAP scroll story in four acts over a stylized night map
+  of the city — pins ignite on load, camera zooms to a shift pin (bottom-sheet
+  card), a worker dot travels the route to the match, then the ember→saffron
+  dawn sweeps the map and the ITM register appears stamped. Storyboard:
+  `docs/LANDING_STORYBOARD.md`. Direction chosen from three moodboards
+  (Living Map / Espresso / Departure Board).
+- **New deps:** `gsap` 3.15 + `@gsap/react` (ScrollTrigger, MotionPathPlugin).
+  Reduced motion renders a static composed hero via `gsap.matchMedia`.
+- **Zori everywhere:** removed all leftover indigo/blue values from
+  `web/src/app/page.tsx` (`to-blue-500`, `#eff6ff` chips, teal/cyan tiles);
+  step tiles now ember / saffron / sage; solid CTAs use `primary-strong`
+  (AA-safe). Landing navbar and footer now use the real `LogoMark`/`LogoTile`
+  instead of the "G" letter tile.
+- New components: `web/src/components/landing/LivingMapHero.tsx`,
+  `web/src/components/landing/Reveal.tsx` (scroll reveals for sections).
+- Dropped the fabricated hero social-proof numbers; `#stats` claims unchanged
+  for now (flagged as placeholders in the storyboard doc).
+
+---
+
 ## [0.4.0] — 2026-06-21 — Zori design system + security hardening + agent swarm
 
 ### 🎨 Design system — Zori v1.0 (ratified)
