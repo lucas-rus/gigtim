@@ -168,22 +168,16 @@ export function LivingMapHero() {
       gsap.set(q('[data-worker]'), { opacity: 0 })
       gsap.set(q('[data-dawn]'), { opacity: 0 })
 
-      // Pins ignite immediately with energy
+      // Pins ignite immediately with energy on Act 0
       gsap.from(q('[data-pin]'), {
         opacity: 0,
         scale: 0,
-        duration: 0.35,
+        duration: 0.4,
         stagger: 0.04,
         ease: 'back.out(2)',
       })
 
-      // Start the animated journey straight after opening (450ms)
-      const startTimer = setTimeout(() => {
-        transitionToAct(1)
-      }, 450)
-
       return () => {
-        clearTimeout(startTimer)
         if (currentTimelineRef.current) currentTimelineRef.current.kill()
         if (timerRef.current) clearTimeout(timerRef.current)
       }
@@ -199,8 +193,6 @@ export function LivingMapHero() {
       className="relative h-[92svh] sm:h-[100svh] min-h-[640px] overflow-hidden select-none"
       style={{ background: 'oklch(0.15 0.015 55)' }}
       aria-label="Orașul lucrează — turele pe harta orașului"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
     >
       <style>{`
         @keyframes hero-act-progress {
