@@ -69,19 +69,29 @@ export default function LandingPage() {
       <LivingMapHero />
 
       {/* ── De Ce GigTim — Trust & Performance Matrix ──────── */}
-      <section id="why-gigtim" className="border-t border-border/50 bg-card/40 py-20 sm:py-28">
+      <section
+        id="why-gigtim"
+        className="relative py-16 sm:py-24 overflow-hidden"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 45% at 50% 0%, oklch(0.82 0.15 80 / 0.09), transparent 70%), var(--background)',
+        }}
+      >
         <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <div className="mx-auto max-w-2xl text-center space-y-3 mb-14 sm:mb-16">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/50 px-3.5 py-1 text-xs font-mono text-muted-foreground">
-                <Lock className="h-3 w-3 text-primary" />
-                <span>SIGURANȚĂ &amp; CONFORMITATE LEGALĂ</span>
+            <div className="mx-auto max-w-2xl text-center space-y-3.5 mb-12 sm:mb-16">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-1.5 text-xs font-mono text-primary shadow-xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                </span>
+                <span className="font-semibold tracking-wide">SIGURANȚĂ &amp; CONFORMITATE LEGALĂ</span>
               </div>
-              <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
                 De ce aleg afacerile și lucrătorii <span className="text-primary-strong">GigTim</span>
               </h2>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Cifre reale, proceduri legale simplificate și încredere totală la fiecare tură.
+              <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                Cifre reale, proceduri legale simplificate și încredere totală la fiecare tură completată.
               </p>
             </div>
           </Reveal>
@@ -90,25 +100,25 @@ export default function LandingPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {[
                 {
-                  icon: <Zap className="h-6 w-6 text-primary-strong" />,
+                  icon: <Zap className="h-6 w-6" />,
                   value: '< 2 min',
                   label: 'Publicare tură',
                   desc: 'Publici o tură în câteva atingeri de pe mobil sau laptop.',
                 },
                 {
-                  icon: <CheckCircle2 className="h-6 w-6 text-primary-strong" />,
+                  icon: <CheckCircle2 className="h-6 w-6" />,
                   value: '99.2%',
                   label: 'Rată de prezentare',
                   desc: 'Lucrători verificați cu recenzii și scor de fiabilitate.',
                 },
                 {
-                  icon: <Lock className="h-6 w-6 text-primary-strong" />,
+                  icon: <Lock className="h-6 w-6" />,
                   value: '100%',
                   label: 'Legea 52/2011',
                   desc: 'Registrul zilierilor ITM se generează automat și conform.',
                 },
                 {
-                  icon: <PhoneCall className="h-6 w-6 text-primary-strong" />,
+                  icon: <PhoneCall className="h-6 w-6" />,
                   value: '24/7',
                   label: 'Suport dedicat',
                   desc: 'Echipa noastră locală este alături de tine la fiecare pas.',
@@ -116,12 +126,12 @@ export default function LandingPage() {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 space-y-3"
+                  className="group rounded-2xl border border-border/80 bg-card/90 backdrop-blur-sm p-5 sm:p-6 transition-all duration-300 hover:border-primary/40 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/5 space-y-3"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/15">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary-strong transition-all duration-300 group-hover:bg-primary-strong group-hover:text-primary-foreground group-hover:scale-105">
                     {stat.icon}
                   </div>
-                  <div className="font-mono text-2xl sm:text-3xl font-extrabold text-foreground">
+                  <div className="font-mono text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
                     {stat.value}
                   </div>
                   <div>

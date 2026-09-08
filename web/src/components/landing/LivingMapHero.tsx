@@ -323,7 +323,7 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Headline + Value Prop + CTAs (Bottom Left) ─────── */}
-      <div className="absolute bottom-6 sm:bottom-16 left-5 sm:left-12 z-10 flex max-w-xl flex-col gap-3.5 sm:gap-5 pr-4 sm:pr-0">
+      <div className="absolute bottom-10 sm:bottom-20 md:bottom-24 left-5 sm:left-12 z-20 flex max-w-xl flex-col gap-3.5 sm:gap-5 pr-4 sm:pr-0">
         {/* Status Chip */}
         <div
           className="inline-flex items-center gap-2 self-start rounded-full border px-3.5 py-1.5 backdrop-blur-md"
@@ -378,7 +378,7 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Act Switcher Buttons & Captions (Top Right on Mobile, Bottom Right on Desktop) ──── */}
-      <div className="absolute top-20 right-4 sm:top-auto sm:bottom-16 sm:right-12 z-20 flex flex-col items-end gap-2">
+      <div className="absolute top-20 right-4 sm:top-auto sm:bottom-20 md:bottom-24 sm:right-12 z-20 flex flex-col items-end gap-2">
         {/* Minimal Swiss Pill Switcher */}
         <div
           className="flex items-center gap-1 sm:gap-1.5 rounded-xl border p-1 backdrop-blur-md shadow-xl"
@@ -441,6 +441,36 @@ export function LivingMapHero() {
             {`${currentAct + 1}/4 — ${activeActData.caption.toUpperCase()}`}
           </span>
         </div>
+      </div>
+
+      {/* ── Zori Horizon Bridge: Smooth Architectural Transition to Content ── */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 overflow-hidden leading-none select-none">
+        {/* Atmospheric Dawn Glow / Light Bleed */}
+        <div
+          className="h-20 sm:h-32 w-full"
+          style={{
+            background:
+              'linear-gradient(to bottom, transparent 0%, oklch(0.62 0.19 35 / 0.08) 35%, oklch(0.82 0.15 80 / 0.18) 70%, var(--background) 100%)',
+          }}
+        />
+        {/* Precision SVG Horizon Curve */}
+        <svg
+          viewBox="0 0 1440 60"
+          preserveAspectRatio="none"
+          className="relative block h-7 sm:h-11 md:h-14 w-[calc(100%+1.3px)]"
+          aria-hidden="true"
+        >
+          <path
+            d="M0,28 Q720,0 1440,28 L1440,60 L0,60 Z"
+            fill="var(--background)"
+          />
+          <path
+            d="M0,28 Q720,0 1440,28"
+            fill="none"
+            stroke="oklch(0.82 0.15 80 / 0.4)"
+            strokeWidth="1.5"
+          />
+        </svg>
       </div>
     </section>
   )
