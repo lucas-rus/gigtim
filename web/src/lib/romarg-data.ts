@@ -10,6 +10,8 @@ function serializeRow(row: any) {
   for (const key of Object.keys(copy)) {
     if (copy[key] instanceof Date) {
       copy[key] = copy[key].toISOString();
+    } else if (typeof copy[key] === 'bigint') {
+      copy[key] = Number(copy[key]);
     }
   }
   return copy;
@@ -344,7 +346,8 @@ export async function getForumPosts() {
       const [rows] = await connection.query<any[]>(
         `SELECT fp.*, u.email as author_email, 
                 COALESCE(w.full_name, e.company_name, u.email) as author_name,
-                u.avatar_url as author_avatar
+                u.avatar_url as author_avatar,
+                (SELECT COUNT(*) FROM forum_comments fc WHERE fc.post_id = fp.id) as comment_count
          FROM forum_posts fp
          JOIN users u ON fp.author_id = u.id
          LEFT JOIN worker_profiles w ON u.id = w.user_id
@@ -419,9 +422,13 @@ export async function getForumComments(postId: string) {
 
 export async function createForumComment(postId: string, content: string) {
   const profile = await getCurrentProfile();
-  if (!profile) return { error: 'Trebuie să fii autentificat pentru a comenta.' };
+  if (!profile) {
+    console.error('createForumComment: no profile found in session');
+    return { error: 'Trebuie să fii autentificat pentru a comenta.' };
+  }
 
-  if (!content.trim()) return { error: 'Comentariul nu poate fi gol.' };
+  const trimmed = (content || '').trim();
+  if (!trimmed) return { error: 'Comentariul nu poate fi gol.' };
 
   const commentId = crypto.randomUUID();
 
@@ -430,13 +437,14 @@ export async function createForumComment(postId: string, content: string) {
     try {
       await connection.query(
         'INSERT INTO forum_comments (id, post_id, author_id, content) VALUES (?, ?, ?, ?)',
-        [commentId, postId, profile.id, content.trim()]
+        [commentId, postId, profile.id, trimmed]
       );
       return { success: true, commentId };
     } finally {
       connection.release();
     }
   } catch (err: any) {
+    console.error('createForumComment database error:', err);
     return { error: 'Eroare la adăugarea comentariului: ' + err.message };
   }
 }

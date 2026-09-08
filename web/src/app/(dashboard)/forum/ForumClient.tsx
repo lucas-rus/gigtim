@@ -38,18 +38,31 @@ function useCurrentTime() {
   return time
 }
 
+interface CurrentUser {
+  id: string
+  name: string
+  avatar: string | null
+}
+
 interface ForumClientProps {
   initialPosts: any[]
   _userId: string | null
+  currentUser?: CurrentUser | null
 }
 
-export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
+export function ForumClient({ initialPosts, _userId, currentUser }: ForumClientProps) {
   const router = useRouter()
   const [tab, setTab] = useState<string>('ALL')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
   const now = useCurrentTime()
+
+  // Local posts state for responsive immediate comment count updates
+  const [posts, setPosts] = useState<any[]>(initialPosts)
+  useEffect(() => {
+    setPosts(initialPosts)
+  }, [initialPosts])
 
   // New post form
   const [title, setTitle] = useState('')
@@ -59,12 +72,15 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
   // Comments
   const [expandedPost, setExpandedPost] = useState<string | null>(null)
   const [comments, setComments] = useState<Record<string, any[]>>({})
+  const [loadingComments, setLoadingComments] = useState<Record<string, boolean>>({})
+  const [submittingComment, setSubmittingComment] = useState<Record<string, boolean>>({})
+  const [commentErrors, setCommentErrors] = useState<Record<string, string | null>>({})
   // Per-post comment draft state — a single shared string previously leaked
   // typed text between posts when toggling expansion.
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
 
   const tabs = ['ALL', 'GENERAL', 'TIPS', 'JOBS', 'LEGAL'] as const
-  const filteredPosts = tab === 'ALL' ? initialPosts : initialPosts.filter(p => p.category === tab)
+  const filteredPosts = tab === 'ALL' ? posts : posts.filter(p => p.category === tab)
 
   function handlePost() {
     const formData = new FormData()
@@ -91,21 +107,118 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
       return
     }
     setExpandedPost(postId)
+    setCommentErrors(prev => ({ ...prev, [postId]: null }))
+
+    if (!comments[postId]) {
+      setLoadingComments(prev => ({ ...prev, [postId]: true }))
+    }
+
     startTransition(async () => {
-      const result = await getForumComments(postId)
-      setComments(prev => ({ ...prev, [postId]: result }))
+      try {
+        const result = await getForumComments(postId)
+        setComments(prev => ({ ...prev, [postId]: result }))
+        setPosts(prev => prev.map(p => {
+          if (p.id === postId) {
+            return { ...p, comment_count: result.length }
+          }
+          return p
+        }))
+      } catch (err: any) {
+        console.error('Failed to load comments:', err)
+      } finally {
+        setLoadingComments(prev => ({ ...prev, [postId]: false }))
+      }
     })
   }
 
   function handleComment(postId: string) {
     const draft = (commentDrafts[postId] || '').trim()
     if (!draft) return
+
+    if (!_userId && !currentUser) {
+      setCommentErrors(prev => ({ ...prev, [postId]: 'Trebuie să fii autentificat pentru a lăsa un comentariu.' }))
+      return
+    }
+
+    setCommentErrors(prev => ({ ...prev, [postId]: null }))
+    setSubmittingComment(prev => ({ ...prev, [postId]: true }))
+
+    // Optimistic comment
+    const tempId = `temp-${Date.now()}`
+    const authorName = currentUser?.name || 'Tu'
+    const authorAvatar = currentUser?.avatar || null
+    const optimisticComment = {
+      id: tempId,
+      post_id: postId,
+      author_id: currentUser?.id || _userId,
+      author_name: authorName,
+      author_avatar: authorAvatar,
+      content: draft,
+      created_at: new Date().toISOString(),
+    }
+
+    // Immediately display comment in list
+    setComments(prev => ({
+      ...prev,
+      [postId]: [...(prev[postId] || []), optimisticComment]
+    }))
+
+    // Immediately increment comment count on post
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return { ...p, comment_count: (Number(p.comment_count) || 0) + 1 }
+      }
+      return p
+    }))
+
+    // Clear draft input
+    setCommentDrafts(prev => ({ ...prev, [postId]: '' }))
+
     startTransition(async () => {
-      const result = await createForumComment(postId, draft)
-      if (!result.error) {
-        setCommentDrafts(prev => ({ ...prev, [postId]: '' }))
-        const updated = await getForumComments(postId)
-        setComments(prev => ({ ...prev, [postId]: updated }))
+      try {
+        const result = await createForumComment(postId, draft)
+        if (result?.error) {
+          // Revert optimistic updates
+          setComments(prev => ({
+            ...prev,
+            [postId]: (prev[postId] || []).filter(c => c.id !== tempId)
+          }))
+          setPosts(prev => prev.map(p => {
+            if (p.id === postId) {
+              return { ...p, comment_count: Math.max(0, (Number(p.comment_count) || 1) - 1) }
+            }
+            return p
+          }))
+          setCommentDrafts(prev => ({ ...prev, [postId]: draft }))
+          setCommentErrors(prev => ({ ...prev, [postId]: result.error }))
+        } else {
+          // Fresh sync from server
+          const updated = await getForumComments(postId)
+          setComments(prev => ({ ...prev, [postId]: updated }))
+          setPosts(prev => prev.map(p => {
+            if (p.id === postId) {
+              return { ...p, comment_count: updated.length }
+            }
+            return p
+          }))
+          router.refresh()
+        }
+      } catch (err: any) {
+        console.error('Error adding comment:', err)
+        setComments(prev => ({
+          ...prev,
+          [postId]: (prev[postId] || []).filter(c => c.id !== tempId)
+        }))
+        setPosts(prev => prev.map(p => {
+          if (p.id === postId) {
+            return { ...p, comment_count: Math.max(0, (Number(p.comment_count) || 1) - 1) }
+          }
+          return p
+        }))
+        setCommentDrafts(prev => ({ ...prev, [postId]: draft }))
+        setCommentErrors(prev => ({ ...prev, [postId]: 'A apărut o eroare: ' + (err.message || 'necunoscută') }))
+      } finally {
+        setSubmittingComment(prev => ({ ...prev, [postId]: false }))
       }
     })
   }
@@ -189,7 +302,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                   : 'border border-border/80 hover:bg-accent text-muted-foreground bg-transparent'
               }`}
             >
-              {t === 'ALL' ? `Toate (${initialPosts.length})` : `${categoryLabels[t as ForumCategory]} (${initialPosts.filter(p => p.category === t).length})`}
+              {t === 'ALL' ? `Toate (${posts.length})` : `${categoryLabels[t as ForumCategory]} (${posts.filter(p => p.category === t).length})`}
             </button>
           )
         })}
@@ -199,7 +312,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
       <div className="space-y-4">
         {filteredPosts.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground font-sans border border-dashed border-border/60 rounded-2xl bg-card/30 p-6">
-            {initialPosts.length === 0
+            {posts.length === 0
               ? 'Nu există postări încă. Fii primul care postează!'
               : 'Nicio postare în această categorie.'}
           </div>
@@ -241,7 +354,7 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                     onClick={() => handleLoadComments(post.id)}
                     className="text-xs font-semibold text-primary-strong font-sans hover:underline flex items-center gap-1.5 cursor-pointer capitalize"
                   >
-                    <MessageSquare className="h-3.5 w-3.5" /> {post.comment_count || 0} comentarii
+                    <MessageSquare className="h-3.5 w-3.5" /> {post.comment_count || 0} {Number(post.comment_count) === 1 ? 'comentariu' : 'comentarii'}
                   </button>
                 </div>
 
@@ -249,8 +362,15 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                 {expandedPost === post.id && (
                   <div className="border border-border/60 bg-muted/20 dark:bg-muted/10 rounded-2xl p-4 space-y-4 animate-in fade-in duration-200">
                     <div className="space-y-3 divide-y divide-border/40">
-                      {(comments[post.id] || []).length === 0 ? (
-                        <p className="text-[10px] text-muted-foreground font-sans uppercase tracking-wider">Niciun comentariu adăugat.</p>
+                      {loadingComments[post.id] ? (
+                        <div className="flex items-center justify-center py-4 text-xs text-muted-foreground gap-2 font-sans">
+                          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          Se încarcă comentariile...
+                        </div>
+                      ) : (comments[post.id] || []).length === 0 ? (
+                        <p className="text-[10px] text-muted-foreground font-sans uppercase tracking-wider py-2">
+                          Niciun comentariu adăugat. Fii primul care lasă un răspuns!
+                        </p>
                       ) : (
                         (comments[post.id] || []).map((c: any, index: number) => (
                           <div key={c.id} className={`flex gap-3 text-xs ${index > 0 ? 'pt-3' : ''}`}>
@@ -278,21 +398,33 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                       )}
                     </div>
                     
+                    {commentErrors[post.id] && (
+                      <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-sans">
+                        {commentErrors[post.id]}
+                      </div>
+                    )}
+
                     <div className="flex gap-2 pt-3 border-t border-border/60">
                       <Input
-                        placeholder="Scrie un comentariu..."
+                        placeholder={currentUser || _userId ? "Scrie un comentariu..." : "Autentifică-te pentru a comenta"}
+                        disabled={(!currentUser && !_userId) || submittingComment[post.id]}
                         value={commentDrafts[post.id] || ''}
                         onChange={(e) => setCommentDrafts(prev => ({ ...prev, [post.id]: e.target.value }))}
-                        onKeyDown={(e) => e.key === 'Enter' && handleComment(post.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleComment(post.id)
+                          }
+                        }}
                         className="bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 text-xs flex-1 font-sans"
                       />
                       <Button 
                         size="sm" 
                         onClick={() => handleComment(post.id)} 
-                        disabled={isPending}
+                        disabled={(!currentUser && !_userId) || submittingComment[post.id] || !(commentDrafts[post.id] || '').trim()}
                         className="h-10 px-4 rounded-xl font-sans text-xs uppercase tracking-wider font-semibold bg-primary-strong hover:brightness-108 active:scale-95 text-primary-foreground transition-all duration-200 shrink-0"
                       >
-                        Trimite
+                        {submittingComment[post.id] ? 'Se trimite...' : 'Trimite'}
                       </Button>
                     </div>
                   </div>

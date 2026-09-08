@@ -10,5 +10,11 @@ export default async function ForumPage() {
     getCurrentProfile(),
   ])
 
-  return <ForumClient initialPosts={posts} _userId={profile?.id || null} />
+  const currentUser = profile ? {
+    id: profile.id,
+    name: profile.full_name || profile.company_name || profile.email,
+    avatar: profile.avatar_url || null,
+  } : null
+
+  return <ForumClient initialPosts={posts} _userId={profile?.id || null} currentUser={currentUser} />
 }
