@@ -18,13 +18,91 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   )
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+const DB_LABEL_MAP: Record<string, string> = {
+  // Forum categories
+  GENERAL: 'General',
+  TIPS: 'Sfaturi',
+  JOBS: 'Joburi',
+  LEGAL: 'Legal',
+
+  // Skills / Roles needed
+  BARISTA: 'Barista',
+  WAITER: 'Ospătar',
+  DISHWASHER: 'Spălător vase',
+  STAGEHAND: 'Ajutor scenă / Evenimente',
+  BARTENDER: 'Barman',
+  COOK: 'Bucătar',
+  KITCHEN_ASSISTANT: 'Ajutor bucătar',
+  CLEANER: 'Curățenie',
+  HOST: 'Ospitalitate / Hostess',
+  EVENT_STAFF: 'Personal evenimente',
+  BUSSER: 'Debarasator',
+  FOOD_RUNNER: 'Food Runner',
+  LINE_COOK: 'Bucătar linie',
+  PREP_COOK: 'Ajutor pregătire',
+  SOMMELIER: 'Somelier',
+  CATERING_STAFF: 'Personal catering',
+  RECEPTIONIST: 'Recepționer',
+  OTHER: 'Altele',
+
+  // User roles
+  WORKER: 'Lucrător',
+  EMPLOYER: 'Angajator',
+  ADMIN: 'Admin',
+  ALL: 'Toate',
+
+  // Shift status
+  OPEN: 'Deschisă',
+  FILLED: 'Ocupată',
+  IN_PROGRESS: 'În desfășurare',
+  COMPLETED: 'Finalizată',
+  CANCELLED: 'Anulată',
+
+  // Application status
+  PENDING: 'În așteptare',
+  ACCEPTED: 'Acceptată',
+  REJECTED: 'Respinsă',
+  NO_SHOW: 'Neprezentare',
+
+  // Verification status
+  APPROVED: 'Aprobat',
+  EXPIRED: 'Expirat',
+  NEEDS_REVIEW: 'Necesită revizuire',
+}
+
+function formatSelectValue(value: any): React.ReactNode {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value === 'string' && DB_LABEL_MAP[value]) {
+    return DB_LABEL_MAP[value]
+  }
+  return value
+}
+
+function SelectValue({
+  className,
+  children,
+  placeholder,
+  ...props
+}: SelectPrimitive.Value.Props) {
+  const formatter =
+    typeof children === 'function'
+      ? children
+      : children !== undefined
+        ? children
+        : (val: any) => {
+            if (val == null || val === '') return (placeholder as React.ReactNode) ?? null
+            return formatSelectValue(val)
+          }
+
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
       className={cn("flex flex-1 text-left", className)}
+      placeholder={placeholder}
       {...props}
-    />
+    >
+      {formatter}
+    </SelectPrimitive.Value>
   )
 }
 

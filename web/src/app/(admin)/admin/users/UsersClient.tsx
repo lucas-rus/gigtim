@@ -96,7 +96,15 @@ export function UsersClient({ initialUsers }: { initialUsers: AdminUser[] }) {
           <Label className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground font-mono">Filtrează după Rol</Label>
           <Select value={roleFilter} onValueChange={(val) => setRoleFilter(val ?? 'ALL')}>
             <SelectTrigger className="w-full bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all rounded h-10">
-              <SelectValue />
+              <SelectValue>
+                {(val) => {
+                  if (val === 'ALL') return 'Toate rolurile'
+                  if (val === 'WORKER') return 'Lucrători'
+                  if (val === 'EMPLOYER') return 'Angajatori'
+                  if (val === 'ADMIN') return 'Admini'
+                  return val
+                }}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-popover border border-border rounded shadow-md">
               <SelectItem value="ALL">Toate rolurile</SelectItem>

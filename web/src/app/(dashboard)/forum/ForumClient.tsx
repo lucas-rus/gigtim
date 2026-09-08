@@ -144,7 +144,11 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
               <div className="grid gap-1.5">
                 <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80 font-sans">Categorie</Label>
                 <Select value={category} onValueChange={(val) => setCategory(val ?? 'GENERAL')}>
-                  <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
+                    <SelectValue>
+                      {(val) => categoryLabels[val as ForumCategory] || 'General'}
+                    </SelectValue>
+                  </SelectTrigger>
                   <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
                     {Object.entries(categoryLabels).map(([key, label]) => (
                       <SelectItem key={key} value={key} className="font-sans">{label}</SelectItem>

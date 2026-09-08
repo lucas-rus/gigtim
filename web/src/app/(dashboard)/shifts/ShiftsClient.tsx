@@ -120,7 +120,9 @@ export function ShiftsClient({ userRole, initialShifts }: ShiftsClientProps) {
                   <Label htmlFor="role_needed" className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80 font-sans">Rol necesar</Label>
                   <Select value={roleNeeded} onValueChange={(val) => setRoleNeeded(val ?? '')}>
                     <SelectTrigger id="role_needed" className="w-full bg-background dark:bg-background/40 border border-border/80 focus:border-primary focus:ring-2 focus:ring-ring transition-all rounded-xl h-10 font-sans text-sm">
-                      <SelectValue placeholder="Selectează rolul" />
+                      <SelectValue placeholder="Selectează rolul">
+                        {(val) => (val ? getLabel(skillLabels, val) : 'Selectează rolul')}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-popover dark:bg-popover border border-border/60 rounded-xl shadow-lg">
                       {Object.entries(skillLabels).map(([key, label]) => (
