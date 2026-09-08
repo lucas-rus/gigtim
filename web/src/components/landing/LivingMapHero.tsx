@@ -394,7 +394,7 @@ export function LivingMapHero() {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => transitionToAct(act.id)}
-                className={`relative flex items-center justify-center h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-all duration-200 ${
+                className={`relative flex flex-col items-center justify-center h-7 sm:h-8 w-7 sm:w-8 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-all duration-200 ${
                   isActive
                     ? 'shadow-md scale-105'
                     : 'opacity-60 hover:opacity-100'
@@ -404,10 +404,12 @@ export function LivingMapHero() {
                   color: isActive ? 'oklch(0.15 0.015 55)' : 'oklch(0.92 0.01 75)',
                 }}
               >
-                <span>{act.label}</span>
-                {/* Active progress micro-indicator */}
+                <span className={`leading-none ${isActive ? '-translate-y-[1px]' : ''}`}>
+                  {act.label}
+                </span>
+                {/* Active progress micro-indicator — perfectly centered horizontally and vertically */}
                 {isActive && !isPaused && (
-                  <span className="absolute bottom-0.5 left-1 right-1 h-0.5 rounded-full bg-black/30 overflow-hidden">
+                  <span className="absolute bottom-[3px] sm:bottom-1 left-1/2 -translate-x-1/2 w-3.5 sm:w-4 h-0.5 rounded-full bg-black/25 overflow-hidden">
                     <span
                       className="block h-full bg-black/80 transition-all duration-75"
                       style={{ width: `${progress}%` }}
