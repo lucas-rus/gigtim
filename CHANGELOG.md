@@ -5,6 +5,19 @@
 
 ---
 
+## [0.5.0] — 2026-09-08 — UI/UX Overhaul: "Orașul lucrează" Living Map + Figma Design Polish
+
+### 🎬 Living Map Hero & Scroll Story
+- **Living Map Hero:** Pinned GSAP ScrollTrigger story in four acts over an animated night map of Timișoara with the Bega river, streets, and architectural blocks:
+  1. *Act 1:* Night map with shift pins igniting with beacon animations.
+  2. *Act 2:* Camera zoom into café pin, responsive floating shift card rises.
+  3. *Act 3:* Worker dot travels the route to the pin, mutual pulse on match.
+  4. *Act 4:* Dawn sweep across the city, ITM register card stamped "CONFORM · LEGEA 52/2011".
+- **Enhanced Mobile Responsiveness:** Scaled shift card and ITM card on mobile screens so iPhone/Android users experience the complete storytelling flow without disappearing elements.
+- **Section Reveals:** Added GSAP `Reveal` component providing graceful viewport intersection fade-up effects across all sections.
+- **Brand Consistency:** Replaced raw "G" tiles across Landing, Login, and Registration with official `LogoMark` and `LogoTile` sun-clock brand components.
+- **Backend Integrity:** Maintained 100% of ROMARG MySQL pool, Base64URL session cookies, React `cache()`, Leaflet Carto API key integration, and GDPR/ITM compliance.
+
 ## [0.4.0] — 2026-06-21 — Zori design system + security hardening + agent swarm
 
 ### 🎨 Design system — Zori v1.0 (ratified)

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
+import { LogoMark } from '@/components/brand/Logo'
+
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -50,9 +52,11 @@ export default function LoginPage() {
       <div className="w-full max-w-[440px] space-y-8 relative z-10">
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground text-3xl font-extrabold shadow-2xl shadow-primary/20 transform hover:scale-105 transition-transform duration-300">
-            G
-          </div>
+          <Link href="/" className="inline-block transform hover:scale-105 transition-transform duration-300">
+            <span className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/25">
+              <LogoMark size={40} strokeWidth={2.1} />
+            </span>
+          </Link>
           <div className="space-y-1">
             <h1 className="text-4xl font-extrabold tracking-tight font-heading text-foreground">
               GigTim

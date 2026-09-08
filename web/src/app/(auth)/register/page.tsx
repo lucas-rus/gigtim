@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { romargRegister, logout } from '@/lib/romarg-auth'
 import { ROMANIAN_COUNTIES, searchLocations } from '@/lib/romanian-locations'
 import { User, Building, MapPin, ChevronDown, Check, Search, X, Plus } from 'lucide-react'
+import { LogoMark } from '@/components/brand/Logo'
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
@@ -132,9 +133,11 @@ export default function RegisterPage() {
       <div className="w-full max-w-[480px] space-y-6 relative z-10 my-8">
         {/* Header Logo */}
         <div className="text-center space-y-3">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground text-2xl font-extrabold shadow-xl shadow-primary/20 transform hover:scale-105 transition-transform duration-300">
-            G
-          </div>
+          <Link href="/" className="inline-block transform hover:scale-105 transition-transform duration-300">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/25">
+              <LogoMark size={34} strokeWidth={2.1} />
+            </span>
+          </Link>
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold tracking-tight font-heading text-foreground">
               GigTim
