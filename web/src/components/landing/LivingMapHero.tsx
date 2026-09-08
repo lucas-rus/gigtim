@@ -311,7 +311,7 @@ export function LivingMapHero() {
         className="absolute flex w-52 sm:w-68 flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md"
         style={{
           right: '5%',
-          top: '18%',
+          top: '15%',
           background: 'oklch(0.205 0.012 50 / 0.95)',
           borderColor: 'oklch(1 0 0 / 0.14)',
         }}
@@ -353,7 +353,7 @@ export function LivingMapHero() {
         className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md"
         style={{
           right: '5%',
-          top: '38%',
+          top: '48%',
           background: 'oklch(0.18 0.012 50 / 0.95)',
           borderColor: 'oklch(0.48 0.13 150 / 0.5)',
         }}
