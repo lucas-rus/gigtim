@@ -1,21 +1,20 @@
 'use client'
 
-import { useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 import { useGSAP } from '@gsap/react'
+import { Play, Pause } from 'lucide-react'
 
-gsap.registerPlugin(useGSAP, ScrollTrigger, MotionPathPlugin)
+gsap.registerPlugin(useGSAP, MotionPathPlugin)
 
 /**
- * "Orașul lucrează" — pinned scroll story in four acts:
- * 1. Night map, shift pins ignite  
- * 2. Zoom to café pin, real shift card rises  
- * 3. Worker dot travels the route → match pulse  
- * 4. Dawn sweeps the city, ITM register stamped "CONFORM · LEGEA 52/2011".
- * With prefers-reduced-motion the hero renders the final composed scene, unpinned.
+ * "Orașul lucrează" — Immersive Living Map Hero with Snappy Autoplay & Manual Act Switcher.
+ * 
+ * Visuals: Exact immersive night-map canvas from the approved Zori design identity.
+ * Behavior: Autoplay cycle (~2.8s per act) with zero scroll-jacking, plus minimal Swiss-style act switcher buttons.
+ * Mobile: Fully responsive viewport scaling, cards positioned safely above bottom CTAs.
  */
 
 const PINS = [
@@ -29,141 +28,160 @@ const PINS = [
   { x: 1290, y: 340, r: 4 },
 ]
 
-const CAPTIONS = [
-  'Turele se aprind pe hartă',
-  'Alege o tură, vezi detaliile',
-  'Match: lucrătorul e pe drum',
-  'Zorii: registrul ITM, gata automat',
+const ACTS = [
+  { id: 0, label: '01', caption: 'Turele se aprind pe hartă' },
+  { id: 1, label: '02', caption: 'Alege o tură, vezi detaliile' },
+  { id: 2, label: '03', caption: 'Match: lucrătorul e pe drum' },
+  { id: 3, label: '04', caption: 'Zorii: registrul ITM, gata automat' },
 ]
+
+const ACT_DURATION_MS = 2600 // Snappy 2.6s per act
 
 export function LivingMapHero() {
   const sectionRef = useRef<HTMLElement>(null)
+  const [currentAct, setCurrentAct] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const [progress, setProgress] = useState(0)
 
+  // Smoothly transition map elements to a specific act
+  const transitionToAct = useCallback((actIndex: number) => {
+    setCurrentAct(actIndex)
+    setProgress(0)
+
+    if (!sectionRef.current) return
+    const q = gsap.utils.selector(sectionRef)
+    const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' } })
+
+    if (actIndex === 0) {
+      // Act 1: Night map with all shift pins glowing
+      tl.to(q('[data-map-zoom]'), { scale: 1, svgOrigin: '720 450', duration: 0.7 })
+      tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: 20, duration: 0.25 }, 0)
+      tl.to(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85, duration: 0.25 }, 0)
+      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.4 }, 0)
+      tl.to(q('[data-route]'), { strokeDashoffset: 1, duration: 0.25 }, 0)
+      tl.to(q('[data-worker]'), { opacity: 0, duration: 0.2 }, 0)
+      tl.fromTo(
+        q('[data-pin]'),
+        { scale: 0.8, opacity: 0.6 },
+        { scale: 1, opacity: 1, stagger: 0.04, duration: 0.4 },
+        0.1
+      )
+    } else if (actIndex === 1) {
+      // Act 2: Camera zooms to café pin, shift card rises
+      tl.to(q('[data-map-zoom]'), { scale: 1.5, svgOrigin: '900 320', duration: 0.75 })
+      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.3 }, 0)
+      tl.to(q('[data-itm-card]'), { autoAlpha: 0, duration: 0.2 }, 0)
+      tl.to(q('[data-route]'), { strokeDashoffset: 1, duration: 0.2 }, 0)
+      tl.to(q('[data-worker]'), { opacity: 0, duration: 0.2 }, 0)
+      tl.fromTo(
+        q('[data-shift-card]'),
+        { autoAlpha: 0, y: 22 },
+        { autoAlpha: 1, y: 0, duration: 0.4 },
+        0.25
+      )
+    } else if (actIndex === 2) {
+      // Act 3: Worker dot traverses route to match & mutual pulse
+      tl.to(q('[data-map-zoom]'), { scale: 1.4, svgOrigin: '720 400', duration: 0.7 })
+      tl.to(q('[data-shift-card]'), { autoAlpha: 1, y: 0, duration: 0.25 }, 0)
+      tl.to(q('[data-itm-card]'), { autoAlpha: 0, duration: 0.2 }, 0)
+      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.25 }, 0)
+      tl.to(q('[data-route]'), { strokeDashoffset: 0, duration: 0.7 }, 0.15)
+      tl.to(q('[data-worker]'), { opacity: 1, duration: 0.1 }, 0.15)
+      tl.fromTo(
+        q('[data-worker]'),
+        { motionPath: { path: '#gigtim-route', align: '#gigtim-route', alignOrigin: [0.5, 0.5], end: 0 } },
+        { motionPath: { path: '#gigtim-route', align: '#gigtim-route', alignOrigin: [0.5, 0.5], end: 1 }, duration: 0.75, ease: 'power1.inOut' },
+        0.15
+      )
+      tl.to(
+        [...q('[data-worker]'), ...q('[data-pin-hero]')],
+        { scale: 1.6, duration: 0.12, repeat: 3, yoyo: true, transformOrigin: '50% 50%' },
+        0.9
+      )
+    } else if (actIndex === 3) {
+      // Act 4: Dawn sweep & stamped ITM register card
+      tl.to(q('[data-map-zoom]'), { scale: 1.18, svgOrigin: '720 450', duration: 0.7 })
+      tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: -16, duration: 0.25 }, 0)
+      tl.to(q('[data-route]'), { strokeDashoffset: 0, opacity: 0.35, duration: 0.3 }, 0)
+      tl.to(q('[data-dawn]'), { opacity: 1, duration: 0.7 }, 0.1)
+      tl.fromTo(
+        q('[data-itm-card]'),
+        { autoAlpha: 0, scale: 0.85, y: 18 },
+        { autoAlpha: 1, scale: 1, y: 0, duration: 0.4 },
+        0.25
+      )
+      tl.fromTo(
+        q('[data-itm-stamp]'),
+        { autoAlpha: 0, scale: 1.7, rotate: 12 },
+        { autoAlpha: 1, scale: 1, rotate: -6, duration: 0.25, ease: 'power3.in' },
+        0.55
+      )
+    }
+  }, [])
+
+  // Autoplay ticker (~2.8s per act)
+  useEffect(() => {
+    if (isPaused) return
+    const tickInterval = 40 // 40ms resolution
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + (tickInterval / ACT_DURATION_MS) * 100
+        if (next >= 100) {
+          const nextAct = (currentAct + 1) % ACTS.length
+          transitionToAct(nextAct)
+          return 0
+        }
+        return next
+      })
+    }, tickInterval)
+
+    return () => clearInterval(interval)
+  }, [isPaused, currentAct, transitionToAct])
+
+  // Initial setup on mount
   useGSAP(
     () => {
       const q = gsap.utils.selector(sectionRef)
-      const mm = gsap.matchMedia()
+      gsap.set(q('[data-shift-card]'), { autoAlpha: 0, y: 20 })
+      gsap.set(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85 })
+      gsap.set(q('[data-route]'), { strokeDashoffset: 1 })
+      gsap.set(q('[data-worker]'), { opacity: 0 })
+      gsap.set(q('[data-dawn]'), { opacity: 0 })
 
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.set(q('[data-pin]'), { opacity: 0, scale: 0, transformOrigin: '50% 50%' })
-        gsap.set(q('[data-shift-card]'), { autoAlpha: 0, y: 28 })
-        gsap.set(q('[data-worker]'), { opacity: 0 })
-        gsap.set(q('[data-route]'), { strokeDashoffset: 1 })
-        gsap.set(q('[data-dawn]'), { opacity: 0 })
-        gsap.set(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85, y: 16 })
-        gsap.set(q('[data-itm-stamp]'), { autoAlpha: 0, scale: 1.6, rotate: 8 })
-        gsap.set(q('[data-caption]'), { autoAlpha: 0 })
-        gsap.set(q('[data-caption="0"]'), { autoAlpha: 1 })
-        gsap.set(q('[data-indicator]'), { opacity: 0.35, scale: 0.85 })
-        gsap.set(q('[data-indicator="0"]'), { opacity: 1, scale: 1.25 })
-
-        // Act 1 — pins ignite over the night map on load
-        gsap.to(q('[data-pin]'), {
-          opacity: 1,
-          scale: 1,
-          duration: 0.7,
-          stagger: 0.12,
-          delay: 0.35,
-          ease: 'back.out(2.5)',
-        })
-
-        const tl = gsap.timeline({
-          defaults: { ease: 'none' },
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top top',
-            end: '+=2600',
-            pin: true,
-            scrub: 1,
-          },
-        })
-
-        const updateAct = (from: number, to: number, at: number) => {
-          tl.to(q(`[data-caption="${from}"]`), { autoAlpha: 0, duration: 0.15 }, at)
-            .to(q(`[data-caption="${to}"]`), { autoAlpha: 1, duration: 0.15 }, at + 0.1)
-            .to(q(`[data-indicator="${from}"]`), { opacity: 0.35, scale: 0.85, duration: 0.15 }, at)
-            .to(q(`[data-indicator="${to}"]`), { opacity: 1, scale: 1.25, duration: 0.15 }, at + 0.1)
-        }
-
-        // Act 2 — camera zooms to the hero pin, the shift card rises
-        updateAct(0, 1, 0.15)
-        tl.to(
-          q('[data-map-zoom]'),
-          { scale: 1.5, svgOrigin: '900 320', duration: 1, ease: 'power1.inOut' },
-          0.2
-        )
-        tl.to(q('[data-shift-card]'), { autoAlpha: 1, y: 0, duration: 0.4 }, 0.7)
-
-        // Act 3 — the worker travels the route; both pulse on arrival
-        updateAct(1, 2, 1.7)
-        tl.to(q('[data-route]'), { strokeDashoffset: 0, duration: 1 }, 1.8)
-        tl.to(q('[data-worker]'), { opacity: 1, duration: 0.1 }, 1.8)
-        tl.to(
-          q('[data-worker]'),
-          {
-            motionPath: { path: '#gigtim-route', align: '#gigtim-route', alignOrigin: [0.5, 0.5] },
-            duration: 1,
-            ease: 'power1.inOut',
-          },
-          1.8
-        )
-        tl.to(
-          [...q('[data-worker]'), ...q('[data-pin-hero]')],
-          {
-            scale: 1.7,
-            transformOrigin: '50% 50%',
-            duration: 0.18,
-            repeat: 3,
-            yoyo: true,
-            ease: 'power1.inOut',
-          },
-          2.85
-        )
-
-        // Act 4 — dawn sweeps the map, the ITM register comes out stamped
-        updateAct(2, 3, 3.4)
-        tl.to(q('[data-dawn]'), { opacity: 1, duration: 1, ease: 'power1.in' }, 3.5)
-        tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: -16, duration: 0.3 }, 3.5)
-        tl.to(q('[data-itm-card]'), { autoAlpha: 1, scale: 1, y: 0, duration: 0.5 }, 3.9)
-        tl.to(
-          q('[data-itm-stamp]'),
-          { autoAlpha: 1, scale: 1, rotate: -8, duration: 0.25, ease: 'power3.in' },
-          4.4
-        )
-        tl.to({}, { duration: 0.4 }) // settle room at the end of the pin
-      })
-
-      mm.add('(prefers-reduced-motion: reduce)', () => {
-        gsap.set(q('[data-pin]'), { opacity: 1 })
-        gsap.set(q('[data-worker]'), { opacity: 0 })
-        gsap.set(q('[data-route]'), { strokeDashoffset: 0 })
-        gsap.set(q('[data-shift-card]'), { autoAlpha: 1 })
-        gsap.set(q('[data-dawn]'), { opacity: 0.6 })
-        gsap.set(q('[data-itm-card]'), { autoAlpha: 0 })
-        gsap.set(q('[data-caption]'), { autoAlpha: 0 })
-        gsap.set(q('[data-indicator]'), { opacity: 0.5 })
+      // Pins ignite on load
+      gsap.from(q('[data-pin]'), {
+        opacity: 0,
+        scale: 0,
+        duration: 0.6,
+        stagger: 0.08,
+        delay: 0.2,
+        ease: 'back.out(2)',
       })
     },
     { scope: sectionRef }
   )
 
+  const activeActData = ACTS[currentAct]
+
   return (
     <section
       ref={sectionRef}
-      className="relative h-[100svh] overflow-hidden"
+      className="relative h-[92svh] sm:h-[100svh] min-h-[640px] overflow-hidden select-none"
       style={{ background: 'oklch(0.15 0.015 55)' }}
       aria-label="Orașul lucrează — turele pe harta orașului"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Night Map Vector */}
+      {/* ── Night Map Vector (Edge-to-Edge) ────────────────── */}
       <svg
-        className="absolute inset-0 h-full w-full"
+        className="absolute inset-0 h-full w-full pointer-events-none"
         viewBox="0 0 1440 900"
         preserveAspectRatio="xMidYMid slice"
         fill="none"
         aria-hidden="true"
       >
         <g data-map-zoom>
-          {/* Street Grid */}
+          {/* Streets Grid */}
           <g stroke="oklch(0.29 0.02 55)" strokeWidth="2">
             <path d="M0 180 L1440 140" />
             <path d="M0 390 L1440 360" strokeWidth="3.5" />
@@ -195,17 +213,17 @@ export function LivingMapHero() {
             <path d="M380 560 L470 560 L470 620 L380 620 Z" />
           </g>
 
-          {/* Worker Route (drawn during Act 3) */}
+          {/* Worker Route (drawn in Act 3) */}
           <path
             id="gigtim-route"
             data-route
             d="M330 640 C 480 610, 620 470, 900 330"
             stroke="oklch(0.82 0.15 80)"
-            strokeWidth="3"
+            strokeWidth="3.5"
             strokeLinecap="round"
             strokeDasharray="1"
             pathLength="1"
-            opacity="0.85"
+            opacity="0.9"
           />
 
           {/* Shift Pins */}
@@ -214,8 +232,8 @@ export function LivingMapHero() {
               <circle
                 cx={pin.x}
                 cy={pin.y}
-                r={pin.r * 2.6}
-                fill={pin.hero ? 'oklch(0.7 0.19 35 / 0.28)' : 'oklch(0.82 0.15 80 / 0.18)'}
+                r={pin.r * 2.8}
+                fill={pin.hero ? 'oklch(0.7 0.19 35 / 0.3)' : 'oklch(0.82 0.15 80 / 0.18)'}
               />
               <circle
                 cx={pin.x}
@@ -233,11 +251,13 @@ export function LivingMapHero() {
             cy="640"
             r="8"
             fill="oklch(0.72 0.14 150)"
+            stroke="#ffffff"
+            strokeWidth="1.5"
           />
         </g>
       </svg>
 
-      {/* Dawn Sweep Gradient (Act 4) */}
+      {/* ── Dawn Sweep Gradient (Act 4) ────────────────────── */}
       <div
         data-dawn
         className="pointer-events-none absolute inset-0"
@@ -248,15 +268,15 @@ export function LivingMapHero() {
         aria-hidden="true"
       />
 
-      {/* Shift Detail Card (Act 2 - Responsive on Mobile & Desktop) */}
+      {/* ── Shift Detail Card (Act 2 & 3) ──────────────────── */}
       <div
         data-shift-card
-        className="absolute flex w-56 sm:w-64 flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md"
+        className="absolute flex w-48 sm:w-64 flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md"
         style={{
           right: '5%',
-          top: '18%',
+          top: '20%',
           background: 'oklch(0.205 0.012 50 / 0.95)',
-          borderColor: 'oklch(1 0 0 / 0.12)',
+          borderColor: 'oklch(1 0 0 / 0.14)',
         }}
         aria-hidden="true"
       >
@@ -266,8 +286,8 @@ export function LivingMapHero() {
           </span>
           <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
         </div>
-        <span className="font-mono text-[11px] sm:text-xs font-bold" style={{ color: 'oklch(0.82 0.15 80)' }}>
-          35 RON/H · 18:00–23:00
+        <span className="font-mono text-xs font-bold" style={{ color: 'oklch(0.82 0.15 80)' }}>
+          35 LEI/H · 18:00–23:00
         </span>
         <span className="text-[11px] sm:text-xs" style={{ color: 'oklch(0.7 0.015 60)' }}>
           Cafenea în centrul vechi · azi
@@ -280,10 +300,10 @@ export function LivingMapHero() {
         </span>
       </div>
 
-      {/* ITM Register Card (Act 4 - Responsive on Mobile & Desktop) */}
+      {/* ── ITM Register Card (Act 4) ──────────────────────── */}
       <div
         data-itm-card
-        className="absolute left-1/2 top-[24%] sm:top-[28%] flex w-52 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
+        className="absolute left-1/2 top-[20%] sm:top-[26%] flex w-48 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
         style={{ background: 'oklch(0.99 0.008 75)' }}
         aria-hidden="true"
       >
@@ -302,10 +322,11 @@ export function LivingMapHero() {
         </span>
       </div>
 
-      {/* Headline + Value Prop + CTAs */}
-      <div className="absolute bottom-12 left-5 z-10 flex max-w-xl flex-col gap-4 sm:gap-5 md:left-12 md:bottom-20">
+      {/* ── Headline + Value Prop + CTAs (Bottom Left) ─────── */}
+      <div className="absolute bottom-6 sm:bottom-16 left-5 sm:left-12 z-10 flex max-w-xl flex-col gap-3.5 sm:gap-5 pr-4 sm:pr-0">
+        {/* Status Chip */}
         <div
-          className="inline-flex items-center gap-2 self-start rounded-full border px-3.5 sm:px-4 py-1.5 backdrop-blur-md"
+          className="inline-flex items-center gap-2 self-start rounded-full border px-3.5 py-1.5 backdrop-blur-md"
           style={{ borderColor: 'oklch(0.82 0.15 80 / 0.4)', background: 'oklch(0.18 0.01 50 / 0.7)' }}
         >
           <span className="relative flex h-2 w-2">
@@ -320,6 +341,7 @@ export function LivingMapHero() {
           </span>
         </div>
 
+        {/* Hero Title */}
         <h1
           className="font-heading text-3xl sm:text-5xl md:text-6xl font-extrabold leading-[1.08] tracking-tight"
           style={{ color: 'oklch(0.96 0.01 75)' }}
@@ -329,56 +351,93 @@ export function LivingMapHero() {
           <span style={{ color: 'oklch(0.82 0.15 80)' }}>Tu doar alegi tura.</span>
         </h1>
 
+        {/* Hero Body */}
         <p className="max-w-md text-sm sm:text-base leading-relaxed md:text-lg" style={{ color: 'oklch(0.78 0.015 60)' }}>
           Ture de o zi în HoReCa, pe harta orașului tău. Aplici cu un click, angajatorul te
           acceptă, iar registrul ITM se generează automat.
         </p>
 
-        <div className="flex flex-col gap-3 sm:flex-row pt-1">
+        {/* CTAs */}
+        <div className="flex flex-row gap-3 pt-1">
           <Link
             href="/register"
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl px-7 text-sm font-semibold shadow-lg shadow-primary/25 transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
+            className="group inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl px-5 sm:px-7 text-sm font-semibold shadow-lg shadow-primary/25 transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
             style={{ background: 'oklch(0.55 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
           >
-            Creează cont gratuit
+            Creează cont
             <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
           </Link>
           <a
-            href="#features"
-            className="inline-flex h-12 items-center justify-center rounded-xl border px-7 text-sm font-medium transition-colors duration-200 hover:bg-white/5"
+            href="#why-gigtim"
+            className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl border px-4 sm:px-7 text-sm font-medium transition-colors duration-200 hover:bg-white/5"
             style={{ borderColor: 'oklch(1 0 0 / 0.2)', color: 'oklch(0.88 0.01 60)' }}
           >
-            Cum funcționează?
+            De ce GigTim?
           </a>
         </div>
       </div>
 
-      {/* Act Indicator & Captions */}
-      <div className="pointer-events-none absolute bottom-12 right-6 sm:right-12 z-10 flex flex-col items-end gap-2" aria-hidden="true">
-        {/* Progress Dots */}
-        <div className="flex items-center gap-1.5 pb-1">
-          {[0, 1, 2, 3].map((i) => (
-            <span
-              key={i}
-              data-indicator={i}
-              className="h-1.5 w-1.5 rounded-full transition-transform"
-              style={{ background: 'oklch(0.82 0.15 80)' }}
-            />
-          ))}
+      {/* ── Act Switcher Buttons & Captions (Top Right on Mobile, Bottom Right on Desktop) ──── */}
+      <div className="absolute top-20 right-4 sm:top-auto sm:bottom-16 sm:right-12 z-20 flex flex-col items-end gap-2">
+        {/* Minimal Swiss Pill Switcher */}
+        <div
+          className="flex items-center gap-1 sm:gap-1.5 rounded-xl border p-1 backdrop-blur-md shadow-xl"
+          style={{ background: 'oklch(0.18 0.012 50 / 0.85)', borderColor: 'oklch(1 0 0 / 0.15)' }}
+          role="tablist"
+          aria-label="Comută actul demonstrației"
+        >
+          {ACTS.map((act) => {
+            const isActive = currentAct === act.id
+            return (
+              <button
+                key={act.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => transitionToAct(act.id)}
+                className={`relative flex items-center justify-center h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-all duration-200 ${
+                  isActive
+                    ? 'shadow-md scale-105'
+                    : 'opacity-60 hover:opacity-100'
+                }`}
+                style={{
+                  background: isActive ? 'oklch(0.82 0.15 80)' : 'transparent',
+                  color: isActive ? 'oklch(0.15 0.015 55)' : 'oklch(0.92 0.01 75)',
+                }}
+              >
+                <span>{act.label}</span>
+                {/* Active progress micro-indicator */}
+                {isActive && !isPaused && (
+                  <span className="absolute bottom-0.5 left-1 right-1 h-0.5 rounded-full bg-black/30 overflow-hidden">
+                    <span
+                      className="block h-full bg-black/80 transition-all duration-75"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+
+          {/* Play/Pause Toggle */}
+          <button
+            onClick={() => setIsPaused(!isPaused)}
+            className="flex items-center justify-center h-7 sm:h-8 w-7 sm:w-8 rounded-lg transition-opacity opacity-70 hover:opacity-100"
+            style={{ color: 'oklch(0.92 0.01 75)' }}
+            title={isPaused ? 'Reia redarea automată' : 'Pauză animație'}
+            aria-label={isPaused ? 'Reia animația' : 'Pauză animație'}
+          >
+            {isPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+          </button>
         </div>
 
-        {/* Caption Text */}
-        <div className="relative h-5 w-64 sm:w-80">
-          {CAPTIONS.map((text, i) => (
-            <span
-              key={text}
-              data-caption={i}
-              className="absolute right-0 whitespace-nowrap font-mono text-[10px] sm:text-[11px] tracking-widest font-semibold"
-              style={{ color: 'oklch(0.72 0.015 60)' }}
-            >
-              {`${i + 1}/4 — ${text.toUpperCase()}`}
-            </span>
-          ))}
+        {/* Narrative Caption */}
+        <div className="text-right">
+          <span
+            className="font-mono text-[10px] sm:text-[11px] tracking-widest font-semibold drop-shadow-xs"
+            style={{ color: 'oklch(0.72 0.015 60)' }}
+          >
+            {`${currentAct + 1}/4 — ${activeActData.caption.toUpperCase()}`}
+          </span>
         </div>
       </div>
     </section>
