@@ -35,128 +35,158 @@ const ACTS = [
   { id: 3, label: '04', caption: 'Zorii: registrul ITM, gata automat' },
 ]
 
-const ACT_DURATION_MS = 2600 // Snappy 2.6s per act
+const ACT_DURATION_MS = 2500 // Snappy 2.5s per act
 
 export function LivingMapHero() {
   const sectionRef = useRef<HTMLElement>(null)
   const [currentAct, setCurrentAct] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
-  const [progress, setProgress] = useState(0)
+  const currentTimelineRef = useRef<gsap.core.Timeline | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Smoothly transition map elements to a specific act
   const transitionToAct = useCallback((actIndex: number) => {
     setCurrentAct(actIndex)
-    setProgress(0)
 
     if (!sectionRef.current) return
+
+    // Safely kill active timeline and any ongoing tweens to prevent memory leaks
+    if (currentTimelineRef.current) {
+      currentTimelineRef.current.kill()
+    }
     const q = gsap.utils.selector(sectionRef)
+    gsap.killTweensOf(
+      q(
+        '[data-map-zoom], [data-shift-card], [data-match-toast], [data-itm-card], [data-dawn], [data-route], [data-worker], [data-pin], [data-itm-stamp]'
+      )
+    )
+
     const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' } })
+    currentTimelineRef.current = tl
 
     if (actIndex === 0) {
       // Act 1: Night map with all shift pins glowing
-      tl.to(q('[data-map-zoom]'), { scale: 1, svgOrigin: '720 450', duration: 0.7 })
-      tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: 20, duration: 0.25 }, 0)
-      tl.to(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85, duration: 0.25 }, 0)
-      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.4 }, 0)
-      tl.to(q('[data-route]'), { strokeDashoffset: 1, duration: 0.25 }, 0)
+      tl.to(q('[data-map-zoom]'), { scale: 1, svgOrigin: '720 450', duration: 0.65 })
+      tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: 15, duration: 0.2 }, 0)
+      tl.to(q('[data-match-toast]'), { autoAlpha: 0, scale: 0.9, duration: 0.15 }, 0)
+      tl.to(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85, duration: 0.2 }, 0)
+      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.35 }, 0)
+      tl.to(q('[data-route]'), { strokeDashoffset: 1, duration: 0.2 }, 0)
       tl.to(q('[data-worker]'), { opacity: 0, duration: 0.2 }, 0)
       tl.fromTo(
         q('[data-pin]'),
         { scale: 0.8, opacity: 0.6 },
-        { scale: 1, opacity: 1, stagger: 0.04, duration: 0.4 },
-        0.1
+        { scale: 1, opacity: 1, stagger: 0.03, duration: 0.35 },
+        0.05
       )
     } else if (actIndex === 1) {
       // Act 2: Camera zooms to café pin, shift card rises
-      tl.to(q('[data-map-zoom]'), { scale: 1.5, svgOrigin: '900 320', duration: 0.75 })
-      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.3 }, 0)
+      tl.to(q('[data-map-zoom]'), { scale: 1.5, svgOrigin: '900 320', duration: 0.7 })
+      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.25 }, 0)
+      tl.to(q('[data-match-toast]'), { autoAlpha: 0, duration: 0.15 }, 0)
       tl.to(q('[data-itm-card]'), { autoAlpha: 0, duration: 0.2 }, 0)
       tl.to(q('[data-route]'), { strokeDashoffset: 1, duration: 0.2 }, 0)
       tl.to(q('[data-worker]'), { opacity: 0, duration: 0.2 }, 0)
       tl.fromTo(
         q('[data-shift-card]'),
-        { autoAlpha: 0, y: 22 },
-        { autoAlpha: 1, y: 0, duration: 0.4 },
-        0.25
+        { autoAlpha: 0, y: 18 },
+        { autoAlpha: 1, y: 0, duration: 0.35 },
+        0.2
       )
     } else if (actIndex === 2) {
-      // Act 3: Worker dot traverses route to match & mutual pulse
-      tl.to(q('[data-map-zoom]'), { scale: 1.4, svgOrigin: '720 400', duration: 0.7 })
-      tl.to(q('[data-shift-card]'), { autoAlpha: 1, y: 0, duration: 0.25 }, 0)
+      // Act 3: Worker traverses route to match & mutual pulse
+      tl.to(q('[data-map-zoom]'), { scale: 1.4, svgOrigin: '720 400', duration: 0.65 })
+      tl.to(q('[data-shift-card]'), { autoAlpha: 1, y: 0, duration: 0.2 }, 0)
       tl.to(q('[data-itm-card]'), { autoAlpha: 0, duration: 0.2 }, 0)
-      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.25 }, 0)
-      tl.to(q('[data-route]'), { strokeDashoffset: 0, duration: 0.7 }, 0.15)
-      tl.to(q('[data-worker]'), { opacity: 1, duration: 0.1 }, 0.15)
+      tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.2 }, 0)
+      tl.to(q('[data-route]'), { strokeDashoffset: 0, duration: 0.65 }, 0.1)
+      tl.to(q('[data-worker]'), { opacity: 1, duration: 0.1 }, 0.1)
       tl.fromTo(
         q('[data-worker]'),
         { motionPath: { path: '#gigtim-route', align: '#gigtim-route', alignOrigin: [0.5, 0.5], end: 0 } },
-        { motionPath: { path: '#gigtim-route', align: '#gigtim-route', alignOrigin: [0.5, 0.5], end: 1 }, duration: 0.75, ease: 'power1.inOut' },
-        0.15
+        { motionPath: { path: '#gigtim-route', align: '#gigtim-route', alignOrigin: [0.5, 0.5], end: 1 }, duration: 0.7, ease: 'power1.inOut' },
+        0.1
+      )
+      tl.fromTo(
+        q('[data-match-toast]'),
+        { autoAlpha: 0, y: 8, scale: 0.94 },
+        { autoAlpha: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.5)' },
+        0.7
       )
       tl.to(
         [...q('[data-worker]'), ...q('[data-pin-hero]')],
-        { scale: 1.6, duration: 0.12, repeat: 3, yoyo: true, transformOrigin: '50% 50%' },
-        0.9
+        { scale: 1.5, duration: 0.12, repeat: 3, yoyo: true, transformOrigin: '50% 50%' },
+        0.75
       )
     } else if (actIndex === 3) {
       // Act 4: Dawn sweep & stamped ITM register card
-      tl.to(q('[data-map-zoom]'), { scale: 1.18, svgOrigin: '720 450', duration: 0.7 })
-      tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: -16, duration: 0.25 }, 0)
-      tl.to(q('[data-route]'), { strokeDashoffset: 0, opacity: 0.35, duration: 0.3 }, 0)
-      tl.to(q('[data-dawn]'), { opacity: 1, duration: 0.7 }, 0.1)
+      tl.to(q('[data-map-zoom]'), { scale: 1.18, svgOrigin: '720 450', duration: 0.65 })
+      tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: -14, duration: 0.2 }, 0)
+      tl.to(q('[data-match-toast]'), { autoAlpha: 0, duration: 0.15 }, 0)
+      tl.to(q('[data-route]'), { strokeDashoffset: 0, opacity: 0.35, duration: 0.25 }, 0)
+      tl.to(q('[data-dawn]'), { opacity: 1, duration: 0.65 }, 0.1)
       tl.fromTo(
         q('[data-itm-card]'),
-        { autoAlpha: 0, scale: 0.85, y: 18 },
-        { autoAlpha: 1, scale: 1, y: 0, duration: 0.4 },
-        0.25
+        { autoAlpha: 0, scale: 0.88, y: 16 },
+        { autoAlpha: 1, scale: 1, y: 0, duration: 0.35 },
+        0.2
       )
       tl.fromTo(
         q('[data-itm-stamp]'),
-        { autoAlpha: 0, scale: 1.7, rotate: 12 },
+        { autoAlpha: 0, scale: 1.6, rotate: 12 },
         { autoAlpha: 1, scale: 1, rotate: -6, duration: 0.25, ease: 'power3.in' },
-        0.55
+        0.5
       )
     }
   }, [])
 
-  // Autoplay ticker (~2.8s per act)
+  // Autoplay ticker — 0 React re-renders during an act, 100% leak-free
   useEffect(() => {
-    if (isPaused) return
-    const tickInterval = 40 // 40ms resolution
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + (tickInterval / ACT_DURATION_MS) * 100
-        if (next >= 100) {
-          const nextAct = (currentAct + 1) % ACTS.length
-          transitionToAct(nextAct)
-          return 0
-        }
-        return next
-      })
-    }, tickInterval)
+    if (isPaused) {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      return
+    }
 
-    return () => clearInterval(interval)
+    timerRef.current = setTimeout(() => {
+      const nextAct = (currentAct + 1) % ACTS.length
+      transitionToAct(nextAct)
+    }, ACT_DURATION_MS)
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
   }, [isPaused, currentAct, transitionToAct])
 
-  // Initial setup on mount
+  // Initial setup on mount: starts immediately after opening!
   useGSAP(
     () => {
       const q = gsap.utils.selector(sectionRef)
       gsap.set(q('[data-shift-card]'), { autoAlpha: 0, y: 20 })
+      gsap.set(q('[data-match-toast]'), { autoAlpha: 0, scale: 0.9 })
       gsap.set(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85 })
       gsap.set(q('[data-route]'), { strokeDashoffset: 1 })
       gsap.set(q('[data-worker]'), { opacity: 0 })
       gsap.set(q('[data-dawn]'), { opacity: 0 })
 
-      // Pins ignite on load
+      // Pins ignite immediately with energy
       gsap.from(q('[data-pin]'), {
         opacity: 0,
         scale: 0,
-        duration: 0.6,
-        stagger: 0.08,
-        delay: 0.2,
+        duration: 0.35,
+        stagger: 0.04,
         ease: 'back.out(2)',
       })
+
+      // Start the animated journey straight after opening (450ms)
+      const startTimer = setTimeout(() => {
+        transitionToAct(1)
+      }, 450)
+
+      return () => {
+        clearTimeout(startTimer)
+        if (currentTimelineRef.current) currentTimelineRef.current.kill()
+        if (timerRef.current) clearTimeout(timerRef.current)
+      }
     },
     { scope: sectionRef }
   )
@@ -172,6 +202,13 @@ export function LivingMapHero() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
+      <style>{`
+        @keyframes hero-act-progress {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+      `}</style>
+
       {/* ── Night Map Vector (Edge-to-Edge) ────────────────── */}
       <svg
         className="absolute inset-0 h-full w-full pointer-events-none"
@@ -268,13 +305,13 @@ export function LivingMapHero() {
         aria-hidden="true"
       />
 
-      {/* ── Shift Detail Card (Act 2 & 3) ──────────────────── */}
+      {/* ── Shift Detail Card (Act 2 & 3) — Personal Timișoara HoReCa ── */}
       <div
         data-shift-card
-        className="absolute flex w-48 sm:w-64 flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md"
+        className="absolute flex w-52 sm:w-68 flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md"
         style={{
           right: '5%',
-          top: '20%',
+          top: '18%',
           background: 'oklch(0.205 0.012 50 / 0.95)',
           borderColor: 'oklch(1 0 0 / 0.14)',
         }}
@@ -282,22 +319,57 @@ export function LivingMapHero() {
       >
         <div className="flex items-center justify-between">
           <span className="font-heading text-xs sm:text-sm font-bold" style={{ color: 'oklch(0.96 0.01 75)' }}>
-            Ospătar — Piața Unirii
+            Barista Specialist
           </span>
-          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-medium">
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            URGENT
+          </span>
         </div>
-        <span className="font-mono text-xs font-bold" style={{ color: 'oklch(0.82 0.15 80)' }}>
-          35 LEI/H · 18:00–23:00
-        </span>
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-sm sm:text-base font-extrabold" style={{ color: 'oklch(0.82 0.15 80)' }}>
+            40 LEI/H
+          </span>
+          <span className="font-mono text-xs opacity-75" style={{ color: 'oklch(0.92 0.01 75)' }}>
+            17:00–23:00 (240 lei)
+          </span>
+        </div>
         <span className="text-[11px] sm:text-xs" style={{ color: 'oklch(0.7 0.015 60)' }}>
-          Cafenea în centrul vechi · azi
+          Cafeneaua din Cetate · Piața Unirii
         </span>
-        <span
-          className="mt-1 inline-flex h-8 sm:h-9 items-center justify-center rounded-xl text-[11px] sm:text-xs font-semibold shadow"
-          style={{ background: 'oklch(0.62 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
-        >
-          Aplică cu un click
-        </span>
+        <div className="mt-1 flex items-center gap-2">
+          <span
+            className="flex-1 inline-flex h-8 sm:h-9 items-center justify-center rounded-xl text-[11px] sm:text-xs font-semibold shadow"
+            style={{ background: 'oklch(0.62 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
+          >
+            Aplică cu un click
+          </span>
+        </div>
+      </div>
+
+      {/* ── Match Confirmation Toast (Act 3) — Human Touch ── */}
+      <div
+        data-match-toast
+        className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md"
+        style={{
+          right: '5%',
+          top: '38%',
+          background: 'oklch(0.18 0.012 50 / 0.95)',
+          borderColor: 'oklch(0.48 0.13 150 / 0.5)',
+        }}
+        aria-hidden="true"
+      >
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-sm">
+          ✓
+        </div>
+        <div className="flex flex-col">
+          <span className="font-heading text-xs sm:text-sm font-bold" style={{ color: 'oklch(0.96 0.01 75)' }}>
+            Andrei M. · Barista
+          </span>
+          <span className="text-[11px] font-mono" style={{ color: 'oklch(0.48 0.13 150)' }}>
+            4.9 ★ (28 ture) · Sosește în 12 min
+          </span>
+        </div>
       </div>
 
       {/* ── ITM Register Card (Act 4) ──────────────────────── */}
@@ -323,7 +395,7 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Headline + Value Prop + CTAs (Bottom Left) ─────── */}
-      <div className="absolute bottom-10 sm:bottom-20 md:bottom-24 left-5 sm:left-12 z-20 flex max-w-xl flex-col gap-3.5 sm:gap-5 pr-4 sm:pr-0">
+      <div className="absolute bottom-8 sm:bottom-16 left-5 sm:left-12 z-20 flex max-w-xl flex-col gap-3.5 sm:gap-5 pr-4 sm:pr-0">
         {/* Status Chip */}
         <div
           className="inline-flex items-center gap-2 self-start rounded-full border px-3.5 py-1.5 backdrop-blur-md"
@@ -378,7 +450,7 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Act Switcher Buttons & Captions (Top Right on Mobile, Bottom Right on Desktop) ──── */}
-      <div className="absolute top-20 right-4 sm:top-auto sm:bottom-20 md:bottom-24 sm:right-12 z-20 flex flex-col items-end gap-2">
+      <div className="absolute top-20 right-4 sm:top-auto sm:bottom-16 sm:right-12 z-20 flex flex-col items-end gap-2">
         {/* Minimal Swiss Pill Switcher */}
         <div
           className="flex items-center gap-1 sm:gap-1.5 rounded-xl border p-1 backdrop-blur-md shadow-xl"
@@ -407,12 +479,16 @@ export function LivingMapHero() {
                 <span className={`leading-none ${isActive ? '-translate-y-[1px]' : ''}`}>
                   {act.label}
                 </span>
-                {/* Active progress micro-indicator — perfectly centered horizontally and vertically */}
-                {isActive && !isPaused && (
+                {/* Active progress micro-indicator — GPU compositor animation (0 React renders!) */}
+                {isActive && (
                   <span className="absolute bottom-[3px] sm:bottom-1 left-1/2 -translate-x-1/2 w-3.5 sm:w-4 h-0.5 rounded-full bg-black/25 overflow-hidden">
                     <span
-                      className="block h-full bg-black/80 transition-all duration-75"
-                      style={{ width: `${progress}%` }}
+                      key={`progress-${act.id}`}
+                      className="block h-full bg-black/80 origin-left"
+                      style={{
+                        animation: `hero-act-progress ${ACT_DURATION_MS}ms linear forwards`,
+                        animationPlayState: isPaused ? 'paused' : 'running',
+                      }}
                     />
                   </span>
                 )}
@@ -443,35 +519,15 @@ export function LivingMapHero() {
         </div>
       </div>
 
-      {/* ── Zori Horizon Bridge: Smooth Architectural Transition to Content ── */}
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 overflow-hidden leading-none select-none">
-        {/* Atmospheric Dawn Glow / Light Bleed */}
-        <div
-          className="h-20 sm:h-32 w-full"
-          style={{
-            background:
-              'linear-gradient(to bottom, transparent 0%, oklch(0.62 0.19 35 / 0.08) 35%, oklch(0.82 0.15 80 / 0.18) 70%, var(--background) 100%)',
-          }}
-        />
-        {/* Precision SVG Horizon Curve */}
-        <svg
-          viewBox="0 0 1440 60"
-          preserveAspectRatio="none"
-          className="relative block h-7 sm:h-11 md:h-14 w-[calc(100%+1.3px)]"
-          aria-hidden="true"
-        >
-          <path
-            d="M0,28 Q720,0 1440,28 L1440,60 L0,60 Z"
-            fill="var(--background)"
-          />
-          <path
-            d="M0,28 Q720,0 1440,28"
-            fill="none"
-            stroke="oklch(0.82 0.15 80 / 0.4)"
-            strokeWidth="1.5"
-          />
-        </svg>
-      </div>
+      {/* ── Seamless atmospheric dissolve into the page body (Zero weird curves or shapes) ── */}
+      <div
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-28 sm:h-36 z-10 select-none"
+        style={{
+          background:
+            'linear-gradient(to bottom, transparent 0%, oklch(0.15 0.015 55 / 0.4) 35%, var(--background) 100%)',
+        }}
+        aria-hidden="true"
+      />
     </section>
   )
 }
