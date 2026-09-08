@@ -508,7 +508,8 @@ export async function getUserReviews(userId: string) {
     try {
       const [rows] = await connection.query<any[]>(
         `SELECT r.*, u.email as reviewer_email,
-                COALESCE(w.full_name, e.company_name) as reviewer_name
+                COALESCE(w.full_name, e.company_name) as reviewer_name,
+                u.avatar_url as reviewer_avatar
          FROM reviews r
          JOIN users u ON r.reviewer_id = u.id
          LEFT JOIN worker_profiles w ON u.id = w.user_id
@@ -610,7 +611,8 @@ export async function getChatMessages(roomId: string) {
     try {
       const [rows] = await connection.query<any[]>(
         `SELECT cm.*, u.email as sender_email,
-                COALESCE(w.full_name, e.company_name, u.email) as sender_name
+                COALESCE(w.full_name, e.company_name, u.email) as sender_name,
+                u.avatar_url as sender_avatar
          FROM chat_messages cm
          JOIN users u ON cm.sender_id = u.id
          LEFT JOIN worker_profiles w ON u.id = w.user_id

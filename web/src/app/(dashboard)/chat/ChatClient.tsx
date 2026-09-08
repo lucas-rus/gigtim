@@ -22,10 +22,11 @@ function useCurrentTime() {
 interface ChatClientProps {
   initialRooms: any[]
   userId: string | null
+  currentUserAvatar?: string | null
   potentialConnections: any[]
 }
 
-export function ChatClient({ initialRooms, userId, potentialConnections }: ChatClientProps) {
+export function ChatClient({ initialRooms, userId, currentUserAvatar, potentialConnections }: ChatClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlRoomId = searchParams.get('room')
@@ -82,6 +83,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
       id: `temp-${Date.now()}`,
       sender_id: userId,
       sender_name: 'Tu',
+      sender_avatar: currentUserAvatar || null,
       is_mine: true,
       content: msg,
       created_at: new Date().toISOString(),
@@ -181,21 +183,35 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                     <button
                       key={room.room_id}
                       onClick={() => selectRoom(room.room_id)}
-                      className={`w-full text-left px-4 py-4 transition-all duration-200 ${
+                      className={`w-full text-left px-4 py-3.5 transition-all duration-200 flex items-center gap-3 ${
                         isSelected
                           ? 'bg-accent dark:bg-muted/30 border-l-4 border-l-primary'
                           : 'bg-transparent hover:bg-muted/20 dark:hover:bg-muted/10 border-l-4 border-l-transparent'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm font-semibold truncate font-sans ${isSelected ? 'text-primary' : 'text-foreground'}`}>{room.other_name || 'Chat'}</p>
-                        <span className="text-[10px] text-muted-foreground font-sans shrink-0">{timeAgo(room.last_message_at)}</span>
+                      <Avatar className="h-10 w-10 border border-border rounded-xl shrink-0">
+                        {room.other_avatar && (
+                          <AvatarImage
+                            src={room.other_avatar}
+                            alt={room.other_name || 'Avatar'}
+                            className="object-cover rounded-xl"
+                          />
+                        )}
+                        <AvatarFallback className="bg-primary/5 text-primary dark:bg-accent text-foreground font-bold text-xs font-heading rounded-xl">
+                          {room.other_name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-sm font-semibold truncate font-sans ${isSelected ? 'text-primary' : 'text-foreground'}`}>{room.other_name || 'Chat'}</p>
+                          <span className="text-[10px] text-muted-foreground font-sans shrink-0">{timeAgo(room.last_message_at)}</span>
+                        </div>
+                        {room.last_message && (
+                          <p className="text-xs text-muted-foreground mt-1 truncate font-sans">
+                            {room.last_sender_id === userId ? 'Tu: ' : ''}{room.last_message}
+                          </p>
+                        )}
                       </div>
-                      {room.last_message && (
-                        <p className="text-xs text-muted-foreground mt-1.5 truncate font-sans">
-                          {room.last_sender_id === userId ? 'Tu: ' : ''}{room.last_message}
-                        </p>
-                      )}
                     </button>
                   )
                 })
@@ -211,7 +227,7 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                   className="h-9 rounded-xl bg-background dark:bg-background/20 border border-border/80 text-xs font-sans placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
                 />
               </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-border/40">
+              <div className="flex-1 overflow-y-auto divide-y border-b border-border/40">
                 {filteredConnections.length === 0 ? (
                   <div className="p-6 text-center text-xs text-muted-foreground font-sans">
                     Nicio conexiune găsită
@@ -268,17 +284,29 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
           ) : (
             <>
               {/* Header */}
-              <div className="px-5 py-4 border-b border-border/60 bg-muted/30 dark:bg-muted/10 flex items-center justify-between">
-                <div className="flex items-center">
+              <div className="px-5 py-3.5 border-b border-border/60 bg-muted/30 dark:bg-muted/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   {/* Mobile Back Button */}
                   <Button 
                     onClick={() => setShowInbox(true)} 
                     variant="ghost"
                     size="icon"
-                    className="md:hidden h-8 w-8 rounded-xl p-0 mr-3 hover:bg-accent flex items-center justify-center text-foreground transition-all duration-200"
+                    className="md:hidden h-8 w-8 rounded-xl p-0 hover:bg-accent flex items-center justify-center text-foreground transition-all duration-200"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
+                  <Avatar className="h-9 w-9 border border-border rounded-xl shrink-0">
+                    {selectedRoomData?.other_avatar && (
+                      <AvatarImage
+                        src={selectedRoomData.other_avatar}
+                        alt={selectedRoomData.other_name || 'Avatar'}
+                        className="object-cover rounded-xl"
+                      />
+                    )}
+                    <AvatarFallback className="bg-primary/5 text-primary dark:bg-accent text-foreground font-bold text-xs font-heading rounded-xl">
+                      {selectedRoomData?.other_name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <p className="font-semibold font-heading text-sm text-foreground">{selectedRoomData?.other_name || 'Chat'}</p>
                     <p className="text-[10px] font-sans text-muted-foreground uppercase tracking-widest mt-0.5">conversație activă</p>
@@ -295,8 +323,25 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                 ) : (
                   messages.map((msg) => {
                     const isMine = msg.is_mine ?? msg.sender_id === userId
+                    const displayAvatar = isMine 
+                      ? (msg.sender_avatar || currentUserAvatar) 
+                      : (msg.sender_avatar || selectedRoomData?.other_avatar)
                     return (
-                    <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div key={msg.id} className={`flex gap-2.5 ${isMine ? 'justify-end items-start' : 'justify-start items-start'}`}>
+                      {!isMine && (
+                        <Avatar className="h-7 w-7 border border-border rounded-lg shrink-0 mt-0.5">
+                          {displayAvatar && (
+                            <AvatarImage
+                              src={displayAvatar}
+                              alt={msg.sender_name || 'Avatar'}
+                              className="object-cover rounded-lg"
+                            />
+                          )}
+                          <AvatarFallback className="bg-muted text-[10px] font-semibold text-foreground font-sans rounded-lg">
+                            {(msg.sender_name || '?')[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                       <div className={`max-w-[75%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
                         {!isMine && (
                           <p className="text-[10px] font-semibold text-muted-foreground mb-1 font-sans uppercase tracking-widest">{msg.sender_name}</p>
@@ -312,6 +357,20 @@ export function ChatClient({ initialRooms, userId, potentialConnections }: ChatC
                           {timeAgo(msg.created_at)}
                         </p>
                       </div>
+                      {isMine && (
+                        <Avatar className="h-7 w-7 border border-border rounded-lg shrink-0 mt-0.5">
+                          {displayAvatar && (
+                            <AvatarImage
+                              src={displayAvatar}
+                              alt="Tu"
+                              className="object-cover rounded-lg"
+                            />
+                          )}
+                          <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary font-sans rounded-lg">
+                            Tu
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
                     )
                   })

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
@@ -209,7 +209,14 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
               <CardHeader className="pb-3 px-5 pt-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border border-border rounded-xl">
+                    <Avatar className="h-9 w-9 border border-border rounded-xl shrink-0">
+                      {post.author_avatar && (
+                        <AvatarImage
+                          src={post.author_avatar}
+                          alt={post.author_name || 'Avatar'}
+                          className="object-cover rounded-xl"
+                        />
+                      )}
                       <AvatarFallback className="text-xs font-bold bg-primary/5 text-primary dark:bg-muted dark:text-primary font-sans rounded-xl">
                         {(post.author_name || '?').split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                       </AvatarFallback>
@@ -247,7 +254,14 @@ export function ForumClient({ initialPosts, _userId }: ForumClientProps) {
                       ) : (
                         (comments[post.id] || []).map((c: any, index: number) => (
                           <div key={c.id} className={`flex gap-3 text-xs ${index > 0 ? 'pt-3' : ''}`}>
-                            <Avatar className="h-7 w-7 border border-border rounded-lg">
+                            <Avatar className="h-7 w-7 border border-border rounded-lg shrink-0">
+                              {c.author_avatar && (
+                                <AvatarImage
+                                  src={c.author_avatar}
+                                  alt={c.author_name || 'Avatar'}
+                                  className="object-cover rounded-lg"
+                                />
+                              )}
                               <AvatarFallback className="text-[10px] font-semibold bg-muted dark:bg-accent text-foreground font-sans rounded-lg">
                                 {(c.author_name || '?')[0]}
                               </AvatarFallback>

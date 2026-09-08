@@ -15,6 +15,7 @@ export default async function ChatPage() {
     <ChatClient 
       initialRooms={rooms} 
       userId={profile?.id || null} 
+      currentUserAvatar={profile?.avatar_url || null}
       potentialConnections={connections}
     />
   )
