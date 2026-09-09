@@ -57,22 +57,24 @@ export function LivingMapHero() {
     const q = gsap.utils.selector(sectionRef)
     gsap.killTweensOf(
       q(
-        '[data-map-zoom], [data-shift-card], [data-match-toast], [data-itm-card], [data-dawn], [data-route], [data-worker], [data-pin], [data-itm-stamp]'
+        '[data-map-zoom], [data-shift-card], [data-match-toast], [data-itm-card], [data-dawn], [data-route], [data-worker], [data-pin], [data-itm-stamp], [data-pin-hero]'
       )
     )
 
     const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' } })
     currentTimelineRef.current = tl
 
+    // CRITICAL: svgOrigin is strictly invariant ('750 450') across ALL acts to guarantee 0 cumulative matrix drift!
     if (actIndex === 0) {
-      // Act 1: Night map with all shift pins glowing — panoramic view over Timișoara
-      tl.to(q('[data-map-zoom]'), { scale: 1, svgOrigin: '750 450', duration: 0.65 })
+      // Act 1: Panoramic night map with all shift pins glowing
+      tl.to(q('[data-map-zoom]'), { scale: 1, x: 0, y: 0, duration: 0.65 })
       tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: 15, duration: 0.2 }, 0)
       tl.to(q('[data-match-toast]'), { autoAlpha: 0, scale: 0.9, duration: 0.15 }, 0)
       tl.to(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85, duration: 0.2 }, 0)
       tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.35 }, 0)
       tl.to(q('[data-route]'), { strokeDashoffset: 1, duration: 0.2 }, 0)
       tl.to(q('[data-worker]'), { opacity: 0, duration: 0.2 }, 0)
+      tl.set(q('[data-worker], [data-pin-hero]'), { scale: 1 }, 0)
       tl.fromTo(
         q('[data-pin]'),
         { scale: 0.8, opacity: 0.6 },
@@ -80,13 +82,14 @@ export function LivingMapHero() {
         0.05
       )
     } else if (actIndex === 1) {
-      // Act 2: Smooth camera zoom to Piața Unirii café pin, shift card rises (NO drift up-and-right!)
-      tl.to(q('[data-map-zoom]'), { scale: 1.35, svgOrigin: '750 380', duration: 0.7 })
+      // Act 2: Smooth camera zoom to Piața Unirii café pin, shift card rises (Zero drift!)
+      tl.to(q('[data-map-zoom]'), { scale: 1.25, x: 0, y: 25, duration: 0.7 })
       tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.25 }, 0)
       tl.to(q('[data-match-toast]'), { autoAlpha: 0, duration: 0.15 }, 0)
       tl.to(q('[data-itm-card]'), { autoAlpha: 0, duration: 0.2 }, 0)
       tl.to(q('[data-route]'), { strokeDashoffset: 1, duration: 0.2 }, 0)
       tl.to(q('[data-worker]'), { opacity: 0, duration: 0.2 }, 0)
+      tl.set(q('[data-worker], [data-pin-hero]'), { scale: 1 }, 0)
       tl.fromTo(
         q('[data-shift-card]'),
         { autoAlpha: 0, y: 18 },
@@ -95,7 +98,7 @@ export function LivingMapHero() {
       )
     } else if (actIndex === 2) {
       // Act 3: Worker crosses Podul Michelangelo from Complex Studențesc to Unirii
-      tl.to(q('[data-map-zoom]'), { scale: 1.3, svgOrigin: '790 480', duration: 0.65 })
+      tl.to(q('[data-map-zoom]'), { scale: 1.2, x: -20, y: -15, duration: 0.65 })
       tl.to(q('[data-shift-card]'), { autoAlpha: 1, y: 0, duration: 0.2 }, 0)
       tl.to(q('[data-itm-card]'), { autoAlpha: 0, duration: 0.2 }, 0)
       tl.to(q('[data-dawn]'), { opacity: 0, duration: 0.2 }, 0)
@@ -115,12 +118,12 @@ export function LivingMapHero() {
       )
       tl.to(
         [...q('[data-worker]'), ...q('[data-pin-hero]')],
-        { scale: 1.5, duration: 0.12, repeat: 3, yoyo: true, transformOrigin: '50% 50%' },
+        { scale: 1.35, duration: 0.12, repeat: 3, yoyo: true, transformOrigin: '50% 50%' },
         0.75
       )
     } else if (actIndex === 3) {
       // Act 4: Dawn sweep & stamped ITM register card
-      tl.to(q('[data-map-zoom]'), { scale: 1.15, svgOrigin: '750 450', duration: 0.65 })
+      tl.to(q('[data-map-zoom]'), { scale: 1.06, x: 0, y: 0, duration: 0.65 })
       tl.to(q('[data-shift-card]'), { autoAlpha: 0, y: -14, duration: 0.2 }, 0)
       tl.to(q('[data-match-toast]'), { autoAlpha: 0, duration: 0.15 }, 0)
       tl.to(q('[data-route]'), { strokeDashoffset: 0, opacity: 0.35, duration: 0.25 }, 0)
@@ -175,11 +178,13 @@ export function LivingMapHero() {
   useGSAP(
     () => {
       const q = gsap.utils.selector(sectionRef)
+      gsap.set(q('[data-map-zoom]'), { scale: 1, x: 0, y: 0 })
       gsap.set(q('[data-shift-card]'), { autoAlpha: 0, y: 20 })
       gsap.set(q('[data-match-toast]'), { autoAlpha: 0, scale: 0.9 })
       gsap.set(q('[data-itm-card]'), { autoAlpha: 0, scale: 0.85 })
       gsap.set(q('[data-route]'), { strokeDashoffset: 1 })
-      gsap.set(q('[data-worker]'), { opacity: 0 })
+      gsap.set(q('[data-worker]'), { opacity: 0, scale: 1 })
+      gsap.set(q('[data-pin-hero]'), { scale: 1 })
       gsap.set(q('[data-dawn]'), { opacity: 0 })
 
       // Pins ignite immediately with energy on Act 0
@@ -215,9 +220,15 @@ export function LivingMapHero() {
         }
       `}</style>
 
-      {/* ── Night Map Vector (Edge-to-Edge) ────────────────── */}
+      {/* ── Night Map Vector (Edge-to-Edge Realistic Timișoara Cartography) ── */}
+      {/* Hardware-accelerated CSS transform container — strictly 0.000% matrix accumulation error */}
+      <div
+        data-map-zoom
+        className="absolute inset-0 h-full w-full pointer-events-none will-change-transform"
+        style={{ transformOrigin: '52% 42%' }}
+      >
       <svg
-        className="absolute inset-0 h-full w-full pointer-events-none"
+        className="h-full w-full"
         viewBox="0 0 1440 900"
         preserveAspectRatio="xMidYMid slice"
         fill="none"
@@ -225,162 +236,287 @@ export function LivingMapHero() {
       >
         <defs>
           <linearGradient id="bega-water" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1a3b47" stopOpacity="0.8" />
-            <stop offset="50%" stopColor="#214d5e" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#1a3b47" stopOpacity="0.8" />
+            <stop offset="0%" stopColor="#142e38" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#1b4252" stopOpacity="0.95" />
+            <stop offset="70%" stopColor="#214d5e" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#163440" stopOpacity="0.9" />
           </linearGradient>
           <linearGradient id="bega-glow" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#2a657d" stopOpacity="0.2" />
-            <stop offset="50%" stopColor="#3888a8" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#2a657d" stopOpacity="0.2" />
+            <stop offset="0%" stopColor="#2a657d" stopOpacity="0.15" />
+            <stop offset="50%" stopColor="#3888a8" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#2a657d" stopOpacity="0.15" />
           </linearGradient>
         </defs>
 
-        <g data-map-zoom>
-          {/* ── Parks / Green Spaces along Bega & Cetate ── */}
-          <g fill="#1a2e22" opacity="0.45">
+
+          {/* 1. Parks & Green Belts along Bega & Citadel */}
+          <g fill="#17281c" opacity="0.5">
             {/* Parcul Botanic (North of Cetate) */}
-            <path d="M 640 270 L 710 270 L 700 320 L 630 320 Z" />
-            {/* Parcul Central Anton Scudier (South-West of Cathedral) */}
-            <path d="M 600 520 L 680 520 L 670 580 L 590 570 Z" />
-            {/* Parcul Justiției */}
-            <path d="M 700 515 L 750 515 L 745 540 L 695 540 Z" />
+            <path d="M 620 250 C 660 250, 710 260, 710 300 C 680 315, 630 310, 615 280 Z" />
+            {/* Parcul Central Anton Scudier (West of Cathedral) */}
+            <path d="M 580 500 C 630 495, 675 510, 670 560 C 620 565, 580 550, 575 515 Z" />
+            {/* Parcul Justiției (Between Cathedral and Michelangelo) */}
+            <path d="M 690 505 C 730 505, 755 510, 750 535 C 710 535, 685 525, 685 510 Z" />
             {/* Parcul Rozelor (Rose Park along Bega) */}
-            <path d="M 765 545 L 830 545 L 820 600 L 760 595 Z" />
-            {/* Parcul Copiilor (Children's Park) */}
-            <path d="M 840 550 L 920 550 L 910 610 L 835 605 Z" />
+            <path d="M 760 535 C 810 535, 830 545, 825 585 C 780 585, 755 570, 755 545 Z" />
+            {/* Parcul Copiilor Ion Creangă (Children's Park) */}
+            <path d="M 835 540 C 895 540, 925 550, 920 595 C 865 595, 830 585, 830 550 Z" />
             {/* Parcul Regina Maria (East) */}
-            <path d="M 1030 510 L 1110 500 L 1100 540 L 1025 545 Z" />
+            <path d="M 1030 500 C 1080 490, 1120 500, 1115 535 C 1065 540, 1025 530, 1025 510 Z" />
+            {/* Pădurea Verde hint (Far North-East) */}
+            <path d="M 1200 80 C 1280 70, 1380 90, 1360 180 C 1270 170, 1190 140, 1200 80 Z" />
           </g>
 
-          {/* ── Secondary Streets Grid (Fabric, Iosefin, Elisabetin, Circumvalațiunii) ── */}
-          <g stroke="#2a2522" strokeWidth="1.5" opacity="0.65">
-            {/* Fabric Grid (East) */}
-            <path d="M 1000 240 L 1380 240 M 1000 300 L 1400 300 M 1050 420 L 1400 420 M 1020 480 L 1380 480" />
-            <path d="M 1080 200 L 1080 500 M 1160 200 L 1160 520 M 1240 200 L 1240 540 M 1320 200 L 1320 550" />
+          {/* 2. Urban Blocks / Building Footprints (Atmospheric city texture) */}
+          <g fill="#1f1b18" stroke="#2a2420" strokeWidth="1" opacity="0.6">
+            {/* Cetate Quarter Blocks */}
+            <rect x="655" y="325" width="45" height="40" rx="3" />
+            <rect x="655" y="380" width="45" height="35" rx="3" />
+            <rect x="785" y="325" width="40" height="40" rx="3" />
+            <rect x="785" y="380" width="40" height="35" rx="3" />
+            {/* Complex Studențesc Dorms & Campus */}
+            <rect x="870" y="650" width="55" height="30" rx="2" />
+            <rect x="940" y="650" width="55" height="30" rx="2" />
+            <rect x="870" y="700" width="55" height="30" rx="2" />
+            <rect x="940" y="700" width="55" height="30" rx="2" />
+            {/* Iosefin Residential Blocks */}
+            <rect x="360" y="590" width="60" height="40" rx="2" />
+            <rect x="440" y="590" width="60" height="40" rx="2" />
+            <rect x="360" y="650" width="60" height="40" rx="2" />
+            <rect x="440" y="650" width="60" height="40" rx="2" />
+            {/* Fabric Residential Blocks */}
+            <rect x="1100" y="370" width="50" height="35" rx="2" />
+            <rect x="1170" y="370" width="50" height="35" rx="2" />
+            <rect x="1100" y="425" width="50" height="35" rx="2" />
+            <rect x="1170" y="425" width="50" height="35" rx="2" />
+          </g>
+
+          {/* 3. Secondary / Residential Streets (Grid Network) */}
+          <g stroke="#26211d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8">
+            {/* Fabric Street Grid (East) */}
+            <path d="M 980 240 L 1400 240 M 980 300 L 1420 300 M 1040 420 L 1420 420 M 1020 480 L 1400 480" />
+            <path d="M 1060 200 L 1060 510 M 1140 200 L 1140 525 M 1220 200 L 1220 535 M 1300 200 L 1300 545 M 1380 200 L 1380 550" />
 
             {/* Iosefin & Elisabetin Grid (South-West) */}
-            <path d="M 200 580 L 560 580 M 180 640 L 600 640 M 220 700 L 680 700 M 240 760 L 720 760" />
-            <path d="M 280 520 L 280 820 M 360 520 L 360 840 M 440 520 L 440 850 M 520 520 L 520 850 M 600 520 L 600 860" />
+            <path d="M 160 580 L 560 580 M 140 640 L 620 640 M 180 700 L 680 700 M 200 760 L 720 760 M 220 820 L 750 820" />
+            <path d="M 260 515 L 260 850 M 340 515 L 340 860 M 420 520 L 420 870 M 500 520 L 500 880 M 580 520 L 580 880" />
 
             {/* Circumvalațiunii & Mehala (North-West) */}
-            <path d="M 380 180 L 660 180 M 340 240 L 640 240 M 320 300 L 620 300 M 300 360 L 600 360" />
-            <path d="M 420 120 L 420 420 M 480 120 L 480 420 M 540 140 L 540 420 M 600 160 L 600 420" />
+            <path d="M 360 160 L 650 160 M 320 220 L 630 220 M 300 280 L 610 280 M 280 340 L 590 340 M 260 400 L 570 400" />
+            <path d="M 400 100 L 400 420 M 460 100 L 460 420 M 520 120 L 520 420 M 580 140 L 580 420" />
 
-            {/* Complexul Studențesc Grid (South-East) */}
-            <path d="M 800 640 L 1080 640 M 800 700 L 1080 700 M 820 760 L 1080 760" />
-            <path d="M 880 580 L 880 800 M 940 580 L 940 800 M 1000 580 L 1000 800" />
+            {/* Complexul Studențesc & Girocului Grid (South-East) */}
+            <path d="M 800 640 L 1120 640 M 800 700 L 1120 700 M 810 760 L 1120 760 M 820 820 L 1120 820" />
+            <path d="M 870 580 L 870 860 M 935 580 L 935 860 M 1000 580 L 1000 860 M 1065 580 L 1065 860" />
           </g>
 
-          {/* ── Architectural Landmarks & Historic Plazas ── */}
-          {/* Bastionul Maria Theresia (Historic Star Fortification) */}
-          <path
-            d="M 805 370 L 845 385 L 835 415 L 865 430 L 850 460 L 810 440 Z"
-            fill="#3a251d"
-            stroke="oklch(0.62 0.19 35)"
-            strokeWidth="1.8"
-            opacity="0.85"
-          />
-
-          {/* Piața Unirii (Rectangular Baroque Square) */}
-          <g>
-            <rect x="725" y="330" width="50" height="40" rx="3" fill="#2d2824" stroke="oklch(0.82 0.15 80)" strokeWidth="2" opacity="0.9" />
-            {/* Domul Romano-Catolic mark */}
-            <rect x="768" y="342" width="6" height="16" rx="1.5" fill="oklch(0.82 0.15 80)" />
-            {/* Biserica Sârbească mark */}
-            <rect x="726" y="342" width="6" height="16" rx="1.5" fill="oklch(0.82 0.15 80)" />
+          {/* 4. Railway tracks to Gara de Nord (West) */}
+          <g stroke="#3a3430" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5">
+            <path d="M 0 380 L 320 380 L 360 420" />
+            <path d="M 0 385 L 320 385 L 360 425" />
           </g>
 
-          {/* Piața Libertății (Square with Red Brick Tone) */}
-          <rect x="728" y="390" width="34" height="30" rx="3" fill="#2d2824" stroke="#b08968" strokeWidth="1.5" opacity="0.85" />
-
-          {/* Piața Victoriei / Operei (Grand Corso from Opera to Cathedral) */}
-          <g>
-            <path d="M 726 430 L 744 430 L 738 490 L 720 490 Z" fill="#282420" stroke="oklch(0.82 0.15 80)" strokeWidth="1.8" opacity="0.9" />
-            {/* Opera Română mark (North end) */}
-            <rect x="724" y="426" width="22" height="7" rx="1.5" fill="oklch(0.62 0.19 35)" />
-            {/* Catedrala Mitropolitană mark (South end) */}
-            <polygon points="720,490 738,490 729,508" fill="oklch(0.82 0.15 80)" />
-          </g>
-
-          {/* Iulius Town / Mall Complex (North) */}
-          <rect x="700" y="140" width="80" height="45" rx="6" fill="#252220" stroke="#4a5568" strokeWidth="1.5" opacity="0.7" />
-
-          {/* ── Primary Arteries & Boulevards of Timișoara ── */}
-          <g stroke="#3d3630" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          {/* 5. MAIN ROADS & BOULEVARDS (Double-Cased for "Actual Road" Appearance) */}
+          {/* ROAD CASING (Outer dark contour giving roads physical body & depth) */}
+          <g stroke="#1a1715" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round">
             {/* Calea Aradului (North past Iulius Town) */}
             <path d="M 740 330 L 740 185 L 740 0" />
             {/* Calea Torontalului (North-West) */}
-            <path d="M 725 330 L 670 200 L 580 0" />
-            {/* Inelul 1 / Bulevardul Revoluției din 1989 & Take Ionescu (East) */}
-            <path d="M 760 380 L 805 380 L 870 365 L 1440 340" />
+            <path d="M 720 330 L 660 190 L 560 0" />
+            {/* Inelul 1 / Bulevardul Take Ionescu & Revoluției 1989 (East) */}
+            <path d="M 750 375 L 810 375 L 880 360 L 1440 335" />
+            {/* Bulevardul Simion Bărnuțiu (Fabric to Airport) */}
+            <path d="M 1040 355 L 1440 345" />
             {/* Bulevardul Republicii (West to Gara de Nord) */}
-            <path d="M 720 430 L 580 430 L 360 425 L 0 425" />
+            <path d="M 715 430 L 570 430 L 360 425 L 0 425" />
             {/* Bulevardul Michelangelo & Vasile Pârvan (South across Bega) */}
-            <path d="M 810 440 L 830 545 L 850 640 L 860 900" strokeWidth="3.5" />
-            {/* Bulevardul 16 Decembrie 1989 / Calea Șagului (South-West) */}
-            <path d="M 700 495 L 600 525 L 480 620 L 380 900" strokeWidth="3.5" />
-            {/* Calea Martirilor 1989 (South to Giroc) */}
+            <path d="M 810 435 L 830 545 L 850 640 L 860 900" />
+            {/* Bulevardul 16 Decembrie 1989 / Calea Șagului (South-West to Shopping City) */}
+            <path d="M 700 495 L 600 525 L 480 620 L 380 900" />
+            {/* Calea Martirilor 1989 (Girocului - South to Giroc) */}
             <path d="M 780 640 L 780 900" />
             {/* Bulevardul Liviu Rebreanu (Ring 2 South) */}
-            <path d="M 0 780 L 1440 760" strokeWidth="2.5" opacity="0.7" />
-            {/* Bulevardul Simion Bărnuțiu (Fabric to East) */}
-            <path d="M 1050 355 L 1440 345" />
-            {/* Splaiul Tudor Vladimirescu & Splaiul Nistrului (Along Bega) */}
-            <path d="M 0 500 L 540 505 L 820 530 L 1440 520" strokeWidth="1.8" opacity="0.5" />
-            <path d="M 0 540 L 540 545 L 840 565 L 1440 560" strokeWidth="1.8" opacity="0.5" />
+            <path d="M 0 780 L 1440 760" />
+            {/* Splaiul Tudor Vladimirescu & Splaiul Nistrului (South bank along Bega) */}
+            <path d="M 0 540 L 525 545 L 830 565 L 1440 560" />
+            {/* Splaiul Nicolae Titulescu (North bank along Bega) */}
+            <path d="M 0 495 L 525 500 L 820 525 L 1440 515" />
           </g>
 
-          {/* ── CANALUL BEGA (Real geographic meandering waterway) ── */}
+          {/* ROAD SURFACE / FILL (Warm charcoal asphalt fill with visible width) */}
+          <g stroke="#3a322b" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+            {/* Calea Aradului */}
+            <path d="M 740 330 L 740 185 L 740 0" />
+            {/* Calea Torontalului */}
+            <path d="M 720 330 L 660 190 L 560 0" />
+            {/* Take Ionescu & Revoluției 1989 */}
+            <path d="M 750 375 L 810 375 L 880 360 L 1440 335" />
+            {/* Simion Bărnuțiu */}
+            <path d="M 1040 355 L 1440 345" />
+            {/* Republicii */}
+            <path d="M 715 430 L 570 430 L 360 425 L 0 425" />
+            {/* Michelangelo & Vasile Pârvan */}
+            <path d="M 810 435 L 830 545 L 850 640 L 860 900" />
+            {/* 16 Decembrie / Calea Șagului */}
+            <path d="M 700 495 L 600 525 L 480 620 L 380 900" />
+            {/* Calea Martirilor */}
+            <path d="M 780 640 L 780 900" />
+            {/* Liviu Rebreanu (Ring 2) */}
+            <path d="M 0 780 L 1440 760" strokeWidth="3" />
+            {/* Splaiuri along Bega */}
+            <path d="M 0 540 L 525 545 L 830 565 L 1440 560" strokeWidth="2.5" />
+            <path d="M 0 495 L 525 500 L 820 525 L 1440 515" strokeWidth="2.5" />
+          </g>
+
+          {/* ROAD CENTERLINES (Subtle lane markings on major boulevards) */}
+          <g stroke="#52483e" strokeWidth="0.8" strokeDasharray="8 6" strokeLinecap="round" opacity="0.6">
+            <path d="M 740 330 L 740 0" />
+            <path d="M 810 435 L 830 545 L 850 640 L 860 900" />
+            <path d="M 700 495 L 600 525 L 480 620 L 380 900" />
+            <path d="M 750 375 L 880 360 L 1440 335" />
+            <path d="M 715 430 L 360 425 L 0 425" />
+          </g>
+
+          {/* 6. CANALUL BEGA (Authentic geographic meandering waterway) */}
+          {/* River Bed Trench / Banks */}
+          <path
+            d="M 0 520 C 180 515, 340 510, 520 525 C 640 535, 730 525, 830 545 C 920 565, 1060 525, 1220 535 C 1340 545, 1400 540, 1440 540"
+            stroke="#0f2228"
+            strokeWidth="26"
+            strokeLinecap="round"
+            fill="none"
+          />
           {/* Waterway Glow */}
           <path
             d="M 0 520 C 180 515, 340 510, 520 525 C 640 535, 730 525, 830 545 C 920 565, 1060 525, 1220 535 C 1340 545, 1400 540, 1440 540"
             stroke="url(#bega-glow)"
-            strokeWidth="28"
+            strokeWidth="22"
             strokeLinecap="round"
+            fill="none"
           />
-          {/* Main Riverbed */}
+          {/* Main Water Stream */}
           <path
             d="M 0 520 C 180 515, 340 510, 520 525 C 640 535, 730 525, 830 545 C 920 565, 1060 525, 1220 535 C 1340 545, 1400 540, 1440 540"
             stroke="url(#bega-water)"
-            strokeWidth="16"
+            strokeWidth="15"
             strokeLinecap="round"
+            fill="none"
           />
-          {/* Flow Centerline */}
+          {/* Water Center Current */}
           <path
             d="M 0 520 C 180 515, 340 510, 520 525 C 640 535, 730 525, 830 545 C 920 565, 1060 525, 1220 535 C 1340 545, 1400 540, 1440 540"
             stroke="#3888a8"
-            strokeWidth="2"
-            strokeDasharray="12 8"
-            opacity="0.6"
+            strokeWidth="1.8"
+            strokeDasharray="14 10"
+            opacity="0.65"
+            fill="none"
           />
 
-          {/* ── Bridges of Timișoara across Bega ── */}
+          {/* 7. BRIDGES OVER BEGA (Engineered bridge decks with shadow and railings) */}
           {/* Podul Ștefan cel Mare (Iosefin) */}
-          <line x1="320" y1="500" x2="320" y2="530" stroke="#fdfbf9" strokeWidth="3.5" strokeLinecap="square" />
-          {/* Podul Traian / Maria (Cathedral) */}
-          <line x1="535" y1="512" x2="545" y2="538" stroke="#fdfbf9" strokeWidth="4" strokeLinecap="square" />
+          <g>
+            <line x1="318" y1="504" x2="318" y2="536" stroke="#12100e" strokeWidth="7" strokeLinecap="butt" />
+            <line x1="318" y1="504" x2="318" y2="536" stroke="#f0ebe6" strokeWidth="4" strokeLinecap="butt" />
+            <line x1="315" y1="504" x2="315" y2="536" stroke="#4a423b" strokeWidth="1" />
+            <line x1="321" y1="504" x2="321" y2="536" stroke="#4a423b" strokeWidth="1" />
+          </g>
+          {/* Podul Traian / Maria (Cathedral to 16 Decembrie) */}
+          <g>
+            <line x1="532" y1="510" x2="542" y2="540" stroke="#12100e" strokeWidth="7.5" strokeLinecap="butt" />
+            <line x1="532" y1="510" x2="542" y2="540" stroke="#f0ebe6" strokeWidth="4.5" strokeLinecap="butt" />
+          </g>
           {/* Podul Tinereții */}
-          <line x1="685" y1="518" x2="685" y2="544" stroke="#fdfbf9" strokeWidth="3.5" strokeLinecap="square" />
-          {/* Podul Michelangelo (Central University artery) */}
-          <line x1="825" y1="532" x2="835" y2="558" stroke="#fdfbf9" strokeWidth="4.5" strokeLinecap="square" />
+          <g>
+            <line x1="685" y1="516" x2="685" y2="546" stroke="#12100e" strokeWidth="6.5" strokeLinecap="butt" />
+            <line x1="685" y1="516" x2="685" y2="546" stroke="#f0ebe6" strokeWidth="4" strokeLinecap="butt" />
+          </g>
+          {/* Podul Michelangelo (Central University Artery) */}
+          <g>
+            <line x1="823" y1="530" x2="835" y2="560" stroke="#12100e" strokeWidth="8" strokeLinecap="butt" />
+            <line x1="823" y1="530" x2="835" y2="560" stroke="#fdfbf9" strokeWidth="5" strokeLinecap="butt" />
+            <line x1="820" y1="530" x2="832" y2="560" stroke="#e14d28" strokeWidth="1.2" />
+          </g>
           {/* Podul Decebal / Neptun (Fabric) */}
-          <line x1="1040" y1="515" x2="1045" y2="545" stroke="#fdfbf9" strokeWidth="3.5" strokeLinecap="square" />
+          <g>
+            <line x1="1040" y1="513" x2="1046" y2="547" stroke="#12100e" strokeWidth="7" strokeLinecap="butt" />
+            <line x1="1040" y1="513" x2="1046" y2="547" stroke="#f0ebe6" strokeWidth="4" strokeLinecap="butt" />
+          </g>
 
-          {/* ── Subtle District & Landmark Typography ── */}
-          <g fontSize="10" fontWeight="700" letterSpacing="2" fill="#8c827a" opacity="0.65" className="font-mono">
-            <text x="735" y="320" textAnchor="middle">CETATE</text>
-            <text x="785" y="355">PIAȚA UNIRII</text>
-            <text x="748" y="465">PIAȚA VICTORIEI</text>
-            <text x="865" y="420">BASTION</text>
-            <text x="740" y="132" textAnchor="middle">IULIUS TOWN</text>
-            <text x="960" y="555" fill="#3888a8" opacity="0.8">CANALUL BEGA</text>
+          {/* 8. ARCHITECTURAL SQUARES & CETATE PEDESTRIAN STREETS */}
+          {/* Bastionul Maria Theresia (Historic Star Fortification) */}
+          <path
+            d="M 805 370 L 845 385 L 835 415 L 865 430 L 850 460 L 810 440 Z"
+            fill="#33201a"
+            stroke="oklch(0.62 0.19 35)"
+            strokeWidth="2"
+            opacity="0.9"
+          />
+
+          {/* Piața Unirii (Grand Baroque Square with Domul Romano-Catolic & Biserica Sârbească) */}
+          <g>
+            <rect x="725" y="328" width="52" height="42" rx="4" fill="#2b241e" stroke="oklch(0.82 0.15 80)" strokeWidth="2.2" opacity="0.95" />
+            {/* Domul Romano-Catolic mark (East) */}
+            <rect x="769" y="340" width="6" height="18" rx="1.5" fill="oklch(0.82 0.15 80)" />
+            {/* Biserica Sârbească mark (West) */}
+            <rect x="727" y="340" width="6" height="18" rx="1.5" fill="oklch(0.82 0.15 80)" />
+            {/* Monumentul Sfintei Treimi (Center Column) */}
+            <circle cx="751" cy="349" r="2.5" fill="oklch(0.82 0.15 80)" />
+          </g>
+
+          {/* Piața Libertății (Red Brick Square & Tram Loop) */}
+          <g>
+            <rect x="728" y="388" width="36" height="32" rx="3" fill="#2d221c" stroke="#b08968" strokeWidth="1.8" opacity="0.9" />
+            {/* Statuia Sfânta Maria și Sfântul Ioan Nepomuk */}
+            <circle cx="746" cy="404" r="2" fill="#b08968" />
+          </g>
+
+          {/* Piața Victoriei / Operei (Grand Pedestrian Corso from Opera to Cathedral) */}
+          <g>
+            <path d="M 724 428 L 746 428 L 740 492 L 718 492 Z" fill="#29221c" stroke="oklch(0.82 0.15 80)" strokeWidth="2" opacity="0.95" />
+            {/* Opera Națională Română (North End) */}
+            <rect x="722" y="423" width="26" height="8" rx="2" fill="oklch(0.62 0.19 35)" />
+            {/* Catedrala Mitropolitană (South End, facing Bega) */}
+            <polygon points="718,492 740,492 729,514" fill="oklch(0.82 0.15 80)" />
+            <circle cx="729" cy="503" r="3" fill="#fdfbf9" />
+            {/* Fântâna cu Pești (Mid-Corso) */}
+            <circle cx="732" cy="460" r="2" fill="#3888a8" />
+          </g>
+
+          {/* Cetate Pedestrian Streets Connecting the Plazas */}
+          <g stroke="#3a3028" strokeWidth="2.5" strokeLinecap="round" opacity="0.85">
+            {/* Strada Vasile Alecsandri (Libertății to Unirii) */}
+            <line x1="746" y1="370" x2="746" y2="388" />
+            {/* Strada Alba Iulia (Victoriei to Libertății) */}
+            <line x1="735" y1="420" x2="735" y2="428" />
+            {/* Strada Florimund Mercy (Unirii to Bastion) */}
+            <line x1="777" y1="360" x2="810" y2="380" />
+            {/* Strada Eugeniu de Savoya */}
+            <line x1="710" y1="350" x2="795" y2="350" />
+          </g>
+
+          {/* Iulius Town / UBC Office Towers Complex (North) */}
+          <g>
+            <rect x="690" y="135" width="100" height="50" rx="8" fill="#211e1c" stroke="#5a6578" strokeWidth="1.8" opacity="0.8" />
+            {/* UBC Tower 1 & 2 marks */}
+            <rect x="705" y="145" width="18" height="14" rx="2" fill="#5a6578" opacity="0.9" />
+            <rect x="735" y="145" width="22" height="14" rx="2" fill="#5a6578" opacity="0.9" />
+            <rect x="765" y="145" width="16" height="14" rx="2" fill="#5a6578" opacity="0.9" />
+          </g>
+
+          {/* 9. DISTRICT & LANDMARK TYPOGRAPHY (Crisp, High-Tech Romanian Monospace) */}
+          <g fontFamily="JetBrains Mono, monospace" fontSize="10" fontWeight="700" letterSpacing="2" fill="#8c827a" opacity="0.75">
+            <text x="735" y="318" textAnchor="middle">CETATE</text>
+            <text x="788" y="354">PIAȚA UNIRII</text>
+            <text x="750" y="468">PIAȚA VICTORIEI</text>
+            <text x="872" y="420">BASTION</text>
+            <text x="740" y="128" textAnchor="middle">IULIUS TOWN</text>
+            <text x="960" y="555" fill="#3888a8" opacity="0.85">CANALUL BEGA</text>
             <text x="890" y="675">COMPLEX STUDENȚESC</text>
             <text x="360" y="560">IOSEFIN</text>
             <text x="1150" y="390">FABRIC</text>
           </g>
 
-          {/* ── Worker Route (drawn in Act 3) ── */}
+          {/* 10. WORKER ROUTE (Complexul Studențesc -> Podul Michelangelo -> Bastion -> Piața Unirii) */}
           <path
             id="gigtim-route"
             data-route
@@ -391,20 +527,26 @@ export function LivingMapHero() {
             strokeDasharray="1"
             pathLength="1"
             opacity="0.95"
+            fill="none"
           />
 
-          {/* ── Shift Pins ── */}
+          {/* 11. SHIFT PINS AT REAL LANDMARKS */}
           {PINS.map((pin) => (
-            <g key={`${pin.x}-${pin.y}`} data-pin {...(pin.hero ? { 'data-pin-hero': true } : {})}>
+            <g
+              key={`${pin.x}-${pin.y}`}
+              data-pin
+              {...(pin.hero ? { 'data-pin-hero': true } : {})}
+              transform={`translate(${pin.x}, ${pin.y})`}
+            >
               <circle
-                cx={pin.x}
-                cy={pin.y}
+                cx={0}
+                cy={0}
                 r={pin.r * 2.8}
                 fill={pin.hero ? 'oklch(0.7 0.19 35 / 0.3)' : 'oklch(0.82 0.15 80 / 0.18)'}
               />
               <circle
-                cx={pin.x}
-                cy={pin.y}
+                cx={0}
+                cy={0}
                 r={pin.r}
                 fill={pin.hero ? 'oklch(0.7 0.19 35)' : 'oklch(0.82 0.15 80)'}
                 stroke={pin.hero ? '#ffffff' : undefined}
@@ -413,7 +555,7 @@ export function LivingMapHero() {
             </g>
           ))}
 
-          {/* ── Worker Dot (starts in Complexul Studențesc) ── */}
+          {/* 12. WORKER DOT (Starts in Complexul Studențesc) */}
           <circle
             data-worker
             cx="850"
@@ -423,8 +565,8 @@ export function LivingMapHero() {
             stroke="#ffffff"
             strokeWidth="2"
           />
-        </g>
       </svg>
+      </div>
 
       {/* ── Dawn Sweep Gradient (Act 4) ────────────────────── */}
       <div
@@ -440,7 +582,7 @@ export function LivingMapHero() {
       {/* ── Shift Detail Card (Act 2 & 3) — Personal Timișoara HoReCa ── */}
       <div
         data-shift-card
-        className="absolute flex w-68 max-w-[calc(100vw-2rem)] flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md top-[145px] right-4 sm:top-[125px] md:top-[135px] lg:top-[16%] sm:right-8 md:right-10 lg:right-[6%]"
+        className="absolute flex w-68 max-w-[calc(100vw-2rem)] flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md top-[180px] right-4 sm:top-[125px] md:top-[135px] lg:top-[16%] sm:right-8 md:right-10 lg:right-[6%]"
         style={{
           background: 'oklch(0.205 0.012 50 / 0.95)',
           borderColor: 'oklch(1 0 0 / 0.14)',
@@ -480,7 +622,7 @@ export function LivingMapHero() {
       {/* ── Match Confirmation Toast (Act 3) — Human Touch ── */}
       <div
         data-match-toast
-        className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md top-[360px] right-4 sm:top-[285px] md:top-[305px] lg:top-[46%] sm:right-8 md:right-10 lg:right-[6%] max-w-[calc(100vw-2rem)]"
+        className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md top-[390px] right-4 sm:top-[285px] md:top-[305px] lg:top-[46%] sm:right-8 md:right-10 lg:right-[6%] max-w-[calc(100vw-2rem)]"
         style={{
           background: 'oklch(0.18 0.012 50 / 0.95)',
           borderColor: 'oklch(0.48 0.13 150 / 0.5)',
@@ -503,7 +645,7 @@ export function LivingMapHero() {
       {/* ── ITM Register Card (Act 4) ──────────────────────── */}
       <div
         data-itm-card
-        className="absolute left-1/2 top-[175px] sm:top-[22%] md:top-[24%] lg:top-[26%] flex w-52 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
+        className="absolute left-1/2 top-[205px] sm:top-[22%] md:top-[24%] lg:top-[26%] flex w-52 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
         style={{ background: 'oklch(0.99 0.008 75)' }}
         aria-hidden="true"
       >
@@ -639,8 +781,12 @@ export function LivingMapHero() {
         {/* Narrative Caption */}
         <div className="text-right">
           <span
-            className="font-mono text-[9px] sm:text-[11px] tracking-wider font-semibold drop-shadow-xs block"
-            style={{ color: 'oklch(0.72 0.015 60)' }}
+            className="inline-block font-mono text-[9px] sm:text-[11px] tracking-wider font-semibold drop-shadow-xs px-2 py-0.5 rounded-md border backdrop-blur-md"
+            style={{
+              color: 'oklch(0.72 0.015 60)',
+              background: 'oklch(0.18 0.012 50 / 0.65)',
+              borderColor: 'oklch(1 0 0 / 0.08)',
+            }}
           >
             {`${currentAct + 1}/4 — ${activeActData.caption.toUpperCase()}`}
           </span>
