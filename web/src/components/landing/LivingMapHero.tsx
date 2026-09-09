@@ -440,7 +440,7 @@ export function LivingMapHero() {
       {/* ── Shift Detail Card (Act 2 & 3) — Personal Timișoara HoReCa ── */}
       <div
         data-shift-card
-        className="absolute flex w-68 max-w-[calc(100vw-2rem)] flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md top-[145px] right-4 sm:top-[16%] sm:right-[6%]"
+        className="absolute flex w-68 max-w-[calc(100vw-2rem)] flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md top-[145px] right-4 sm:top-[125px] md:top-[135px] lg:top-[16%] sm:right-8 md:right-10 lg:right-[6%]"
         style={{
           background: 'oklch(0.205 0.012 50 / 0.95)',
           borderColor: 'oklch(1 0 0 / 0.14)',
@@ -480,7 +480,7 @@ export function LivingMapHero() {
       {/* ── Match Confirmation Toast (Act 3) — Human Touch ── */}
       <div
         data-match-toast
-        className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md top-[360px] right-4 sm:top-[46%] sm:right-[6%] max-w-[calc(100vw-2rem)]"
+        className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md top-[360px] right-4 sm:top-[285px] md:top-[305px] lg:top-[46%] sm:right-8 md:right-10 lg:right-[6%] max-w-[calc(100vw-2rem)]"
         style={{
           background: 'oklch(0.18 0.012 50 / 0.95)',
           borderColor: 'oklch(0.48 0.13 150 / 0.5)',
@@ -503,7 +503,7 @@ export function LivingMapHero() {
       {/* ── ITM Register Card (Act 4) ──────────────────────── */}
       <div
         data-itm-card
-        className="absolute left-1/2 top-[175px] sm:top-[26%] flex w-52 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
+        className="absolute left-1/2 top-[175px] sm:top-[22%] md:top-[24%] lg:top-[26%] flex w-52 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
         style={{ background: 'oklch(0.99 0.008 75)' }}
         aria-hidden="true"
       >
@@ -523,7 +523,7 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Headline + Value Prop + CTAs (Bottom Left) ─────── */}
-      <div className="absolute bottom-6 sm:bottom-16 left-4 sm:left-12 z-20 flex max-w-xl flex-col gap-2.5 sm:gap-5 pr-4 sm:pr-0">
+      <div className="absolute bottom-6 sm:bottom-8 md:bottom-10 lg:bottom-16 left-4 sm:left-8 md:left-10 lg:left-12 z-20 flex max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl flex-col gap-2.5 sm:gap-4 lg:gap-5 pr-4 sm:pr-0">
         {/* Status Chip */}
         <div
           className="inline-flex items-center gap-2 self-start rounded-full border px-3 py-1 sm:px-3.5 sm:py-1.5 backdrop-blur-md"
@@ -536,14 +536,14 @@ export function LivingMapHero() {
             />
             <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: 'oklch(0.82 0.15 80)' }} />
           </span>
-          <span className="font-mono text-[9px] sm:text-[11px] font-bold tracking-widest" style={{ color: 'oklch(0.82 0.15 80)' }}>
+          <span className="font-mono text-[9px] sm:text-[10px] lg:text-[11px] font-bold tracking-widest" style={{ color: 'oklch(0.82 0.15 80)' }}>
             TURE LIVE PE HARTA ORAȘULUI
           </span>
         </div>
 
         {/* Hero Title */}
         <h1
-          className="font-heading text-2xl sm:text-5xl md:text-6xl font-extrabold leading-[1.08] tracking-tight"
+          className="font-heading text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.12] sm:leading-[1.1] md:leading-[1.08] tracking-tight"
           style={{ color: 'oklch(0.96 0.01 75)' }}
         >
           Orașul lucrează.
@@ -552,7 +552,7 @@ export function LivingMapHero() {
         </h1>
 
         {/* Hero Body */}
-        <p className="max-w-md text-xs sm:text-base leading-relaxed md:text-lg opacity-90" style={{ color: 'oklch(0.78 0.015 60)' }}>
+        <p className="max-w-md text-xs sm:text-sm lg:text-base leading-relaxed md:leading-normal lg:text-lg opacity-90" style={{ color: 'oklch(0.78 0.015 60)' }}>
           Ture de o zi în HoReCa, pe harta orașului tău. Aplici cu un click, angajatorul te
           acceptă, iar registrul ITM se generează automat.
         </p>
@@ -561,7 +561,7 @@ export function LivingMapHero() {
         <div className="flex flex-row gap-2.5 sm:gap-3 pt-0.5 sm:pt-1">
           <Link
             href="/register"
-            className="group inline-flex h-10 sm:h-12 items-center justify-center gap-2 rounded-xl px-4 sm:px-7 text-xs sm:text-sm font-semibold shadow-lg shadow-primary/25 transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
+            className="group inline-flex h-10 sm:h-11 lg:h-12 items-center justify-center gap-2 rounded-xl px-4 sm:px-6 lg:px-7 text-xs sm:text-sm font-semibold shadow-lg shadow-primary/25 transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
             style={{ background: 'oklch(0.55 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
           >
             Creează cont
@@ -569,7 +569,7 @@ export function LivingMapHero() {
           </Link>
           <a
             href="#why-gigtim"
-            className="inline-flex h-10 sm:h-12 items-center justify-center rounded-xl border px-3.5 sm:px-7 text-xs sm:text-sm font-medium transition-colors duration-200 hover:bg-white/5"
+            className="inline-flex h-10 sm:h-11 lg:h-12 items-center justify-center rounded-xl border px-3.5 sm:px-6 lg:px-7 text-xs sm:text-sm font-medium transition-colors duration-200 hover:bg-white/5"
             style={{ borderColor: 'oklch(1 0 0 / 0.2)', color: 'oklch(0.88 0.01 60)' }}
           >
             De ce GigTim?
@@ -578,7 +578,7 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Act Switcher Buttons & Captions (Top Right on Mobile, Bottom Right on Desktop) ──── */}
-      <div className="absolute top-[72px] right-4 sm:top-auto sm:bottom-16 sm:right-12 z-20 flex flex-col items-end gap-1">
+      <div className="absolute top-[72px] right-4 sm:top-auto sm:bottom-8 md:bottom-10 lg:bottom-16 sm:right-8 md:right-10 lg:right-12 z-20 flex flex-col items-end gap-1">
         {/* Minimal Swiss Pill Switcher */}
         <div
           className="flex items-center gap-1 sm:gap-1.5 rounded-xl border p-1 backdrop-blur-md shadow-xl"
