@@ -140,6 +140,20 @@ export function LivingMapHero() {
     }
   }, [])
 
+  // Check for ?act=X URL parameter on mount for direct act testing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const actParam = params.get('act')
+      if (actParam !== null) {
+        const actNum = parseInt(actParam, 10)
+        if (!isNaN(actNum) && actNum >= 0 && actNum <= 3) {
+          transitionToAct(actNum)
+        }
+      }
+    }
+  }, [transitionToAct])
+
   // Autoplay ticker — 0 React re-renders during an act, 100% leak-free
   useEffect(() => {
     if (isPaused) {
@@ -190,7 +204,7 @@ export function LivingMapHero() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[92svh] sm:h-[100svh] min-h-[640px] overflow-hidden select-none"
+      className="relative min-h-[680px] h-[95svh] sm:h-[100svh] sm:min-h-[640px] overflow-hidden select-none"
       style={{ background: 'oklch(0.15 0.015 55)' }}
       aria-label="Orașul lucrează — turele pe harta orașului"
     >
@@ -300,10 +314,8 @@ export function LivingMapHero() {
       {/* ── Shift Detail Card (Act 2 & 3) — Personal Timișoara HoReCa ── */}
       <div
         data-shift-card
-        className="absolute flex w-52 sm:w-68 flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md"
+        className="absolute flex w-68 max-w-[calc(100vw-2rem)] flex-col gap-1.5 rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-md top-[175px] right-4 sm:top-[16%] sm:right-[6%]"
         style={{
-          right: '5%',
-          top: '15%',
           background: 'oklch(0.205 0.012 50 / 0.95)',
           borderColor: 'oklch(1 0 0 / 0.14)',
         }}
@@ -342,16 +354,14 @@ export function LivingMapHero() {
       {/* ── Match Confirmation Toast (Act 3) — Human Touch ── */}
       <div
         data-match-toast
-        className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md"
+        className="absolute flex items-center gap-3 rounded-2xl border p-3 shadow-2xl backdrop-blur-md top-[360px] right-4 sm:top-[46%] sm:right-[6%] max-w-[calc(100vw-2rem)]"
         style={{
-          right: '5%',
-          top: '48%',
           background: 'oklch(0.18 0.012 50 / 0.95)',
           borderColor: 'oklch(0.48 0.13 150 / 0.5)',
         }}
         aria-hidden="true"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-sm">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-sm">
           ✓
         </div>
         <div className="flex flex-col">
@@ -367,7 +377,7 @@ export function LivingMapHero() {
       {/* ── ITM Register Card (Act 4) ──────────────────────── */}
       <div
         data-itm-card
-        className="absolute left-1/2 top-[20%] sm:top-[26%] flex w-48 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
+        className="absolute left-1/2 top-[175px] sm:top-[26%] flex w-52 sm:w-60 -translate-x-1/2 flex-col gap-2 rounded-xl p-4 sm:p-5 shadow-2xl"
         style={{ background: 'oklch(0.99 0.008 75)' }}
         aria-hidden="true"
       >
@@ -387,10 +397,10 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Headline + Value Prop + CTAs (Bottom Left) ─────── */}
-      <div className="absolute bottom-8 sm:bottom-16 left-5 sm:left-12 z-20 flex max-w-xl flex-col gap-3.5 sm:gap-5 pr-4 sm:pr-0">
+      <div className="absolute bottom-6 sm:bottom-16 left-4 sm:left-12 z-20 flex max-w-xl flex-col gap-2.5 sm:gap-5 pr-4 sm:pr-0">
         {/* Status Chip */}
         <div
-          className="inline-flex items-center gap-2 self-start rounded-full border px-3.5 py-1.5 backdrop-blur-md"
+          className="inline-flex items-center gap-2 self-start rounded-full border px-3 py-1 sm:px-3.5 sm:py-1.5 backdrop-blur-md"
           style={{ borderColor: 'oklch(0.82 0.15 80 / 0.4)', background: 'oklch(0.18 0.01 50 / 0.7)' }}
         >
           <span className="relative flex h-2 w-2">
@@ -400,14 +410,14 @@ export function LivingMapHero() {
             />
             <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: 'oklch(0.82 0.15 80)' }} />
           </span>
-          <span className="font-mono text-[10px] sm:text-[11px] font-bold tracking-widest" style={{ color: 'oklch(0.82 0.15 80)' }}>
+          <span className="font-mono text-[9px] sm:text-[11px] font-bold tracking-widest" style={{ color: 'oklch(0.82 0.15 80)' }}>
             TURE LIVE PE HARTA ORAȘULUI
           </span>
         </div>
 
         {/* Hero Title */}
         <h1
-          className="font-heading text-3xl sm:text-5xl md:text-6xl font-extrabold leading-[1.08] tracking-tight"
+          className="font-heading text-2xl sm:text-5xl md:text-6xl font-extrabold leading-[1.08] tracking-tight"
           style={{ color: 'oklch(0.96 0.01 75)' }}
         >
           Orașul lucrează.
@@ -416,16 +426,16 @@ export function LivingMapHero() {
         </h1>
 
         {/* Hero Body */}
-        <p className="max-w-md text-sm sm:text-base leading-relaxed md:text-lg" style={{ color: 'oklch(0.78 0.015 60)' }}>
+        <p className="max-w-md text-xs sm:text-base leading-relaxed md:text-lg opacity-90" style={{ color: 'oklch(0.78 0.015 60)' }}>
           Ture de o zi în HoReCa, pe harta orașului tău. Aplici cu un click, angajatorul te
           acceptă, iar registrul ITM se generează automat.
         </p>
 
         {/* CTAs */}
-        <div className="flex flex-row gap-3 pt-1">
+        <div className="flex flex-row gap-2.5 sm:gap-3 pt-0.5 sm:pt-1">
           <Link
             href="/register"
-            className="group inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl px-5 sm:px-7 text-sm font-semibold shadow-lg shadow-primary/25 transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
+            className="group inline-flex h-10 sm:h-12 items-center justify-center gap-2 rounded-xl px-4 sm:px-7 text-xs sm:text-sm font-semibold shadow-lg shadow-primary/25 transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
             style={{ background: 'oklch(0.55 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
           >
             Creează cont
@@ -433,7 +443,7 @@ export function LivingMapHero() {
           </Link>
           <a
             href="#why-gigtim"
-            className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl border px-4 sm:px-7 text-sm font-medium transition-colors duration-200 hover:bg-white/5"
+            className="inline-flex h-10 sm:h-12 items-center justify-center rounded-xl border px-3.5 sm:px-7 text-xs sm:text-sm font-medium transition-colors duration-200 hover:bg-white/5"
             style={{ borderColor: 'oklch(1 0 0 / 0.2)', color: 'oklch(0.88 0.01 60)' }}
           >
             De ce GigTim?
@@ -442,7 +452,7 @@ export function LivingMapHero() {
       </div>
 
       {/* ── Act Switcher Buttons & Captions (Top Right on Mobile, Bottom Right on Desktop) ──── */}
-      <div className="absolute top-20 right-4 sm:top-auto sm:bottom-16 sm:right-12 z-20 flex flex-col items-end gap-2">
+      <div className="absolute top-[72px] right-4 sm:top-auto sm:bottom-16 sm:right-12 z-20 flex flex-col items-end gap-1">
         {/* Minimal Swiss Pill Switcher */}
         <div
           className="flex items-center gap-1 sm:gap-1.5 rounded-xl border p-1 backdrop-blur-md shadow-xl"
@@ -503,7 +513,7 @@ export function LivingMapHero() {
         {/* Narrative Caption */}
         <div className="text-right">
           <span
-            className="font-mono text-[10px] sm:text-[11px] tracking-widest font-semibold drop-shadow-xs"
+            className="font-mono text-[9px] sm:text-[11px] tracking-wider font-semibold drop-shadow-xs block"
             style={{ color: 'oklch(0.72 0.015 60)' }}
           >
             {`${currentAct + 1}/4 — ${activeActData.caption.toUpperCase()}`}

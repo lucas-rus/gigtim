@@ -10,7 +10,13 @@ const skillLabels: Record<string, string> = {
   BARISTA: 'Barista',
   WAITER: 'Ospătar',
   DISHWASHER: 'Spălător vase',
-  STAGEHAND: 'Stagehand',
+  KITCHEN_HELP: 'Ajutor Bucătar',
+  STAGEHAND: 'Logistică / Scenă',
+  EVENT_CREW: 'Hostess / Evenimente',
+  GARDENER: 'Tuns Iarba / Grădină',
+  CLEANER: 'Curățenie & Menaj',
+  PET_SITTER: 'Pet Care',
+  PROMOTER: 'Promoter Teren',
 };
 
 const roleLabels: Record<string, string> = {
@@ -380,6 +386,22 @@ export default function ProfileScreen() {
               </View>
             </View>
           )}
+        </Card>
+      )}
+
+      {/* Protecția Muncii (SSM) Passport */}
+      {profile.role === 'WORKER' && (
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <ShieldCheck size={18} color={t.secondary} strokeWidth={2} />
+            <Text style={{ color: t.foreground, fontSize: fontSize.base, fontWeight: fontWeight.bold, fontFamily: font.heading, flex: 1 }}>
+              Pașaport Digital SSM
+            </Text>
+            <Badge variant="secondary">Activ (6 luni)</Badge>
+          </View>
+          <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, lineHeight: 18, fontFamily: font.sans }}>
+            Certificat conform OUG 36/2021 și Legii 319/2006. Instruire prealabilă validată pentru HoReCa, Grădinărit și Evenimente. Scutești 25 de minute la începerea oricărei ture.
+          </Text>
         </Card>
       )}
 

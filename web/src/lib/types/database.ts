@@ -7,7 +7,17 @@
 
 export type UserRole = 'WORKER' | 'EMPLOYER' | 'ADMIN'
 
-export type WorkerSkill = 'BARISTA' | 'WAITER' | 'DISHWASHER' | 'STAGEHAND'
+export type WorkerSkill =
+  | 'BARISTA'
+  | 'WAITER'
+  | 'DISHWASHER'
+  | 'STAGEHAND'
+  | 'KITCHEN_HELP'
+  | 'EVENT_CREW'
+  | 'GARDENER'
+  | 'CLEANER'
+  | 'PET_SITTER'
+  | 'PROMOTER'
 
 export type ShiftStatus = 'OPEN' | 'FILLED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 

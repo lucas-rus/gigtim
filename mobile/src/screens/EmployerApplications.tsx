@@ -6,7 +6,16 @@ import { useZoriTheme, font, fontSize, fontWeight, spacing, radius } from '@/src
 import { Card, Badge, Button, EmptyState, Skeleton, toast, Avatar, RatingStars } from '@/src/ui';
 
 const skillLabels: Record<string, string> = {
-  BARISTA: 'Barista', WAITER: 'Ospătar', DISHWASHER: 'Spălător vase', STAGEHAND: 'Stagehand',
+  BARISTA: 'Barista',
+  WAITER: 'Ospătar',
+  DISHWASHER: 'Spălător vase',
+  KITCHEN_HELP: 'Ajutor Bucătar',
+  STAGEHAND: 'Logistică / Scenă',
+  EVENT_CREW: 'Hostess / Evenimente',
+  GARDENER: 'Tuns Iarba / Grădină',
+  CLEANER: 'Curățenie & Menaj',
+  PET_SITTER: 'Pet Care',
+  PROMOTER: 'Promoter Teren',
 };
 
 const statusLabels: Record<string, string> = {

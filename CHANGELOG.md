@@ -5,6 +5,30 @@
 
 ---
 
+## [0.6.0] — 2026-09-09 — Marketplace Overhaul, Legal Framework Expansion & Digital SSM
+
+### ⚖️ Legal Framework & Casual Jobs Expansion (Legea 52/2011 + Legea 111/2022)
+- **Legal Analysis & Dual-Pillar Architecture:**
+  - **Pillar 1 (Legea 52/2011 - B2B/B2C Zilieri):** HoReCa, evenimente, logistică, spectacole. Impozit 10% pe venit reținut la sursă + CAS 25% opțional/declarat, înregistrare zilier în Registrul ITM prin aplicația `Inspecția Muncii`.
+  - **Pillar 2 (Legea 111/2022 - P2P Prestatorul Casnic):** Servicii casnice de la persoană fizică la persoană fizică (tuns iarba / grădinărit, menaj / curățenie, îngrijire animale / pet care). Remunerare prin tichete de activități casnice (15 RON tichet) decontate prin ANOFM/AJOFM cu reținere automată de 10% impozit + 25% CAS la valoarea minimă calculată.
+- **New Skill Enums & Labels:** Added `KITCHEN_HELP` (Ajutor Bucătar), `EVENT_CREW` (Hostess / Evenimente), `GARDENER` (Tuns Iarba / Grădină), `CLEANER` (Curățenie & Menaj), `PET_SITTER` (Pet Care), `PROMOTER` (Promoter Teren) to Supabase migration `012_expanded_job_roles.sql`, TypeScript definitions, and UI label mappings with legal pillar badges (`✓ Legea 52/2011`, `✓ Legea 111/2022`).
+
+### 🛡️ Digital SSM Module & Memorandum ("Pașaportul Digital SSM")
+- **Legislation Basis:** Leveraged **OUG 36/2021** (semnătură electronică & instruire SSM la distanță) and **Legea 319/2006 / HG 1425/2006** to draft a formal regulatory proposal to the Ministry of Labor & ITM Timiș.
+- **Interactive Training & Verification (`/ssm`):** Interactive digital modules for HoReCa, Grădinărit & Peisagistică, and Logistică / Evenimente. Instant 3-question quiz validating real-world safety procedures, issuing a verified digital certificate (`RO-TM-SSM-84920`) with automated PDF sheet generation conforming to Anexa 12 HG 1425/2006. Saves ~25 minutes on-site per shift with a 15-second mobile check-in.
+- **Profile Integration:** Added SSM Digital Passport status badge directly to the worker profile on both Web and Mobile.
+
+### 🎨 Internal Platform UI/UX Transformation (Linear & Airbnb Aesthetic)
+- **Marketplace Dashboard (`/jobs`, `/shifts`):** Transformed flat database tables and forum-like listings into designer-grade interactive cards. Added domain-specific role icons, legal framework badges, computed shift duration, and total estimated net pay calculations (`~XXX RON total`).
+- **Dual View Modes:** Shift management now supports fluid Grid Cards and compact Table modes.
+- **Information Architecture:** Separated primary marketplace flows (`Marketplace`, `Ture`, `Aplicări`, `Mesaje`) from secondary educational and civic tools (`Protecția Muncii (SSM)`, `Comunitate`).
+
+### 📱 Mobile Landing Page & Hero Polish (iPhone 12 Pro Fixes)
+- **Living Map Hero Collision Fixed:** Eliminated coordinate collision between the Swiss step pill/caption and the animated shift card. Re-anchored headline to top flow (`pt-24`), shift card and worker match to vertical center (`top-[370px]`), and step switcher to bottom dock (`bottom-4`), ensuring fluid responsiveness across all iPhone viewports (390px+).
+- **Streamlined Mobile Landing Content:** Removed heavy testimonials from mobile viewport, replaced with an elevated, high-contrast **Transparency of Income** section (`#income`) highlighting transparent hourly and total shift rates across HoReCa and Household jobs.
+
+---
+
 ## [0.5.0] — 2026-09-08 — UI/UX Overhaul: "Orașul lucrează" Living Map + Figma Design Polish
 
 ### 🎬 Living Map Hero & Scroll Story

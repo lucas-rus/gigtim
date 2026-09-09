@@ -5,17 +5,17 @@ import {
   MessageSquare,
   BarChart3,
   Star,
-  Users2,
   Zap,
   CheckCircle2,
   Lock,
   ArrowRight,
-  Quote,
   Coins,
   Coffee,
-  Sparkles,
-  MapPin,
   FileCheck,
+  Utensils,
+  Trees,
+  PartyPopper,
+  Users,
 } from 'lucide-react'
 import { LogoMark, LogoTile } from '@/components/brand/Logo'
 import { LivingMapHero } from '@/components/landing/LivingMapHero'
@@ -43,8 +43,8 @@ export default function LandingPage() {
             <a href="#how-it-works" className="transition-opacity hover:opacity-100 hover:text-white">
               Cum funcționează
             </a>
-            <a href="#community" className="transition-opacity hover:opacity-100 hover:text-white">
-              Povești locale
+            <a href="#income" className="transition-opacity hover:opacity-100 hover:text-white">
+              Câștiguri
             </a>
             <a href="#why-gigtim" className="transition-opacity hover:opacity-100 hover:text-white">
               De ce GigTim
@@ -208,241 +208,136 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Povești Locale — Real People from Timișoara HoReCa ── */}
-      <section id="community" className="border-t border-border/50 bg-card/25 py-20 sm:py-28">
+      {/* ── Transparență a Câștigurilor — Real Numbers in Timișoara ── */}
+      <section id="income" className="border-t border-border/50 bg-card/25 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <Reveal>
-            <div className="mx-auto max-w-3xl text-center space-y-3.5 mb-14 sm:mb-16">
+            <div className="mx-auto max-w-3xl text-center space-y-3.5 mb-12 sm:mb-16">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-1.5 text-xs font-mono text-primary shadow-xs">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span className="font-semibold tracking-wide">COMUNITATEA GIGTIM · TIMIȘOARA</span>
+                <FileCheck className="h-3.5 w-3.5" />
+                <span className="font-semibold tracking-wide">TRANSPARENȚĂ TOTALĂ A CÂȘTIGURILOR · TIMIȘOARA</span>
               </div>
               <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-                Oameni reali. <span className="text-primary-strong">Povești autentice</span> din Cetate, Unirii și Complex.
+                Știi exact cât câștigi <span className="text-primary-strong">înainte de fiecare tură</span>
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-                Cum ajută GigTim cafenelele locale să rezolve urgențele de personal și oferă studenților libertatea de a munci flexibil și legal.
+                Fără negocieri incomode și fără comisioane oprite din munca ta. Tarife reale plătite direct după încheierea serviciului.
               </p>
             </div>
           </Reveal>
 
-          {/* Testimonial Bento Grid */}
+          {/* Role Rates Grid */}
           <Reveal>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Card 1: D-na Maria (Employer / Cafe Owner) */}
-              <div className="relative flex flex-col justify-between rounded-3xl border border-border/80 bg-card/90 p-7 sm:p-9 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Quote className="h-6 w-6 opacity-75" />
-                      <span className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
-                        Proprietar Afacere Locală
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {[
+                {
+                  role: 'Barista & Bar Support',
+                  icon: <Coffee className="h-5 w-5" />,
+                  hourly: '35–45 lei',
+                  shiftTotal: '210–270 lei',
+                  shiftDesc: 'Tură de 6 ore · Cafenele & Baruri',
+                  badge: 'HoReCa · Legea 52',
+                  accent: 'border-primary/30',
+                },
+                {
+                  role: 'Ajutor Bucătărie & Prep',
+                  icon: <Utensils className="h-5 w-5" />,
+                  hourly: '35–42 lei',
+                  shiftTotal: '280–336 lei',
+                  shiftDesc: 'Tură de 8 ore · Restaurante Cetate',
+                  badge: 'HoReCa · Legea 52',
+                  accent: 'border-accent/30',
+                },
+                {
+                  role: 'Tuns Iarba & Grădinărit',
+                  icon: <Trees className="h-5 w-5" />,
+                  hourly: '40–50 lei',
+                  shiftTotal: '240–300 lei',
+                  shiftDesc: 'Tură de 6 ore · Curți & Spații verzi',
+                  badge: 'Casnic · Legea 111',
+                  accent: 'border-secondary/40',
+                },
+                {
+                  role: 'Evenimente & Logistică',
+                  icon: <PartyPopper className="h-5 w-5" />,
+                  hourly: '40–55 lei',
+                  shiftTotal: '320–440 lei',
+                  shiftDesc: 'Tură de 8 ore · Festivaluri & Nunți',
+                  badge: 'Evenimente · Legea 52',
+                  accent: 'border-primary/30',
+                },
+              ].map((item) => (
+                <div
+                  key={item.role}
+                  className={`relative flex flex-col justify-between rounded-3xl border ${item.accent} bg-card/90 backdrop-blur-sm p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 space-y-4`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary-strong">
+                        {item.icon}
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        {item.badge}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                      <Star className="h-3.5 w-3.5 fill-current" />
-                      <span>5.0 (42 ture)</span>
-                    </div>
-                  </div>
-                  <p className="text-sm sm:text-base leading-relaxed text-foreground/90 italic">
-                    „În weekendul festivalului din Piața Unirii am avut o avalanșă de clienți pe terasă. Un barista s-a îmbolnăvit vineri la prânz. Am publicat tura pe GigTim, iar în 20 de minute aveam un student priceput la espressor. Contractul de zilier și registrul ITM s-au semnat direct pe telefon.”
-                  </p>
-                </div>
-                <div className="mt-6 pt-5 border-t border-border/60 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-strong font-heading font-bold text-sm">
-                      M
-                    </div>
                     <div>
-                      <div className="font-heading text-sm font-bold text-foreground flex items-center gap-1.5">
-                        D-na Maria
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                          ✓ CUI Verificat
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        Cafeneaua din Cetate · Piața Unirii
-                      </div>
+                      <h4 className="font-heading text-base font-bold text-foreground">
+                        {item.role}
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {item.shiftDesc}
+                      </p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-mono text-muted-foreground hidden sm:inline-block">
-                    Angajator Activ
-                  </span>
-                </div>
-              </div>
 
-              {/* Card 2: Alex M. (Worker / Student Barista) */}
-              <div className="relative flex flex-col justify-between rounded-3xl border border-border/80 bg-card/90 p-7 sm:p-9 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Coffee className="h-6 w-6 opacity-75" />
-                      <span className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
-                        Zilier &amp; Student
+                  <div className="pt-3 border-t border-border/60">
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-mono text-2xl font-extrabold text-foreground">
+                        {item.hourly}
+                        <span className="text-xs font-sans font-normal text-muted-foreground ml-1">/ oră</span>
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                      <Star className="h-3.5 w-3.5 fill-current" />
-                      <span>4.9 (34 ture)</span>
-                    </div>
-                  </div>
-                  <p className="text-sm sm:text-base leading-relaxed text-foreground/90 italic">
-                    „Turele de weekend de 6-8 ore mă ajută să-mi plătesc căminul și cheltuielile fără să lipsesc de la cursuri la UVT în timpul săptămânii. Știu dinainte cât câștig pe oră (40 lei/h), iar banii îmi intră direct după ce termin tura.”
-                  </p>
-                </div>
-                <div className="mt-6 pt-5 border-t border-border/60 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-strong font-heading font-bold text-sm">
-                      A
-                    </div>
-                    <div>
-                      <div className="font-heading text-sm font-bold text-foreground flex items-center gap-1.5">
-                        Alex M.
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                          ✓ CI Verificată
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        Student UVT · Barista Piața Unirii
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-mono text-muted-foreground hidden sm:inline-block">
-                    40 lei/oră
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 3: Sorin B. (Event Manager) */}
-              <div className="relative flex flex-col justify-between rounded-3xl border border-border/80 bg-card/90 p-7 sm:p-9 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Users2 className="h-6 w-6 opacity-75" />
-                      <span className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
-                        Manager Evenimente &amp; Catering
+                    <div className="mt-1 flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Câștig estimat tură:</span>
+                      <span className="font-mono font-bold text-primary">
+                        {item.shiftTotal} net
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                      <Star className="h-3.5 w-3.5 fill-current" />
-                      <span>4.9 (118 zilieri)</span>
-                    </div>
                   </div>
-                  <p className="text-sm sm:text-base leading-relaxed text-foreground/90 italic">
-                    „Pentru evenimente mari și nunți în Timișoara am nevoie de 6-8 ospătari de încredere pentru o singură seară. Fără GigTim ar fi însemnat zeci de apeluri disperate. Acum totul este transparent și 100% conform Legii 52/2011.”
-                  </p>
                 </div>
-                <div className="mt-6 pt-5 border-t border-border/60 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-strong font-heading font-bold text-sm">
-                      S
-                    </div>
-                    <div>
-                      <div className="font-heading text-sm font-bold text-foreground flex items-center gap-1.5">
-                        Sorin B.
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                          ✓ Partener HoReCa
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        Catering &amp; Evenimente Timișoara
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-mono text-muted-foreground hidden sm:inline-block">
-                    100% Legal
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 4: Elena R. (Worker / Waiter) */}
-              <div className="relative flex flex-col justify-between rounded-3xl border border-border/80 bg-card/90 p-7 sm:p-9 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Quote className="h-6 w-6 opacity-75" />
-                      <span className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
-                        Ospătar &amp; Ajutor Bar
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                      <Star className="h-3.5 w-3.5 fill-current" />
-                      <span>5.0 (19 ture)</span>
-                    </div>
-                  </div>
-                  <p className="text-sm sm:text-base leading-relaxed text-foreground/90 italic">
-                    „Apreciez că nu există promisiuni false. Aplici cu un click pe hartă, vezi locația exactă, orele și remunerația. La final de zi, munca ta e respectată și ai siguranța legii de partea ta.”
-                  </p>
-                </div>
-                <div className="mt-6 pt-5 border-t border-border/60 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-strong font-heading font-bold text-sm">
-                      E
-                    </div>
-                    <div>
-                      <div className="font-heading text-sm font-bold text-foreground flex items-center gap-1.5">
-                        Elena R.
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                          ✓ Profil Verificat
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        Piața Libertății · Timișoara
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-mono text-muted-foreground hidden sm:inline-block">
-                    Plată Sigură
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </Reveal>
 
-          {/* Transparență & Câștiguri Banner (Stitch-inspired) */}
+          {/* Transparency Guarantees Row */}
           <Reveal>
-            <div className="mt-12 rounded-3xl border border-border/80 bg-gradient-to-r from-card via-card/90 to-card p-6 sm:p-10 shadow-lg">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="space-y-2 text-center md:text-left">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-primary">
-                    <FileCheck className="h-4 w-4" />
-                    TRANSPARENȚĂ TOTALĂ A VENITURILOR
-                  </span>
-                  <h3 className="font-heading text-xl sm:text-2xl font-bold text-foreground">
-                    Cât se câștigă în HoReCa Timișoara prin GigTim?
-                  </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-lg leading-relaxed">
-                    Fiecare tură are remunerația afișată transparent din primul moment. Fără negocieri incomode sau rețineri neanunțate.
-                  </p>
+            <div className="mt-10 rounded-2xl border border-border/60 bg-muted/20 p-5 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center sm:text-left">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                    ✓
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-foreground block">Plată pe loc garantată</span>
+                    <span className="text-[11px] text-muted-foreground">Fără așteptat până la sfârșitul lunii</span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-4 sm:gap-8">
-                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4 text-center min-w-[130px]">
-                    <div className="font-mono text-xl sm:text-2xl font-black text-primary-strong">
-                      35–50 lei
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                      Tarif mediu / oră
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-strong font-bold text-sm">
+                    0%
                   </div>
-                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4 text-center min-w-[130px]">
-                    <div className="font-mono text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                      210–300 lei
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                      Câștig / tură de 6h
-                    </div>
+                  <div>
+                    <span className="text-xs font-bold text-foreground block">Zero comision din salariu</span>
+                    <span className="text-[11px] text-muted-foreground">Tot ce lucrezi îți revine ție integral</span>
                   </div>
-                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4 text-center min-w-[130px]">
-                    <div className="font-mono text-xl sm:text-2xl font-black text-foreground">
-                      Legea 52
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                      Registru ITM generat
-                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent-foreground font-bold text-sm">
+                    ITM
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-foreground block">100% Acoperire Legală</span>
+                    <span className="text-[11px] text-muted-foreground">Registrul se semnează pe telefon</span>
                   </div>
                 </div>
               </div>
@@ -494,7 +389,7 @@ export default function LandingPage() {
                   desc: 'Recenzii după fiecare tură completată. Scorul de fiabilitate ajută angajatorii să aleagă cei mai serioși zilieri.',
                 },
                 {
-                  icon: <Users2 className="h-6 w-6 text-primary-strong" />,
+                  icon: <Users className="h-6 w-6 text-primary-strong" />,
                   title: 'Comunitate HoReCa locală',
                   desc: 'Forum dedicat pentru sfaturi, recomandări, legislație și oportunități în Timișoara și județele vecine.',
                 },

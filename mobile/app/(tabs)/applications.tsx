@@ -7,7 +7,16 @@ import { Card, Badge, Button, EmptyState, Skeleton, toast } from '@/src/ui';
 import { EmployerApplications } from '@/src/screens/EmployerApplications';
 
 const skillLabels: Record<string, string> = {
-  BARISTA: 'Barista', WAITER: 'Ospătar', DISHWASHER: 'Spălător vase', STAGEHAND: 'Stagehand',
+  BARISTA: 'Barista',
+  WAITER: 'Ospătar',
+  DISHWASHER: 'Spălător vase',
+  KITCHEN_HELP: 'Ajutor Bucătar',
+  STAGEHAND: 'Logistică / Scenă',
+  EVENT_CREW: 'Hostess / Evenimente',
+  GARDENER: 'Tuns Iarba / Grădină',
+  CLEANER: 'Curățenie & Menaj',
+  PET_SITTER: 'Pet Care',
+  PROMOTER: 'Promoter Teren',
 };
 
 const statusLabels: Record<string, string> = {
@@ -155,11 +164,25 @@ function WorkerApplications({ userDbId }: { userDbId: string | null }) {
                     {app.shift ? new Date(app.shift.start_time).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }) : ''}–{app.shift ? new Date(app.shift.end_time).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }) : ''}
                   </Text>
                 </View>
-                <View style={[styles.metaRow, { marginTop: 6 }]}>
-                  <CircleDollarSign color={t.primary} size={14} strokeWidth={2} />
-                  <Text style={{ color: t.foreground, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.mono }}>
-                    {app.shift?.hourly_pay_ron} RON/oră
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                  <View style={styles.metaRow}>
+                    <CircleDollarSign color={t.primary} size={15} strokeWidth={2} />
+                    <Text style={{ color: t.foreground, fontSize: fontSize.sm, fontWeight: fontWeight.bold, fontFamily: font.mono }}>
+                      {app.shift?.hourly_pay_ron} RON/oră
+                    </Text>
+                    {app.shift && (
+                      <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontFamily: font.sans }}>
+                        ({Math.max(1, Math.round((new Date(app.shift.end_time).getTime() - new Date(app.shift.start_time).getTime()) / 3600000))}h)
+                      </Text>
+                    )}
+                  </View>
+                  {app.shift && (
+                    <View style={{ backgroundColor: t.primary + '15', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                      <Text style={{ color: t.primaryStrong, fontSize: fontSize.xs, fontWeight: fontWeight.bold, fontFamily: font.mono }}>
+                        ~{Math.round(Math.max(1, (new Date(app.shift.end_time).getTime() - new Date(app.shift.start_time).getTime()) / 3600000) * app.shift.hourly_pay_ron)} RON total
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
 

@@ -7,10 +7,29 @@ import { useZoriTheme, font, fontSize, fontWeight, spacing, radius } from '@/src
 import { Card, Button, Badge, EmptyState, RatingStars, toast } from '@/src/ui';
 
 const skillLabels: Record<string, string> = {
-  BARISTA: 'Barista',
-  WAITER: 'Ospătar',
-  DISHWASHER: 'Spălător vase',
-  STAGEHAND: 'Stagehand',
+  BARISTA: 'Barista / Bar Support',
+  WAITER: 'Ajutor Ospătar / Servire',
+  DISHWASHER: 'Spălător vase / Oficiant',
+  KITCHEN_HELP: 'Ajutor Bucătar (prep)',
+  STAGEHAND: 'Logistică / Scenotehnică',
+  EVENT_CREW: 'Asistent Evenimente / Hostess',
+  GARDENER: 'Tuns Iarba / Grădinărit',
+  CLEANER: 'Curățenie & Menaj',
+  PET_SITTER: 'Îngrijire Animale (Pet Care)',
+  PROMOTER: 'Promoter & Sampling',
+};
+
+const skillLegalPillar: Record<string, { badge: string; label: string }> = {
+  BARISTA: { badge: '✓ Legea 52/2011', label: 'Zilier HoReCa' },
+  WAITER: { badge: '✓ Legea 52/2011', label: 'Zilier HoReCa' },
+  DISHWASHER: { badge: '✓ Legea 52/2011', label: 'Zilier HoReCa' },
+  KITCHEN_HELP: { badge: '✓ Legea 52/2011', label: 'Zilier HoReCa' },
+  STAGEHAND: { badge: '✓ Legea 52/2011', label: 'Evenimente & Scenă' },
+  EVENT_CREW: { badge: '✓ Legea 52/2011', label: 'Evenimente & Târguri' },
+  PROMOTER: { badge: '✓ Legea 52/2011', label: 'Promoter Teren' },
+  GARDENER: { badge: '✓ Legea 111/2022', label: 'Prestator Casnic' },
+  CLEANER: { badge: '✓ Legea 111/2022', label: 'Prestator Casnic' },
+  PET_SITTER: { badge: '✓ Legea 111/2022', label: 'Prestator Casnic' },
 };
 
 const INITIAL_REGION = {
@@ -241,9 +260,16 @@ export default function ExploreScreen() {
                       <Badge variant="primary">Deschis</Badge>
                     )}
                   </View>
-                  <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, marginBottom: 12, fontFamily: font.sans }}>
-                    {shift.employer?.company_name}
-                  </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: fontWeight.semibold, fontFamily: font.sans }}>
+                      {shift.employer?.company_name}
+                    </Text>
+                    {skillLegalPillar[shift.role_needed] && (
+                      <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontFamily: font.mono }}>
+                        {skillLegalPillar[shift.role_needed].badge}
+                      </Text>
+                    )}
+                  </View>
                   <View style={{ gap: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Calendar size={14} color={t.mutedForeground} />
@@ -292,9 +318,17 @@ export default function ExploreScreen() {
               </Pressable>
             </View>
 
-            <Text style={{ color: t.primary, fontSize: fontSize.base, fontWeight: fontWeight.semibold, marginBottom: 8, fontFamily: font.sans }}>
+            <Text style={{ color: t.primary, fontSize: fontSize.base, fontWeight: fontWeight.semibold, marginBottom: 4, fontFamily: font.sans }}>
               {selectedShift.employer?.company_name}
             </Text>
+
+            {skillLegalPillar[selectedShift.role_needed] && (
+              <View style={{ alignSelf: 'flex-start', backgroundColor: t.primary + '18', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginBottom: 12 }}>
+                <Text style={{ color: t.primary, fontSize: fontSize.xs, fontWeight: fontWeight.bold, fontFamily: font.mono }}>
+                  {skillLegalPillar[selectedShift.role_needed].badge} · {skillLegalPillar[selectedShift.role_needed].label}
+                </Text>
+              </View>
+            )}
 
             {selectedShift.employer?.employer_rating && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 }}>
@@ -304,10 +338,16 @@ export default function ExploreScreen() {
 
             <DetailRow icon={Calendar} text={`${formatDate(selectedShift.start_time)}, ${formatTime(selectedShift.start_time)} - ${formatTime(selectedShift.end_time)}`} t={t} />
             <DetailRow icon={MapPin} text={selectedShift.employer?.address} t={t} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
               <CircleDollarSign size={16} color={t.accent} />
               <Text style={{ color: t.foreground, fontSize: fontSize.base, fontWeight: fontWeight.bold, fontFamily: font.mono }}>
                 {selectedShift.hourly_pay_ron} RON/oră
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Text style={{ color: t.mutedForeground, fontSize: fontSize.xs, fontFamily: font.sans }}>
+                ✓ Protecția Muncii (SSM) acoperită prin GigTim Digital
               </Text>
             </View>
 

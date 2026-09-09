@@ -5,11 +5,12 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import {
   Map as MapIcon, List, MapPin, Calendar, CircleDollarSign, CheckCircle2,
-  MessageSquare, Star, X, Briefcase,
+  MessageSquare, Star, X, Briefcase, Coffee, Utensils, ChefHat, Trees,
+  Sparkles, PartyPopper, Megaphone, Hammer, HeartHandshake, ShieldCheck
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet'
-import { skillLabels, getLabel } from '@/lib/labels'
+import { skillLabels, getLabel, skillLegalPillar, legalPillarBadges } from '@/lib/labels'
 import { applyToShift, getOrCreateDirectChat } from '@/lib/romarg-data'
 import type { UserRole } from '@/lib/types/database'
 import { toast } from 'sonner'
@@ -33,6 +34,29 @@ function formatDate(iso: string) {
 }
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
+}
+
+function calculateDurationHours(startIso: string, endIso: string): number {
+  const start = new Date(startIso).getTime()
+  const end = new Date(endIso).getTime()
+  const diffHours = (end - start) / (1000 * 60 * 60)
+  return Math.max(1, Math.round(diffHours * 10) / 10)
+}
+
+function getRoleIcon(role: string) {
+  switch (role) {
+    case 'BARISTA': return Coffee
+    case 'WAITER': return Utensils
+    case 'KITCHEN_HELP': return ChefHat
+    case 'DISHWASHER': return Sparkles
+    case 'STAGEHAND': return Hammer
+    case 'EVENT_CREW': return PartyPopper
+    case 'GARDENER': return Trees
+    case 'CLEANER': return Sparkles
+    case 'PET_SITTER': return HeartHandshake
+    case 'PROMOTER': return Megaphone
+    default: return Briefcase
+  }
 }
 
 export function JobsClient({ shifts, userRole, initialAppliedShiftIds = [] }: JobsClientProps) {
@@ -237,41 +261,62 @@ export function JobsClient({ shifts, userRole, initialAppliedShiftIds = [] }: Jo
           ) : (
             filteredShifts.map((shift) => {
               const applied = appliedIds.has(shift.id)
+              const Icon = getRoleIcon(shift.role_needed)
+              const pillar = skillLegalPillar[shift.role_needed]
+              const pillarBadge = pillar ? legalPillarBadges[pillar] : null
+              const duration = calculateDurationHours(shift.start_time, shift.end_time)
+              const hourly = Number(shift.hourly_pay_ron) || 0
+              const totalPay = Math.round(duration * hourly)
+
               return (
                 <button
                   key={shift.id}
                   onClick={() => setSelectedShift(shift)}
-                  className="text-left bg-card dark:bg-card/40 border border-border/60 rounded-2xl p-5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:border-primary/30 transition-all duration-200 space-y-3"
+                  className="text-left bg-card border border-border/60 rounded-3xl p-5 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/40 transition-all duration-300 space-y-4 group"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1.5 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg font-bold font-heading text-foreground">
-                          {getLabel(skillLabels, shift.role_needed)}
-                        </h3>
-                        <span
-                          className={cn(
-                            'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                            applied
-                              ? 'bg-secondary/15 text-secondary dark:text-secondary'
-                              : 'bg-primary/10 text-primary-strong dark:text-primary'
-                          )}
-                        >
-                          {applied ? 'Aplicat' : 'Deschis'}
-                        </span>
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300 shadow-sm">
+                        <Icon className="h-5 w-5" />
                       </div>
-                      <p className="text-sm font-semibold text-foreground/90 truncate">
-                        {shift.company_name || 'Angajator'}
-                      </p>
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-base font-bold font-heading text-foreground truncate">
+                            {getLabel(skillLabels, shift.role_needed)}
+                          </h3>
+                          <span
+                            className={cn(
+                              'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase font-mono tracking-wider',
+                              applied
+                                ? 'bg-secondary/15 text-secondary'
+                                : 'bg-primary/10 text-primary-strong'
+                            )}
+                          >
+                            {applied ? 'Aplicat' : 'Deschis'}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-foreground/85 truncate">
+                          {shift.company_name || 'Angajator'}
+                        </p>
+                        {pillarBadge && (
+                          <span className="text-[10px] font-mono text-muted-foreground block">
+                            {pillarBadge.badge}
+                          </span>
+                        )}
+                      </div>
                     </div>
+
                     <div className="text-right shrink-0">
-                      <div className="text-lg font-bold font-mono text-foreground">
-                        {Number(shift.hourly_pay_ron)} <span className="text-xs font-sans font-normal text-muted-foreground">RON/oră</span>
+                      <div className="text-base font-bold font-mono text-foreground">
+                        {hourly} <span className="text-xs font-sans font-normal text-muted-foreground">RON/h</span>
+                      </div>
+                      <div className="text-[11px] font-mono font-bold text-primary">
+                        ~{totalPay} RON <span className="font-normal text-muted-foreground">({duration}h)</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground pt-1 border-t border-border/40">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                       {formatDate(shift.start_time)} · {formatTime(shift.start_time)}–{formatTime(shift.end_time)}
@@ -343,10 +388,28 @@ export function JobsClient({ shifts, userRole, initialAppliedShiftIds = [] }: Jo
 
               {/* Details */}
               <div className="space-y-3 rounded-2xl border border-border/50 bg-muted/30 dark:bg-muted/10 p-4">
+                {/* Legal Pillar Badge */}
+                {selectedShift.role_needed && skillLegalPillar[selectedShift.role_needed] && (
+                  <div className="flex items-start gap-2.5 pb-2.5 border-b border-border/40">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-xs font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <div className="text-xs">
+                      <span className="font-bold text-foreground">
+                        {legalPillarBadges[skillLegalPillar[selectedShift.role_needed]].badge}
+                      </span>
+                      <p className="text-muted-foreground text-[11px] mt-0.5">
+                        {legalPillarBadges[skillLegalPillar[selectedShift.role_needed]].description}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
                   <span className="text-foreground">
                     {formatDate(selectedShift.start_time)} · {formatTime(selectedShift.start_time)} – {formatTime(selectedShift.end_time)}
+                    {' '}({calculateDurationHours(selectedShift.start_time, selectedShift.end_time)}h)
                   </span>
                 </div>
                 {(selectedShift.employer_city || selectedShift.employer_county) && (
@@ -357,11 +420,24 @@ export function JobsClient({ shifts, userRole, initialAppliedShiftIds = [] }: Jo
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-3 text-sm">
-                  <CircleDollarSign className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
-                  <span className="font-mono font-bold text-foreground">
-                    {Number(selectedShift.hourly_pay_ron)} RON/oră
-                  </span>
+                <div className="flex items-center justify-between text-sm pt-1">
+                  <div className="flex items-center gap-3">
+                    <CircleDollarSign className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
+                    <span className="font-mono font-bold text-foreground">
+                      {Number(selectedShift.hourly_pay_ron)} RON/oră
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-mono font-bold text-primary">
+                      Total: ~{Math.round(calculateDurationHours(selectedShift.start_time, selectedShift.end_time) * (Number(selectedShift.hourly_pay_ron) || 0))} RON net
+                    </span>
+                  </div>
+                </div>
+
+                {/* SSM Badge */}
+                <div className="flex items-center gap-2 pt-2 border-t border-border/40 text-[11px] text-muted-foreground">
+                  <ShieldCheck className="h-4 w-4 text-secondary shrink-0" />
+                  <span>Protecția Muncii (SSM) acoperită prin Pașaportul Digital GigTim</span>
                 </div>
               </div>
 

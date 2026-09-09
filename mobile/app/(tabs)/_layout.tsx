@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
-import { MapPin, Calendar, MessageSquare, MessageCircle, User, Briefcase } from 'lucide-react-native';
+import { MapPin, Calendar, MessageSquare, MessageCircle, User, Briefcase, Users } from 'lucide-react-native';
 import { useZoriTheme } from '@/src/design/useTheme';
 import { supabase } from '@/lib/supabase';
 
@@ -69,37 +69,37 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Ture',
+          title: 'Explorează',
           headerTitle: 'Explorează Ture',
-          tabBarLabel: 'Hartă',
+          tabBarLabel: 'Explorează',
           tabBarIcon: ({ color, size }) => <MapPin size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="applications"
         options={{
-          title: 'Aplicații',
+          title: 'Turele Mele',
           headerTitle: 'Turele Mele',
-          tabBarLabel: 'Aplicații',
+          tabBarLabel: 'Turele Mele',
           tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="forum"
-        options={{
-          title: 'Forum',
-          headerTitle: 'Discuții Comunitate',
-          tabBarLabel: 'Forum',
-          tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
           title: 'Mesaje',
-          headerTitle: 'Chat',
-          tabBarLabel: 'Chat',
+          headerTitle: 'Mesaje & Chat',
+          tabBarLabel: 'Mesaje',
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="forum"
+        options={{
+          title: 'Comunitate',
+          headerTitle: 'Comunitate & Hub',
+          tabBarLabel: 'Comunitate',
+          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
         }}
       />
       <Tabs.Screen
