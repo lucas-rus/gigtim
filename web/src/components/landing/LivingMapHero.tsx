@@ -668,7 +668,7 @@ export function LivingMapHero() {
       <div className="absolute bottom-6 sm:bottom-8 md:bottom-10 lg:bottom-16 left-4 sm:left-8 md:left-10 lg:left-12 z-20 flex max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl flex-col gap-2.5 sm:gap-4 lg:gap-5 pr-4 sm:pr-0">
         {/* Status Chip */}
         <div
-          className="inline-flex items-center gap-2 self-start rounded-full border px-3 py-1 sm:px-3.5 sm:py-1.5 backdrop-blur-md"
+          className="hidden sm:inline-flex items-center gap-2 self-start rounded-full border px-3 py-1 sm:px-3.5 sm:py-1.5 backdrop-blur-md"
           style={{ borderColor: 'oklch(0.82 0.15 80 / 0.4)', background: 'oklch(0.18 0.01 50 / 0.7)' }}
         >
           <span className="relative flex h-2 w-2">
