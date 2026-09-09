@@ -43,14 +43,14 @@ export function LandingNavbar() {
           <LanguageToggle />
           <Link
             href="/login"
-            className="whitespace-nowrap rounded-lg px-2.5 sm:px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
+            className="whitespace-nowrap rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-opacity hover:opacity-80"
             style={{ color: 'oklch(0.85 0.01 60)' }}
           >
             {t.nav.login}
           </Link>
           <Link
             href="/register"
-            className="whitespace-nowrap rounded-xl px-3 sm:px-4 py-2 text-sm font-semibold transition-all duration-200 hover:brightness-110 shadow-md shadow-primary/20 active:scale-[0.98]"
+            className="hidden sm:inline-flex whitespace-nowrap rounded-xl px-3.5 sm:px-4 py-2 text-sm font-semibold transition-all duration-200 hover:brightness-110 shadow-md shadow-primary/20 active:scale-[0.98]"
             style={{ background: 'oklch(0.55 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
           >
             {t.nav.register}

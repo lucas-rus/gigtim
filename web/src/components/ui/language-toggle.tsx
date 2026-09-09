@@ -20,7 +20,7 @@ export function LanguageToggle({ className = '' }: LanguageToggleProps) {
         type="button"
         onClick={() => setLanguage('ro')}
         aria-pressed={language === 'ro'}
-        className={`rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wider transition-all duration-200 ${
+        className={`rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold tracking-wider transition-all duration-200 ${
           language === 'ro'
             ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-[1.02]'
             : 'text-muted-foreground hover:text-foreground'
@@ -32,7 +32,7 @@ export function LanguageToggle({ className = '' }: LanguageToggleProps) {
         type="button"
         onClick={() => setLanguage('en')}
         aria-pressed={language === 'en'}
-        className={`rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wider transition-all duration-200 ${
+        className={`rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold tracking-wider transition-all duration-200 ${
           language === 'en'
             ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-[1.02]'
             : 'text-muted-foreground hover:text-foreground'
