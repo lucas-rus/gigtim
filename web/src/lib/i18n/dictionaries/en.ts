@@ -88,7 +88,7 @@ export const en: TranslationDictionary = {
     act1Caption: 'Shifts light up on the map',
     act2Caption: 'Pick a shift, see the details',
     act3Caption: 'Match: worker is on their way',
-    act4Caption: 'Dawn: ITM registry, ready automatically',
+    act4Caption: 'ITM registry, ready automatically',
     shiftCardTitle: 'Specialist Barista',
     urgent: 'URGENT',
     shiftHours: '17:00–23:00 (240 lei)',

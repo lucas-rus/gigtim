@@ -86,7 +86,7 @@ export const ro = {
     act1Caption: 'Turele se aprind pe hartă',
     act2Caption: 'Alege o tură, vezi detaliile',
     act3Caption: 'Match: lucrătorul e pe drum',
-    act4Caption: 'Zorii: registrul ITM, gata automat',
+    act4Caption: 'Registrul ITM, gata automat',
     shiftCardTitle: 'Barista Specialist',
     urgent: 'URGENT',
     shiftHours: '17:00–23:00 (240 lei)',
