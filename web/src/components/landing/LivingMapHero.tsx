@@ -30,16 +30,22 @@ const PINS = [
 ]
 
 const ACTS = [
-  { id: 0, label: '01', caption: 'Turele se aprind pe hartă' },
-  { id: 1, label: '02', caption: 'Alege o tură, vezi detaliile' },
-  { id: 2, label: '03', caption: 'Match: lucrătorul e pe drum' },
-  { id: 3, label: '04', caption: 'Zorii: registrul ITM, gata automat' },
+  { id: 0, label: '01' },
+  { id: 1, label: '02' },
+  { id: 2, label: '03' },
+  { id: 3, label: '04' },
 ]
 
 const ACT_DURATION_MS = 2500 // Snappy 2.5s per act
 
 export function LivingMapHero() {
   const { t } = useTranslation()
+  const actCaptions = [
+    t.hero.act1Caption,
+    t.hero.act2Caption,
+    t.hero.act3Caption,
+    t.hero.act4Caption,
+  ]
   const sectionRef = useRef<HTMLElement>(null)
   const [currentAct, setCurrentAct] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
@@ -205,8 +211,6 @@ export function LivingMapHero() {
     },
     { scope: sectionRef }
   )
-
-  const activeActData = ACTS[currentAct]
 
   return (
     <section
@@ -593,11 +597,11 @@ export function LivingMapHero() {
       >
         <div className="flex items-center justify-between">
           <span className="font-heading text-xs sm:text-sm font-bold" style={{ color: 'oklch(0.96 0.01 75)' }}>
-            Barista Specialist
+            {t.hero.shiftCardTitle}
           </span>
           <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-medium">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            URGENT
+            {t.hero.urgent}
           </span>
         </div>
         <div className="flex items-baseline gap-2">
@@ -605,18 +609,18 @@ export function LivingMapHero() {
             40 LEI/H
           </span>
           <span className="font-mono text-xs opacity-75" style={{ color: 'oklch(0.92 0.01 75)' }}>
-            17:00–23:00 (240 lei)
+            {t.hero.shiftHours}
           </span>
         </div>
         <span className="text-[11px] sm:text-xs" style={{ color: 'oklch(0.7 0.015 60)' }}>
-          Cafeneaua din Cetate · Piața Unirii
+          {t.hero.shiftLocation}
         </span>
         <div className="mt-1 flex items-center gap-2">
           <span
             className="flex-1 inline-flex h-8 sm:h-9 items-center justify-center rounded-xl text-[11px] sm:text-xs font-semibold shadow"
             style={{ background: 'oklch(0.62 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
           >
-            Aplică cu un click
+            {t.hero.applyClick}
           </span>
         </div>
       </div>
@@ -636,10 +640,10 @@ export function LivingMapHero() {
         </div>
         <div className="flex flex-col">
           <span className="font-heading text-xs sm:text-sm font-bold" style={{ color: 'oklch(0.96 0.01 75)' }}>
-            Andrei M. · Barista
+            {t.hero.matchWorker}
           </span>
           <span className="text-[11px] font-mono" style={{ color: 'oklch(0.48 0.13 150)' }}>
-            4.9 ★ (28 ture) · Sosește în 12 min
+            {t.hero.matchShifts} · {t.hero.matchEta}
           </span>
         </div>
       </div>
@@ -652,7 +656,7 @@ export function LivingMapHero() {
         aria-hidden="true"
       >
         <span className="font-mono text-[9px] sm:text-[10px] tracking-widest font-bold" style={{ color: 'oklch(0.4 0.02 55)' }}>
-          REGISTRUL ZILIERILOR
+          {t.hero.itmCardTitle}
         </span>
         <span className="h-1.5 rounded-full" style={{ background: 'oklch(0.9 0.01 75)' }} />
         <span className="h-1.5 w-3/4 rounded-full" style={{ background: 'oklch(0.9 0.01 75)' }} />
@@ -662,7 +666,7 @@ export function LivingMapHero() {
           className="self-end rounded border-2 px-2 py-0.5 font-mono text-[10px] sm:text-xs font-bold"
           style={{ color: 'oklch(0.48 0.13 150)', borderColor: 'oklch(0.48 0.13 150)' }}
         >
-          CONFORM · LEGEA 52/2011
+          {t.hero.itmCompliance}
         </span>
       </div>
 
@@ -789,7 +793,7 @@ export function LivingMapHero() {
               borderColor: 'oklch(1 0 0 / 0.08)',
             }}
           >
-            {`${currentAct + 1}/4 — ${activeActData.caption.toUpperCase()}`}
+            {`${currentAct + 1}/4 — ${actCaptions[currentAct].toUpperCase()}`}
           </span>
         </div>
       </div>

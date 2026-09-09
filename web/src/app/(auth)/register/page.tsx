@@ -370,7 +370,7 @@ export default function RegisterPage() {
                               autoFocus
                               value={countySearch}
                               onChange={(e) => setCountySearch(e.target.value)}
-                              placeholder="Caută județ (ex: Timiș, Cluj, B)..."
+                              placeholder={t.auth.searchCountyPlaceholder}
                               className="w-full rounded-xl border border-border bg-background px-8 py-2 text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                             />
                             {countySearch && (
@@ -415,7 +415,7 @@ export default function RegisterPage() {
                             ))
                           ) : (
                             <div className="px-3 py-4 text-center text-xs text-muted-foreground italic">
-                              Niciun județ găsit pentru "{countySearch}"
+                              {t.auth.noCountyFound} "{countySearch}"
                             </div>
                           )}
                         </div>
@@ -456,7 +456,7 @@ export default function RegisterPage() {
                               autoFocus
                               value={citySearch}
                               onChange={(e) => setCitySearch(e.target.value)}
-                              placeholder={`Caută localitate în ${selectedCounty}...`}
+                              placeholder={`${t.auth.searchCityPlaceholder} ${selectedCounty}...`}
                               className="w-full rounded-xl border border-border bg-background px-8 py-2 text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                             />
                             {citySearch && (
@@ -505,7 +505,7 @@ export default function RegisterPage() {
                               className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 text-left transition-all"
                             >
                               <Plus className="h-3.5 w-3.5" />
-                              <span>Utilizează "{citySearch.trim()}"</span>
+                              <span>{t.auth.useCustomCity} "{citySearch.trim()}"</span>
                             </button>
                           )}
                         </div>
