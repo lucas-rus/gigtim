@@ -5,6 +5,17 @@
 
 ---
 
+## [0.7.0] — 2026-09-09 — Full Bilingual (RO/EN) i18n Translation & Mobile Navbar Polish
+
+### 🌐 Complete Bilingual (Romanian & English) Internationalization
+- **Landing Page (`/`):** Converted to reactive client component wired to `useTranslation()`. Every section (`#why-gigtim`, `#how-it-works`, `#income`, `#features`, CTA banner, global footer) dynamically toggles between Romanian and English.
+- **Living Map Hero:** All 4 act switcher captions, barista shift card, match confirmation toast, and ITM compliance badge now dynamically translate into English (`Specialist Barista`, `Law 52/2011`, `Dawn: ITM registry ready`).
+- **Register & Login:** Fully translated 4-step registration wizard, searchable county and city selectors, empty search states, email confirmation screen, and login error states.
+- **Mobile Navbar Polish:** Resolved button crowding on mobile viewports (< 400px) with responsive padding and prioritized CTAs.
+- **Zero Drift Cartography:** Preserved invariant SVG origin (`750 450`) across all hero animation cycles.
+
+---
+
 ## [0.6.0] — 2026-09-09 — Marketplace Overhaul, Legal Framework Expansion & Digital SSM
 
 ### ⚖️ Legal Framework & Casual Jobs Expansion (Legea 52/2011 + Legea 111/2022)
