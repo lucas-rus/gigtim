@@ -3,6 +3,7 @@ import { Inter, Sora, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "@/lib/i18n";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,10 +40,12 @@ export default function RootLayout({
     <html lang="ro" className={`${inter.variable} ${sora.variable} ${jetbrains.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-          <Toaster richColors position="top-right" />
+          <LanguageProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+            <Toaster richColors position="top-right" />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

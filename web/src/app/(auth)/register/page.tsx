@@ -6,8 +6,11 @@ import { romargRegister, logout } from '@/lib/romarg-auth'
 import { ROMANIAN_COUNTIES, searchLocations } from '@/lib/romanian-locations'
 import { User, Building, MapPin, ChevronDown, Check, Search, X, Plus } from 'lucide-react'
 import { LogoMark } from '@/components/brand/Logo'
+import { useTranslation } from '@/lib/i18n'
+import { LanguageToggle } from '@/components/ui/language-toggle'
 
 export default function RegisterPage() {
+  const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
@@ -75,11 +78,11 @@ export default function RegisterPage() {
     setError(null)
     if (step === 2) {
       if (password !== confirmPassword) {
-        setError('Parolele nu coincid.')
+        setError(t.auth.passwordsMismatch)
         return
       }
       if (password.length < 6) {
-        setError('Parola trebuie să aibă minim 6 caractere.')
+        setError(t.auth.passwordMinLength)
         return
       }
     }
@@ -124,6 +127,11 @@ export default function RegisterPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4 sm:p-6 text-foreground font-sans">
+      {/* Language Toggle in Top Right */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <LanguageToggle />
+      </div>
+
       {/* Ambient Glows */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary/5 dark:bg-primary/10 blur-[120px] animate-pulse"></div>
@@ -143,7 +151,7 @@ export default function RegisterPage() {
               GigTim
             </h1>
             <p className="text-xs text-muted-foreground font-light tracking-wide">
-              Creează-ți contul în câteva secunde
+              {t.auth.registerSubtitle}
             </p>
           </div>
         </div>
@@ -153,16 +161,16 @@ export default function RegisterPage() {
           <div className="p-6 sm:p-8">
             <div className="mb-5 space-y-1">
               <h2 className="text-xl font-bold font-heading text-foreground">
-                {step === 1 && 'Tipul contului'}
-                {step === 2 && 'Date autentificare'}
-                {step === 3 && 'Profil utilizator'}
-                {step === 4 && 'Cont creat cu succes!'}
+                {step === 1 && t.auth.step1Title}
+                {step === 2 && t.auth.step2Title}
+                {step === 3 && t.auth.step3Title}
+                {step === 4 && t.auth.step4Title}
               </h2>
               <p className="text-xs text-muted-foreground font-light italic">
-                {step === 1 && 'Alege cum vrei să folosești platforma'}
-                {step === 2 && 'Introdu adresa de email și o parolă sigură'}
-                {step === 3 && 'Completează detaliile pentru a-ți finaliza profilul'}
-                {step === 4 && 'Urmează ultimul pas pentru activare'}
+                {step === 1 && t.auth.step1Desc}
+                {step === 2 && t.auth.step2Desc}
+                {step === 3 && t.auth.step3Desc}
+                {step === 4 && t.auth.step4Desc}
               </p>
             </div>
 
@@ -190,7 +198,7 @@ export default function RegisterPage() {
               {/* STEP 1: ROLE */}
               {step === 1 && (
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Tip cont</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t.auth.accountType}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -202,7 +210,7 @@ export default function RegisterPage() {
                       }`}
                     >
                       <User className="h-8 w-8 text-primary" />
-                      <span className="font-bold font-heading">Zilier / Lucrător</span>
+                      <span className="font-bold font-heading">{t.auth.roleWorkerTitle}</span>
                     </button>
                     <button
                       type="button"
@@ -214,7 +222,7 @@ export default function RegisterPage() {
                       }`}
                     >
                       <Building className="h-8 w-8 text-primary" />
-                      <span className="font-bold font-heading">Angajator</span>
+                      <span className="font-bold font-heading">{t.auth.roleEmployerTitle}</span>
                     </button>
                   </div>
                 </div>
@@ -224,35 +232,35 @@ export default function RegisterPage() {
               {step === 2 && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Email</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.emailLabel}</label>
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="nume@exemplu.ro"
+                      placeholder={t.auth.emailPlaceholder}
                       className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Parolă</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.passwordLabel}</label>
                     <input
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="minim 6 caractere"
+                      placeholder={t.auth.passwordPlaceholder}
                       className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Confirmă Parola</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.confirmPasswordLabel}</label>
                     <input
                       type="password"
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="repetă parola"
+                      placeholder={t.auth.confirmPasswordLabel}
                       className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     />
                   </div>
@@ -264,49 +272,49 @@ export default function RegisterPage() {
                 <div className="space-y-4">
                   {role === 'WORKER' ? (
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Nume Complet</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.fullNameLabel}</label>
                       <input
                         type="text"
                         required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        placeholder="Popescu Ion"
+                        placeholder={t.auth.fullNamePlaceholder}
                         className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
                   ) : (
                     <>
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Nume Companie</label>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.companyNameLabel}</label>
                         <input
                           type="text"
                           required
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
-                          placeholder="SC Restaurant SRL"
+                          placeholder={t.auth.companyNamePlaceholder}
                           className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">CUI</label>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.cuiLabel}</label>
                           <input
                             type="text"
                             required
                             value={cui}
                             onChange={(e) => setCui(e.target.value)}
-                            placeholder="RO12345678"
+                            placeholder={t.auth.cuiPlaceholder}
                             className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Adresă Sediu</label>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.addressLabel}</label>
                           <input
                             type="text"
                             required
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            placeholder="Str. Revoluției 10"
+                            placeholder={t.auth.addressPlaceholder}
                             className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                           />
                         </div>
@@ -315,20 +323,20 @@ export default function RegisterPage() {
                   )}
 
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Telefon</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.phoneLabel}</label>
                     <input
                       type="tel"
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="07xxxxxxxx"
+                      placeholder={t.auth.phonePlaceholder}
                       className="w-full rounded-2xl border border-border bg-background/50 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                     />
                   </div>
 
                   {/* SEARCHABLE JUDEȚ (COUNTY) SELECT */}
                   <div className="relative" ref={countyRef}>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Județ</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.countyLabel}</label>
                     <button
                       type="button"
                       onClick={() => {
@@ -417,7 +425,7 @@ export default function RegisterPage() {
 
                   {/* SEARCHABLE LOCALITATE (CITY) SELECT WITH CUSTOM ENTRY */}
                   <div className="relative" ref={cityRef}>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">Localitate / Oraș</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 ml-1">{t.auth.cityLabel}</label>
                     <button
                       type="button"
                       onClick={() => {
@@ -513,16 +521,16 @@ export default function RegisterPage() {
                   <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
                     ✉️
                   </div>
-                  <h3 className="text-xl font-bold font-heading">Verifică-ți adresa de email</h3>
+                  <h3 className="text-xl font-bold font-heading">{t.auth.emailVerifyTitle}</h3>
                   <p className="text-xs text-muted-foreground italic leading-relaxed">
-                    Am trimis un link de confirmare la adresa <strong>{email}</strong>. Te rugăm să deschizi emailul și să apeși pe link pentru a-ți activa contul.
+                    {t.auth.emailVerifyBody} <strong>{email}</strong>. {t.auth.emailVerifyAction}
                   </p>
                   <div className="pt-2">
                     <Link
                       href="/login"
                       className="inline-block w-full rounded-2xl border border-border bg-card/50 py-3 text-center text-sm font-bold text-foreground hover:bg-accent transition-all"
                     >
-                      Mergi la Autentificare
+                      {t.auth.goToLogin}
                     </Link>
                   </div>
                 </div>
@@ -537,7 +545,7 @@ export default function RegisterPage() {
                       onClick={handlePrevStep}
                       className="flex-1 rounded-2xl border border-border bg-card/50 py-3 text-sm font-bold text-foreground hover:bg-accent transition-all"
                     >
-                      Înapoi
+                      {t.common.back}
                     </button>
                   )}
                   <button
@@ -545,11 +553,19 @@ export default function RegisterPage() {
                     disabled={loading}
                     className="flex-1 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 disabled:opacity-50 transition-all"
                   >
-                    {loading ? 'Se procesează...' : step === 3 ? 'Creează cont' : 'Continuă'}
+                    {loading ? t.common.loading : step === 3 ? t.auth.submitCreateAccount : t.common.continue}
                   </button>
                 </div>
               )}
             </form>
+
+            {/* Link back to login */}
+            <div className="mt-8 text-center text-xs text-muted-foreground">
+              {t.auth.alreadyHaveAccount}{' '}
+              <Link href="/login" className="font-semibold text-primary hover:underline">
+                {t.auth.logInHere}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import gsap from 'gsap'
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 import { useGSAP } from '@gsap/react'
 import { Play, Pause } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 gsap.registerPlugin(useGSAP, MotionPathPlugin)
 
@@ -38,6 +39,7 @@ const ACTS = [
 const ACT_DURATION_MS = 2500 // Snappy 2.5s per act
 
 export function LivingMapHero() {
+  const { t } = useTranslation()
   const sectionRef = useRef<HTMLElement>(null)
   const [currentAct, setCurrentAct] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
@@ -679,7 +681,7 @@ export function LivingMapHero() {
             <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: 'oklch(0.82 0.15 80)' }} />
           </span>
           <span className="font-mono text-[9px] sm:text-[10px] lg:text-[11px] font-bold tracking-widest" style={{ color: 'oklch(0.82 0.15 80)' }}>
-            TURE LIVE PE HARTA ORAȘULUI
+            {t.hero.liveBadge}
           </span>
         </div>
 
@@ -688,15 +690,14 @@ export function LivingMapHero() {
           className="font-heading text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.12] sm:leading-[1.1] md:leading-[1.08] tracking-tight"
           style={{ color: 'oklch(0.96 0.01 75)' }}
         >
-          Orașul lucrează.
+          {t.hero.titleLine1}
           <br />
-          <span style={{ color: 'oklch(0.82 0.15 80)' }}>Tu doar alegi tura.</span>
+          <span style={{ color: 'oklch(0.82 0.15 80)' }}>{t.hero.titleLine2}</span>
         </h1>
 
         {/* Hero Body */}
         <p className="max-w-md text-xs sm:text-sm lg:text-base leading-relaxed md:leading-normal lg:text-lg opacity-90" style={{ color: 'oklch(0.78 0.015 60)' }}>
-          Ture de o zi în HoReCa, pe harta orașului tău. Aplici cu un click, angajatorul te
-          acceptă, iar registrul ITM se generează automat.
+          {t.hero.description}
         </p>
 
         {/* CTAs */}
@@ -706,7 +707,7 @@ export function LivingMapHero() {
             className="group inline-flex h-10 sm:h-11 lg:h-12 items-center justify-center gap-2 rounded-xl px-4 sm:px-6 lg:px-7 text-xs sm:text-sm font-semibold shadow-lg shadow-primary/25 transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
             style={{ background: 'oklch(0.55 0.19 35)', color: 'oklch(0.99 0.004 75)' }}
           >
-            Creează cont
+            {t.hero.createAccount}
             <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
           </Link>
           <a
@@ -714,7 +715,7 @@ export function LivingMapHero() {
             className="inline-flex h-10 sm:h-11 lg:h-12 items-center justify-center rounded-xl border px-3.5 sm:px-6 lg:px-7 text-xs sm:text-sm font-medium transition-colors duration-200 hover:bg-white/5"
             style={{ borderColor: 'oklch(1 0 0 / 0.2)', color: 'oklch(0.88 0.01 60)' }}
           >
-            De ce GigTim?
+            {t.hero.whyGigtim}
           </a>
         </div>
       </div>

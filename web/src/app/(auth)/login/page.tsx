@@ -4,8 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { LogoMark } from '@/components/brand/Logo'
+import { useTranslation } from '@/lib/i18n'
+import { LanguageToggle } from '@/components/ui/language-toggle'
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -26,7 +29,7 @@ export default function LoginPage() {
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok || data?.error) {
-        setError(data?.error || 'Email sau parolă incorectă.')
+        setError(data?.error || (t.auth.emailLabel + ' / ' + t.auth.passwordLabel + ' incorect.'))
         setLoading(false)
         return
       }
@@ -43,6 +46,11 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6 text-foreground font-sans">
+      {/* Language Toggle in Top Right */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <LanguageToggle />
+      </div>
+
       {/* Background Elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary/5 dark:bg-primary/10 blur-[120px] animate-pulse"></div>
@@ -62,7 +70,7 @@ export default function LoginPage() {
               GigTim
             </h1>
             <p className="text-muted-foreground font-light tracking-wide">
-              Marketplace de zilieri pentru România
+              {t.auth.loginSubtitle}
             </p>
           </div>
         </div>
@@ -71,8 +79,8 @@ export default function LoginPage() {
         <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/65 dark:bg-card/45 backdrop-blur-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.05)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-500 hover:border-primary/20">
           <div className="p-8 sm:p-10">
             <div className="mb-8 space-y-2">
-              <h2 className="text-2xl font-bold font-heading text-foreground">Autentificare</h2>
-              <p className="text-sm text-muted-foreground font-light italic">Intră în contul tău pentru a continua</p>
+              <h2 className="text-2xl font-bold font-heading text-foreground">{t.auth.loginTitle}</h2>
+              <p className="text-sm text-muted-foreground font-light italic">{t.auth.loginSubtitle}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -85,14 +93,14 @@ export default function LoginPage() {
               {/* Email Field */}
               <div className="space-y-2.5">
                 <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground ml-1" htmlFor="email">
-                  Email
+                  {t.auth.emailLabel}
                 </label>
                 <input
                   id="email"
                   name="email"
                   type="email"
                   required
-                  placeholder="nume@example.ro"
+                  placeholder={t.auth.emailPlaceholder}
                   className="w-full rounded-2xl border border-border/80 bg-background/50 dark:bg-background/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 transition-all duration-200 focus:border-primary focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10"
                 />
               </div>
@@ -101,7 +109,7 @@ export default function LoginPage() {
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between ml-1">
                   <label className="block text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground" htmlFor="password">
-                    Parolă
+                    {t.auth.passwordLabel}
                   </label>
                 </div>
                 <input
@@ -109,7 +117,7 @@ export default function LoginPage() {
                   name="password"
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder={t.auth.passwordPlaceholder}
                   className="w-full rounded-2xl border border-border/80 bg-background/50 dark:bg-background/30 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 transition-all duration-200 focus:border-primary focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10"
                 />
               </div>
@@ -120,14 +128,14 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full rounded-2xl bg-primary-strong py-3.5 text-sm font-semibold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:brightness-108 active:scale-[0.99] disabled:opacity-50"
               >
-                {loading ? 'Se conectează...' : 'Conectează-te'}
+                {loading ? t.auth.loggingIn : t.auth.loginButton}
               </button>
             </form>
 
             <div className="mt-8 text-center text-xs text-muted-foreground">
-              Nu ai un cont?{' '}
+              {t.auth.noAccount}{' '}
               <Link href="/register" className="font-semibold text-primary hover:underline">
-                Creează cont nou
+                {t.auth.createNewAccount}
               </Link>
             </div>
           </div>
