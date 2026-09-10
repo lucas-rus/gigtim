@@ -232,7 +232,9 @@ export function LivingMapHero() {
         .map-road-primary-casing { stroke: #cbd5e1; }
         .map-road-primary-core { stroke: #475569; }
         .map-road-primary-dash { stroke: #ffffff; }
-        .map-label { fill: #475569; }
+        .map-label { fill: #475569; stroke: #f8fafc; stroke-width: 2.5px; paint-order: stroke fill; }
+        .map-label-bridge { fill: #0284c7; stroke: #f8fafc; stroke-width: 3.5px; paint-order: stroke fill; font-weight: 800; }
+        .map-label-campus { fill: #059669; stroke: #f8fafc; stroke-width: 2.5px; paint-order: stroke fill; }
         .map-label-hero { fill: #0f172a; }
 
         :is(.dark *) .map-bg-rect { fill: #000000; }
@@ -247,7 +249,9 @@ export function LivingMapHero() {
         :is(.dark *) .map-road-primary-casing { stroke: #181818; }
         :is(.dark *) .map-road-primary-core { stroke: #484848; }
         :is(.dark *) .map-road-primary-dash { stroke: #888888; }
-        :is(.dark *) .map-label { fill: #71717a; }
+        :is(.dark *) .map-label { fill: #94a3b8; stroke: #000000; stroke-width: 2.5px; paint-order: stroke fill; }
+        :is(.dark *) .map-label-bridge { fill: #38bdf8; stroke: #000000; stroke-width: 3.5px; paint-order: stroke fill; font-weight: 800; }
+        :is(.dark *) .map-label-campus { fill: #34d399; stroke: #000000; stroke-width: 2.5px; paint-order: stroke fill; }
         :is(.dark *) .map-label-hero { fill: #ffffff; }
       `}</style>
 
@@ -391,10 +395,10 @@ export function LivingMapHero() {
             <g className="hidden sm:block" fontFamily="JetBrains Mono, monospace" fontSize="10" fontWeight="700" letterSpacing="2">
               <text x="462" y="435" textAnchor="middle" className="map-label">PIAȚA VICTORIEI</text>
               <text x="960" y="258" textAnchor="middle" className="map-label">BASTION</text>
-              <text x="880" y="605" textAnchor="middle" className="map-label" fill="#0284c7">PODUL MICHELANGELO</text>
-              <text x="1260" y="732" textAnchor="middle" className="map-label" fill="#10b981">COMPLEX STUDENȚESC</text>
+              <text x="1005" y="556" textAnchor="middle" className="map-label-bridge">PODUL MICHELANGELO</text>
+              <text x="1260" y="732" textAnchor="middle" className="map-label-campus">COMPLEX STUDENȚESC</text>
               <text x="220" y="665" textAnchor="middle" className="map-label">IOSEFIN</text>
-              <text x="1240" y="342" textAnchor="middle" className="map-label">FABRIC</text>
+              <text x="1325" y="395" textAnchor="middle" className="map-label">FABRIC</text>
             </g>
 
             {/* 8. Worker Route (Complexul Studențesc -> Podul Michelangelo -> Piața Unirii) */}

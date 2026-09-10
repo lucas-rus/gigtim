@@ -22,12 +22,12 @@ export const TIMISOARA_LANDMARKS: readonly Landmark[] = [
   { x: 660, y: 200, name: "PIAȚA UNIRII", hero: true, r: 8 },
   { x: 462, y: 410, name: "PIAȚA VICTORIEI", r: 5.5 },
   { x: 960, y: 275, name: "BASTION", r: 5 },
-  { x: 880, y: 625, name: "PODUL MICHELANGELO", r: 5 },
+  { x: 1005, y: 587, name: "PODUL MICHELANGELO", r: 5 },
   { x: 1260, y: 700, name: "COMPLEX STUDENȚESC", r: 6.5 },
   { x: 220, y: 640, name: "IOSEFIN", r: 4.5 },
-  { x: 1240, y: 360, name: "FABRIC", r: 4.5 },
+  { x: 1325, y: 415, name: "FABRIC", r: 4.5 },
 ] as const;
 
-// Realistic path connecting Complex Studențesc across Podul Michelangelo into Piața Unirii
+// Authentic path: Complex Studențesc -> crosses Podul Michelangelo over Bega -> Bd. Michelangelo -> Piața Unirii
 export const WORKER_ROUTE_PATH =
-  "M 1260 700 C 1120 670, 960 645, 880 625 C 840 540, 830 420, 840 340 C 820 280, 750 220, 660 200";
+  "M 1260 700 C 1160 670, 1080 640, 1030 615 C 1015 598, 995 577, 975 555 C 945 525, 910 490, 885 460 C 850 380, 780 275, 710 220 C 690 208, 675 202, 660 200";
