@@ -5,7 +5,6 @@ import Link from 'next/link'
 import gsap from 'gsap'
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 import { useGSAP } from '@gsap/react'
-import { Play, Pause } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
 import {
   TIMISOARA_OSM_PATHS,
@@ -19,30 +18,17 @@ gsap.registerPlugin(useGSAP, MotionPathPlugin)
  * "Orașul lucrează" — Immersive Living Map Hero with Authentic Timișoara OSM Cartography
  * 
  * Visuals: Pure black `#000000` canvas with authentic OpenStreetMap road and river vectors of Timișoara.
- * Behavior: Autoplay cycle (~2.5s per act) with zero scroll-jacking, plus minimal Bending Spoons pill switcher.
+ * Behavior: Autoplay cycle (~2.5s per act) with zero scroll-jacking.
  * Typography & UI: Editorial serif italic accents, rounded-full pill CTAs, high-contrast monochrome polish.
  */
 
-const ACTS = [
-  { id: 0, label: '01' },
-  { id: 1, label: '02' },
-  { id: 2, label: '03' },
-  { id: 3, label: '04' },
-]
-
+const TOTAL_ACTS = 4
 const ACT_DURATION_MS = 2500
 
 export function LivingMapHero() {
   const { t } = useTranslation()
-  const actCaptions = [
-    t.hero.act1Caption,
-    t.hero.act2Caption,
-    t.hero.act3Caption,
-    t.hero.act4Caption,
-  ]
   const sectionRef = useRef<HTMLElement>(null)
   const [currentAct, setCurrentAct] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
   const currentTimelineRef = useRef<gsap.core.Timeline | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -163,20 +149,15 @@ export function LivingMapHero() {
 
   // Autoplay ticker
   useEffect(() => {
-    if (isPaused) {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      return
-    }
-
     timerRef.current = setTimeout(() => {
-      const nextAct = (currentAct + 1) % ACTS.length
+      const nextAct = (currentAct + 1) % TOTAL_ACTS
       transitionToAct(nextAct)
     }, ACT_DURATION_MS)
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [isPaused, currentAct, transitionToAct])
+  }, [currentAct, transitionToAct])
 
   // Initial setup on mount
   useGSAP(
@@ -214,11 +195,6 @@ export function LivingMapHero() {
       aria-label="Orașul lucrează — turele pe harta orașului"
     >
       <style>{`
-        @keyframes hero-act-progress {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
-        }
-
         /* SVG Map Color Rules (Automatic Light/Dark Mode) */
         .map-bg-rect { fill: #f8fafc; transition: fill 0.3s ease; }
         .map-bega-bed { stroke: #e0f2fe; }
@@ -634,63 +610,7 @@ export function LivingMapHero() {
         </div>
       </div>
 
-      {/* ── Bending Spoons Minimalist Pill Switcher ──── */}
-      <div className="absolute top-[72px] right-4 sm:top-auto sm:bottom-8 md:bottom-10 lg:bottom-16 sm:right-8 md:right-10 lg:right-12 z-20 flex flex-col items-end gap-1.5">
-        <div
-          className="flex items-center gap-1 sm:gap-1.5 rounded-full border border-zinc-200/90 dark:border-white/15 bg-white/90 dark:bg-black/80 p-1.5 backdrop-blur-xl shadow-2xl transition-colors"
-          role="tablist"
-          aria-label="Comută actul demonstrației"
-        >
-          {ACTS.map((act) => {
-            const isActive = currentAct === act.id
-            return (
-              <button
-                key={act.id}
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => transitionToAct(act.id)}
-                className={`relative flex flex-col items-center justify-center h-7 sm:h-8 w-7 sm:w-8 rounded-full text-[11px] sm:text-xs font-mono font-bold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-zinc-950 text-white dark:bg-white dark:text-black shadow-md scale-105'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
-                }`}
-              >
-                <span className={`leading-none ${isActive ? '-translate-y-[1px]' : ''}`}>
-                  {act.label}
-                </span>
-                {isActive && (
-                  <span className="absolute bottom-[3px] sm:bottom-1 left-1/2 -translate-x-1/2 w-3 sm:w-3.5 h-0.5 rounded-full bg-black/20 dark:bg-white/30 overflow-hidden">
-                    <span
-                      key={`progress-${act.id}`}
-                      className="block h-full bg-white dark:bg-white origin-left"
-                      style={{
-                        animation: `hero-act-progress ${ACT_DURATION_MS}ms linear forwards`,
-                        animationPlayState: isPaused ? 'paused' : 'running',
-                      }}
-                    />
-                  </span>
-                )}
-              </button>
-            )
-          })}
 
-          <button
-            onClick={() => setIsPaused(!isPaused)}
-            className="flex items-center justify-center h-7 sm:h-8 w-7 sm:w-8 rounded-full text-zinc-600 dark:text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-white"
-            title={isPaused ? 'Reia redarea automată' : 'Pauză animație'}
-            aria-label={isPaused ? 'Reia animația' : 'Pauză animație'}
-          >
-            {isPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-          </button>
-        </div>
-
-        {/* Narrative Caption (hidden on small mobile to avoid card overlap) */}
-        <div className="text-right hidden sm:block">
-          <span className="inline-block font-mono text-[9px] sm:text-[11px] tracking-wider font-semibold text-zinc-700 dark:text-zinc-400 bg-white/90 dark:bg-zinc-950/80 px-2.5 py-0.5 rounded-full border border-zinc-200/90 dark:border-white/10 backdrop-blur-md shadow-sm">
-            {`${currentAct + 1}/4 — ${actCaptions[currentAct].toUpperCase()}`}
-          </span>
-        </div>
-      </div>
 
       {/* ── Seamless atmospheric dissolve into page body ── */}
       <div
