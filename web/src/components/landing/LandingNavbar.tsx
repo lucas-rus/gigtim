@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { LogoMark } from '@/components/brand/Logo'
 import { useTranslation } from '@/lib/i18n'
 import { LanguageToggle } from '@/components/ui/language-toggle'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export function LandingNavbar() {
   const { t } = useTranslation()
@@ -37,6 +38,7 @@ export function LandingNavbar() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <ThemeToggle />
           <LanguageToggle />
           <Link
             href="/login"

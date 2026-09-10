@@ -322,8 +322,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Funcționalități Cheie — 6-Grid Minimalist Feature Cards ── */}
-      <section id="features" className="border-t border-zinc-200 dark:border-white/10 py-20 sm:py-28 bg-white dark:bg-black transition-colors">
+      {/* ── Funcționalități Cheie — 6-Grid Minimalist Feature Cards (Hidden on mobile for concise, on-point layout) ── */}
+      <section id="features" className="hidden md:block border-t border-zinc-200 dark:border-white/10 py-20 sm:py-28 bg-white dark:bg-black transition-colors">
         <div className="mx-auto max-w-6xl px-6 sm:px-8">
           <Reveal>
             <div className="max-w-2xl space-y-4 mb-14 sm:mb-18">
