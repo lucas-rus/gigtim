@@ -100,6 +100,13 @@ export const en: TranslationDictionary = {
     itmCardTitle: 'DAY-LABORER REGISTRY',
     itmCompliance: 'COMPLIANT · LAW 52/2011',
   },
+  statement: {
+    badge: 'OUR MISSION · TIMIȘOARA',
+    titlePart1: 'Timișoara moves fast.',
+    titlePart2: 'Hospitality does too.',
+    col1: 'Every busy evening on Corso, every festival along the Bega canal, and every terrace in Piața Unirii depends on reliable people who show up on time and deliver.',
+    col2: 'GigTim transforms day-labor into a seamless, dignified, and 100% compliant experience. No midnight panic calls, no forgotten paper contracts. Shift on the map, ITM ready, paid on the spot.',
+  },
   whyGigtim: {
     badge: 'LEGAL COMPLIANCE & SAFETY · TIMIȘOARA',
     titlePrefix: 'Why businesses and workers choose ',

@@ -98,6 +98,13 @@ export const ro = {
     itmCardTitle: 'REGISTRUL ZILIERILOR',
     itmCompliance: 'CONFORM · LEGEA 52/2011',
   },
+  statement: {
+    badge: 'MISIUNEA NOASTRĂ · TIMIȘOARA',
+    titlePart1: 'Timișoara se mișcă repede.',
+    titlePart2: 'HoReCa la fel.',
+    col1: 'Fiecare seară aglomerată pe Corso, fiecare festival pe malul Begăi și fiecare terasă din Piața Unirii depinde de oameni serioși care apar la timp și își fac treaba impecabil.',
+    col2: 'GigTim transformă munca de o zi într-un proces demn, sigur și 100% legal. Fără telefoane disperate, fără contracte uitate pe hârtie. Tura pe hartă, verificat ITM, plată pe loc.',
+  },
   whyGigtim: {
     badge: 'SIGURANȚĂ & CONFORMITATE LEGALĂ · TIMIȘOARA',
     titlePrefix: 'De ce aleg afacerile și lucrătorii ',

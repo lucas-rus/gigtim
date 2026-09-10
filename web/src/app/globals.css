@@ -9,6 +9,7 @@
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
 
   /* core colors → --color-* utilities */
   --color-background: var(--background);
