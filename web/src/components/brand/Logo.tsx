@@ -73,13 +73,13 @@ export function LogoTile({
   return (
     <span className={`inline-flex items-center gap-2.5 ${className ?? ''}`}>
       <span
-        className="inline-flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+        className="inline-flex items-center justify-center rounded-xl bg-[#e14d28] text-white shadow-lg shadow-[#e14d28]/25 transition-transform hover:scale-105"
         style={{ width: size, height: size }}
       >
         <LogoMark size={Math.round(size * 0.66)} strokeWidth={2.1} />
       </span>
       {withWordmark && (
-        <span className="font-heading text-xl font-extrabold tracking-tight text-foreground">
+        <span className="font-heading text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
           GigTim
         </span>
       )}
