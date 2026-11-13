@@ -1,13 +1,15 @@
 import mysql from 'mysql2/promise';
 
+// Run from web/: node --env-file=.env.local scripts/test-romarg-db.mjs (reads the ROMARG_DB_* variables).
+
 async function testDatabase() {
-  console.log('Connecting to ROMARG MySQL server (REMOVED)...');
+  console.log(`Connecting to ROMARG MySQL server (${process.env.ROMARG_DB_HOST})...`);
   const connection = await mysql.createConnection({
-    host: 'REMOVED',
-    port: 3306,
-    user: 'REMOVED',
-    password: 'REMOVED',
-    database: 'REMOVED',
+    host: process.env.ROMARG_DB_HOST,
+    port: Number(process.env.ROMARG_DB_PORT) || 3306,
+    user: process.env.ROMARG_DB_USER,
+    password: process.env.ROMARG_DB_PASSWORD,
+    database: process.env.ROMARG_DB_NAME,
   });
 
   console.log('Connected successfully!');

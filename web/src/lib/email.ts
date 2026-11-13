@@ -3,13 +3,19 @@ import nodemailer from 'nodemailer';
 export async function sendVerificationEmail(toEmail: string, token: string) {
   const confirmUrl = `https://gigtim.arhebis.ro/confirm-email?token=${token}`;
 
+  // SMTP_HOST, SMTP_USER and SMTP_PASS come only from the environment (web/.env.local, Vercel settings); SMTP_FROM is optional.
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error('email: SMTP_HOST, SMTP_USER or SMTP_PASS not set; verification emails cannot be sent.');
+    return { success: false, error: 'Email is not configured' };
+  }
+
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'REMOVED',
+    host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 465,
     secure: true,
     auth: {
-      user: process.env.SMTP_USER || 'REMOVED',
-      pass: process.env.SMTP_PASS || 'REMOVED',
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
     tls: {
       rejectUnauthorized: false,
@@ -53,7 +59,7 @@ export async function sendVerificationEmail(toEmail: string, token: string) {
 
   try {
     const info = await transporter.sendMail({
-      from: '"GigTim" <REMOVED>',
+      from: `"GigTim" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
       to: toEmail,
       subject: 'Confirmă adresa ta de email — GigTim',
       html: htmlContent,

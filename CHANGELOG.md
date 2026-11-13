@@ -5,6 +5,15 @@
 
 ---
 
+## [0.7.1] — 2026-11-13 — Credentials out of the code
+
+### 🔒 Security
+- **Database and email settings come only from environment variables.** `web/src/lib/romarg-db.ts` reads `ROMARG_DB_HOST`, `ROMARG_DB_PORT` (optional), `ROMARG_DB_USER`, `ROMARG_DB_PASSWORD` and `ROMARG_DB_NAME`; `web/src/lib/email.ts` reads `SMTP_HOST`, `SMTP_PORT` (optional), `SMTP_USER`, `SMTP_PASS` and `SMTP_FROM` (optional, defaults to `SMTP_USER`). No fallback values in code; a missing setting is logged and the call fails instead.
+- `web/scripts/test-romarg-db.mjs` and `web/scripts/test-email.mjs` read the same variables: run them with `node --env-file=.env.local scripts/<name>.mjs` from `web/`.
+- The old values were removed from the repository's history too. They were public for a while, so both passwords get changed at the host.
+
+---
+
 ## [0.7.0] — 2026-09-09 — Full Bilingual (RO/EN) i18n Translation & Mobile Navbar Polish
 
 ### 🌐 Complete Bilingual (Romanian & English) Internationalization

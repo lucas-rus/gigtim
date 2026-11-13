@@ -1,22 +1,24 @@
 import nodemailer from 'nodemailer';
 
+// Run from web/: node --env-file=.env.local scripts/test-email.mjs (reads the SMTP_* variables).
+
 async function testSmtp() {
-  console.log('Testing SMTP connection with REMOVED...');
+  console.log(`Testing SMTP connection with ${process.env.SMTP_USER}...`);
   
   const transporter = nodemailer.createTransport({
-    host: 'REMOVED',
-    port: 465,
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 465,
     secure: true,
     auth: {
-      user: 'REMOVED',
-      pass: 'REMOVED',
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
     tls: { rejectUnauthorized: false }
   });
 
   try {
     const info = await transporter.sendMail({
-      from: '"GigTim" <REMOVED>',
+      from: `"GigTim" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
       to: 'lucas.rus.dojo@gmail.com',
       subject: 'Test Email from GigTim',
       text: 'Testing SMTP delivery with real email account',
